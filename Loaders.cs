@@ -25,10 +25,10 @@ namespace OtherLoader
                 throw new ArgumentException("Could not load item, make sure you are pointing to the asset bundle correctly");
             }
 
+            //First, we want to load the asset bundle itself
             OtherLoader.OtherLogger.LogInfo("Beginning async loading of asset bundle");
-
             byte[] bundleBytes = stage.ImmediateReaders.Get<byte[]>()(file);
-            AnvilCallback<AssetBundle> bundle = LoadAssetBundleAsync(bundleBytes, mod.Info.Guid);
+            AnvilCallback<AssetBundle> bundle = LoadAssetBundleAsync(bundleBytes, file.Path);
 
             yield return bundle;
 
@@ -38,6 +38,8 @@ namespace OtherLoader
                 yield break;
             }
 
+
+            //Now that the asset bundle is loaded, we need to load all the FVRObjects
             AssetBundleRequest fvrObjects = bundle.Result.LoadAllAssetsAsync<FVRObject>();
             yield return fvrObjects;
 
@@ -46,7 +48,7 @@ namespace OtherLoader
                 if (item == null) continue;
                 OtherLoader.OtherLogger.LogInfo("Loading Item: " + item.ItemID);
 
-                item.m_anvilPrefab.Bundle = mod.Info.Guid;
+                item.m_anvilPrefab.Bundle = file.Path;
 
                 IM.OD.Add(item.ItemID, item);
                 ManagerSingleton<IM>.Instance.odicTagCategory.AddOrCreate(item.Category).Add(item);
@@ -69,8 +71,67 @@ namespace OtherLoader
                     ManagerSingleton<IM>.Instance.odicTagFirearmMount.AddOrCreate(mount).Add(item);
                 }
 
+                //if(item.Category == FVRObject.ObjectCategory.Cartridge)
+                //{
+                //    FVRFireArmRound round = item.GetGameObject().GetComponent<FVRFireArmRound>();
+                //}
+
             }
 
+            //Now all the FVRObjects are loaded, we can load the bullet data
+            AssetBundleRequest roundData = bundle.Result.LoadAllAssetsAsync<FVRFireArmRoundDisplayData>();
+            yield return roundData;
+
+            foreach (FVRFireArmRoundDisplayData data in roundData.allAssets)
+            {
+                if (data == null) continue;
+
+                OtherLoader.OtherLogger.LogInfo("Loading ammo display data!");
+
+                OtherLoader.OtherLogger.LogInfo("Type: " + data.Type);
+                if (!ManagerSingleton<AM>.Instance.TypeDic.ContainsKey(data.Type))
+                {
+                    OtherLoader.OtherLogger.LogInfo("This is a new ammo type! Adding it to dictionary");
+                    ManagerSingleton<AM>.Instance.TypeDic.Add(data.Type, new Dictionary<FireArmRoundClass, FVRFireArmRoundDisplayData.DisplayDataClass>());
+                }
+
+                if (!AM.STypeClassLists.ContainsKey(data.Type))
+                {
+                    AM.STypeClassLists.Add(data.Type, new List<FireArmRoundClass>());
+                }
+
+                if (!AM.SRoundDisplayDataDic.ContainsKey(data.Type))
+                {
+                    AM.SRoundDisplayDataDic.Add(data.Type, data);
+                }
+
+                //If this Display Data already exists, then we should add our classes to the existing display data class list
+                else
+                {
+                    List<FVRFireArmRoundDisplayData.DisplayDataClass> classes = new List<FVRFireArmRoundDisplayData.DisplayDataClass>(AM.SRoundDisplayDataDic[data.Type].Classes);
+                    classes.AddRange(data.Classes);
+                    AM.SRoundDisplayDataDic[data.Type].Classes = classes.ToArray();
+                }
+
+                foreach (FVRFireArmRoundDisplayData.DisplayDataClass roundClass in data.Classes)
+                {
+                    OtherLoader.OtherLogger.LogInfo("Class: " + roundClass.Class);
+                    if (!ManagerSingleton<AM>.Instance.TypeDic[data.Type].ContainsKey(roundClass.Class))
+                    {
+                        OtherLoader.OtherLogger.LogInfo("This is a new ammo class! Adding it to dictionary");
+                        ManagerSingleton<AM>.Instance.TypeDic[data.Type].Add(roundClass.Class, roundClass);
+                    }
+
+                    if (!AM.STypeClassLists[data.Type].Contains(roundClass.Class))
+                    {
+                        AM.STypeClassLists[data.Type].Add(roundClass.Class);
+                    }
+
+                }
+            }
+
+
+            //Finally, add all the items to the spawner
             AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
             yield return spawnerIDs;
 
@@ -83,7 +144,6 @@ namespace OtherLoader
                 {
                     ManagerSingleton<IM>.Instance.SpawnerIDDic[id.ItemID] = id;
                 }
-
             }
         }
 

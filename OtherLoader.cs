@@ -31,5 +31,6 @@ namespace OtherLoader
             stage.RuntimeAssetLoaders[Source, "item"] = new ItemLoader().LoadAsset;
         }
 
+
     }
 }
