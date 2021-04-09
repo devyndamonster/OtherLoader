@@ -35,7 +35,7 @@ Once you have your asset bundle inside a `.Deli` file, you just need to point to
     "patcher": {},
     "setup": {},
     "runtime": {
-        "supahbulletbundle": "h3vr.otherloader.deli:item"
+        "YourAssetBundleName": "h3vr.otherloader.deli:item"
     }
   }
 }
