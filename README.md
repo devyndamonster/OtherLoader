@@ -17,7 +17,7 @@ Other loader is an asset loader for H3VR, which functions similarly to other loa
 ## Making mods compatible with OtherLoader
 OtherLoader works similarly to LSIIC, in that it loads asset bundles into the game. Any custom item that was made for LSIIC can also be used with OtherLoader by simply packaging the asset bundles into a `.Deli` file.
 
-Once you have your asset bundle inside a `.Deli` file, you just need to point to it a Deli manifest file. Here's an example of what that file might look like:
+Once you have your asset bundle inside a `.Deli` file, you just need to point to it with a Deli manifest file. Here's an example of what that file might look like:
 ```
 {
   "guid": "h3vr.otherloader.example",
