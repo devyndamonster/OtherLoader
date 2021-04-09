@@ -3,7 +3,7 @@
 
 Other loader is an asset loader for H3VR, which functions similarly to other loaders like LSIIC.
 
-#### Why should you use other loader?
+#### Why should you use OtherLoader?
 - It supports custom ammo
 - It allows other items to use Deli's dependany system
 - It doesn't spam the console like LSIIC
