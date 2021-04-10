@@ -24,6 +24,8 @@ namespace OtherLoader
 
         private void Awake()
         {
+            LoadConfigFile();
+
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
 
             OtherLogger = BepInEx.Logging.Logger.CreateLogSource("OtherLoader");

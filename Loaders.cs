@@ -47,6 +47,10 @@ namespace OtherLoader
             yield return bulletData;
             LoadBulletData(bulletData);
 
+            AssetBundleRequest spawnerCats = bundle.Result.LoadAllAssetsAsync<ItemSpawnerCategoryDefinitions>();
+            yield return spawnerCats;
+            LoadSpawnerCategories(spawnerCats);
+
             //Finally, add all the items to the spawner
             AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
             yield return spawnerIDs;
@@ -65,7 +69,76 @@ namespace OtherLoader
             
         }
 
-        
+
+        private void LoadSpawnerCategories(AssetBundleRequest IDAssets)
+        {
+            foreach (ItemSpawnerCategoryDefinitions newLoadedCats in IDAssets.allAssets)
+            {
+                foreach (ItemSpawnerCategoryDefinitions.Category newCategory in newLoadedCats.Categories)
+                {
+
+                    OtherLoader.OtherLogger.LogInfo("Loading New ItemSpawner Category: " + newCategory.DisplayName);
+
+                    //If the loaded categories already contains this new category, we want to add subcategories
+                    if (IM.CD.ContainsKey(newCategory.Cat))
+                    {
+                        OtherLoader.OtherLogger.LogInfo("Category already exists! Adding subcategories");
+
+                        foreach (ItemSpawnerCategoryDefinitions.Category currentCat in IM.CDefs.Categories)
+                        {
+                            if(currentCat.Cat == newCategory.Cat)
+                            {
+                                foreach(ItemSpawnerCategoryDefinitions.SubCategory newSubCat in newCategory.Subcats)
+                                {
+                                    //Only add this new subcategory if it is unique to the main category
+                                    if(!currentCat.Subcats.Select(o => o.Subcat).Contains(newSubCat.Subcat))
+                                    {
+                                        OtherLoader.OtherLogger.LogInfo("Adding subcategory: " + newSubCat.DisplayName);
+
+                                        List<ItemSpawnerCategoryDefinitions.SubCategory> currSubCatList = currentCat.Subcats.ToList();
+                                        currSubCatList.Add(newSubCat);
+                                        currentCat.Subcats = currSubCatList.ToArray();
+
+                                        IM.CDefSubs[currentCat.Cat].Add(newSubCat);
+
+                                        if (!IM.CDefSubInfo.ContainsKey(newSubCat.Subcat)) IM.CDefSubInfo.Add(newSubCat.Subcat, newSubCat);
+                                        if (!IM.SCD.ContainsKey(newSubCat.Subcat)) IM.SCD.Add(newSubCat.Subcat, new List<ItemSpawnerID>());
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    //If new category, we can just add the whole thing
+                    else
+                    {
+                        OtherLoader.OtherLogger.LogInfo("Is New Category!");
+
+                        List<ItemSpawnerCategoryDefinitions.Category> currentCatsList = IM.CDefs.Categories.ToList();
+                        currentCatsList.Add(newCategory);
+                        IM.CDefs.Categories = currentCatsList.ToArray();
+
+                        if (!IM.CDefSubs.ContainsKey(newCategory.Cat)) IM.CDefSubs.Add(newCategory.Cat, new List<ItemSpawnerCategoryDefinitions.SubCategory>());
+                        if (!IM.CDefInfo.ContainsKey(newCategory.Cat)) IM.CDefInfo.Add(newCategory.Cat, newCategory);
+                        if (!IM.CD.ContainsKey(newCategory.Cat)) IM.CD.Add(newCategory.Cat, new List<ItemSpawnerID>());
+
+                        foreach(ItemSpawnerCategoryDefinitions.SubCategory newSubCat in newCategory.Subcats)
+                        {
+                            IM.CDefSubs[newCategory.Cat].Add(newSubCat);
+
+                            if (!IM.CDefSubInfo.ContainsKey(newSubCat.Subcat)) IM.CDefSubInfo.Add(newSubCat.Subcat, newSubCat);
+                            if (!IM.SCD.ContainsKey(newSubCat.Subcat)) IM.SCD.Add(newSubCat.Subcat, new List<ItemSpawnerID>());
+                        }
+                    }
+                }
+
+                
+
+                
+            }
+        }
+
+
         private void LoadSpawnerIDs(AssetBundleRequest IDAssets)
         {
             foreach (ItemSpawnerID id in IDAssets.allAssets)
