@@ -42,9 +42,21 @@ namespace OtherLoader
         {
             if (BundleFiles.ContainsKey(bundle))
             {
-                __result = LoaderUtils.LoadAssetBundleFromFile(BundleFiles[bundle]);
-                AnvilManager.m_bundles.Add(bundle, __result);
-                return false;
+                //If this is a modded bundle, we should first check if the bundle is already loaded
+                AnvilCallbackBase anvilCallbackBase;
+                if (AnvilManager.m_bundles.TryGetValue(bundle, out anvilCallbackBase))
+                {
+                    __result = anvilCallbackBase as AnvilCallback<AssetBundle>;
+                    return false;
+                }
+
+                //If the bundle is not already loaded, then load it
+                else
+                {
+                    __result = LoaderUtils.LoadAssetBundleFromFile(BundleFiles[bundle]);
+                    AnvilManager.m_bundles.Add(bundle, __result);
+                    return false;
+                }
             }
 
             return true;
