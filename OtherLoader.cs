@@ -10,6 +10,7 @@ using FistVR;
 using Deli.Runtime;
 using Deli.VFS;
 using Deli.Immediate;
+using BepInEx.Configuration;
 
 namespace OtherLoader
 {
@@ -18,7 +19,8 @@ namespace OtherLoader
 
         public static ManualLogSource OtherLogger;
         public static Dictionary<string, IFileHandle> BundleFiles = new Dictionary<string, IFileHandle>();
-        
+
+        public static ConfigEntry<bool> OptimizeMemory;
 
         private void Awake()
         {
@@ -28,6 +30,17 @@ namespace OtherLoader
 
             Stages.Runtime += DuringRuntime;
         }
+
+        private void LoadConfigFile()
+        {
+            OptimizeMemory = Source.Config.Bind(
+                "General",
+                "OptimizeMemory",
+                false,
+                "When enabled, modded assets will be loaded on-demand instead of kept in memory. Can cause small hiccups when spawning modded guns for the first time. Useful if you are low on RAM"
+                );
+        }
+
 
         private void DuringRuntime(RuntimeStage stage)
         {
@@ -61,7 +74,6 @@ namespace OtherLoader
 
             return true;
         }
-
     }
 
 

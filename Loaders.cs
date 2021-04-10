@@ -52,9 +52,17 @@ namespace OtherLoader
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs);
             
-            //With our assets now added to all the dictionaries, we can unload this asset bundle and it will be loaded on-demand later
+            //If OptimizeMemory is true, we unload the asset bundle. If it's not true, the asset bundle will remain loaded, and the reference to it will be kept in the AnvilManager
             OtherLoader.BundleFiles.Add(file.Path, file);
-            bundle.Result.Unload(false);
+            if (OtherLoader.OptimizeMemory.Value)
+            {
+                bundle.Result.Unload(false);
+            }
+            else
+            {
+                AnvilManager.m_bundles.Add(file.Path, bundle);
+            }
+            
         }
 
         
