@@ -20,7 +20,7 @@ namespace OtherLoader
 
         public IEnumerator LoadAsset(RuntimeStage stage, Mod mod, IHandle handle)
         {
-            if(handle is not IFileHandle file)
+            if (handle is not IFileHandle file)
             {
                 throw new ArgumentException("Could not load item, make sure you are pointing to the asset bundle correctly");
             }
@@ -32,7 +32,7 @@ namespace OtherLoader
 
             yield return bundle;
 
-            if(bundle.Result == null)
+            if (bundle.Result == null)
             {
                 OtherLoader.OtherLogger.LogError("Asset Bundle was null!");
                 yield break;
@@ -42,7 +42,47 @@ namespace OtherLoader
             //Now that the asset bundle is loaded, we need to load all the FVRObjects
             AssetBundleRequest fvrObjects = bundle.Result.LoadAllAssetsAsync<FVRObject>();
             yield return fvrObjects;
+            LoadFVRObjects(file, fvrObjects);
 
+            //Now all the FVRObjects are loaded, we can load the bullet data
+            AssetBundleRequest bulletData = bundle.Result.LoadAllAssetsAsync<FVRFireArmRoundDisplayData>();
+            yield return bulletData;
+            LoadBulletData(bulletData);
+
+            //Finally, add all the items to the spawner
+            AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
+            yield return spawnerIDs;
+            LoadSpawnerIDs(spawnerIDs);
+
+        }
+
+        
+
+        private AnvilCallback<AssetBundle> LoadAssetBundleAsync(byte[] bundleBytes, string ID)
+        {
+            AsyncOperation request = AssetBundle.LoadFromMemoryAsync(bundleBytes);
+            AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
+            AnvilManager.m_bundles.Add(ID, anvilCallbackBase);
+            return (AnvilCallback<AssetBundle>)anvilCallbackBase;
+        }
+
+        private void LoadSpawnerIDs(AssetBundleRequest IDAssets)
+        {
+            foreach (ItemSpawnerID id in IDAssets.allAssets)
+            {
+                IM.CD[id.Category].Add(id);
+                IM.SCD[id.SubCategory].Add(id);
+
+                if (!ManagerSingleton<IM>.Instance.SpawnerIDDic.ContainsKey(id.ItemID))
+                {
+                    ManagerSingleton<IM>.Instance.SpawnerIDDic[id.ItemID] = id;
+                }
+            }
+        }
+
+
+        private void LoadFVRObjects(IFileHandle file, AssetBundleRequest fvrObjects)
+        {
             foreach (FVRObject item in fvrObjects.allAssets)
             {
                 if (item == null) continue;
@@ -62,7 +102,7 @@ namespace OtherLoader
                 {
                     ManagerSingleton<IM>.Instance.odicTagFirearmFiringMode.AddOrCreate(mode).Add(item);
                 }
-                foreach(FVRObject.OTagFirearmFeedOption feed in item.TagFirearmFeedOption)
+                foreach (FVRObject.OTagFirearmFeedOption feed in item.TagFirearmFeedOption)
                 {
                     ManagerSingleton<IM>.Instance.odicTagFirearmFeedOption.AddOrCreate(feed).Add(item);
                 }
@@ -70,34 +110,28 @@ namespace OtherLoader
                 {
                     ManagerSingleton<IM>.Instance.odicTagFirearmMount.AddOrCreate(mount).Add(item);
                 }
-
-                //if(item.Category == FVRObject.ObjectCategory.Cartridge)
-                //{
-                //    FVRFireArmRound round = item.GetGameObject().GetComponent<FVRFireArmRound>();
-                //}
-
             }
+        }
 
-            //Now all the FVRObjects are loaded, we can load the bullet data
-            AssetBundleRequest roundData = bundle.Result.LoadAllAssetsAsync<FVRFireArmRoundDisplayData>();
-            yield return roundData;
 
-            foreach (FVRFireArmRoundDisplayData data in roundData.allAssets)
+        private void LoadBulletData(AssetBundleRequest bulletAssets)
+        {
+            foreach (FVRFireArmRoundDisplayData data in bulletAssets.allAssets)
             {
                 if (data == null) continue;
 
                 OtherLoader.OtherLogger.LogInfo("Loading ammo display data!");
 
                 OtherLoader.OtherLogger.LogInfo("Type: " + data.Type);
-                if (!ManagerSingleton<AM>.Instance.TypeDic.ContainsKey(data.Type))
+                if (!AM.STypeDic.ContainsKey(data.Type))
                 {
                     OtherLoader.OtherLogger.LogInfo("This is a new ammo type! Adding it to dictionary");
-                    ManagerSingleton<AM>.Instance.TypeDic.Add(data.Type, new Dictionary<FireArmRoundClass, FVRFireArmRoundDisplayData.DisplayDataClass>());
+                    AM.STypeDic.Add(data.Type, new Dictionary<FireArmRoundClass, FVRFireArmRoundDisplayData.DisplayDataClass>());
                 }
 
-                if (!AM.STypeClassLists.ContainsKey(data.Type))
+                if (!AM.STypeList.Contains(data.Type))
                 {
-                    AM.STypeClassLists.Add(data.Type, new List<FireArmRoundClass>());
+                    AM.STypeList.Add(data.Type);
                 }
 
                 if (!AM.SRoundDisplayDataDic.ContainsKey(data.Type))
@@ -111,6 +145,11 @@ namespace OtherLoader
                     List<FVRFireArmRoundDisplayData.DisplayDataClass> classes = new List<FVRFireArmRoundDisplayData.DisplayDataClass>(AM.SRoundDisplayDataDic[data.Type].Classes);
                     classes.AddRange(data.Classes);
                     AM.SRoundDisplayDataDic[data.Type].Classes = classes.ToArray();
+                }
+
+                if (!AM.STypeClassLists.ContainsKey(data.Type))
+                {
+                    AM.STypeClassLists.Add(data.Type, new List<FireArmRoundClass>());
                 }
 
                 foreach (FVRFireArmRoundDisplayData.DisplayDataClass roundClass in data.Classes)
@@ -129,33 +168,10 @@ namespace OtherLoader
 
                 }
             }
-
-
-            //Finally, add all the items to the spawner
-            AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
-            yield return spawnerIDs;
-
-            foreach (ItemSpawnerID id in spawnerIDs.allAssets)
-            {
-                IM.CD[id.Category].Add(id);
-                IM.SCD[id.SubCategory].Add(id);
-
-                if (!ManagerSingleton<IM>.Instance.SpawnerIDDic.ContainsKey(id.ItemID))
-                {
-                    ManagerSingleton<IM>.Instance.SpawnerIDDic[id.ItemID] = id;
-                }
-            }
-        }
-
-        private AnvilCallback<AssetBundle> LoadAssetBundleAsync(byte[] bundleBytes, string ID)
-        {
-            AsyncOperation request = AssetBundle.LoadFromMemoryAsync(bundleBytes);
-            AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
-            AnvilManager.m_bundles.Add(ID, anvilCallbackBase);
-            return (AnvilCallback<AssetBundle>)anvilCallbackBase;
         }
 
     }
+
 
     /// <summary>
     /// Credit to BlockBuilder57 for this incredibly useful extension
