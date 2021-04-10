@@ -1,7 +1,7 @@
 # OtherLoader
 #### A whole new loader!
 
-Other loader is an asset loader for H3VR, which functions similarly to other loaders like LSIIC.
+OtherLoader is an asset loader for H3VR, which functions similarly to other loaders like LSIIC.
 
 #### Why should you use OtherLoader?
 - It supports custom ammo
