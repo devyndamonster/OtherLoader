@@ -27,8 +27,7 @@ namespace OtherLoader
 
             //First, we want to load the asset bundle itself
             OtherLoader.OtherLogger.LogInfo("Beginning async loading of asset bundle");
-            byte[] bundleBytes = stage.ImmediateReaders.Get<byte[]>()(file);
-            AnvilCallback<AssetBundle> bundle = LoadAssetBundleAsync(bundleBytes, file.Path);
+            AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundleFromFile(file);
 
             yield return bundle;
 
@@ -37,7 +36,6 @@ namespace OtherLoader
                 OtherLoader.OtherLogger.LogError("Asset Bundle was null!");
                 yield break;
             }
-
 
             //Now that the asset bundle is loaded, we need to load all the FVRObjects
             AssetBundleRequest fvrObjects = bundle.Result.LoadAllAssetsAsync<FVRObject>();
@@ -53,19 +51,13 @@ namespace OtherLoader
             AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs);
-
+            
+            //With our assets now added to all the dictionaries, we can unload this asset bundle and it will be loaded on-demand later
+            OtherLoader.BundleFiles.Add(file.Path, file);
+            bundle.Result.Unload(false);
         }
 
         
-
-        private AnvilCallback<AssetBundle> LoadAssetBundleAsync(byte[] bundleBytes, string ID)
-        {
-            AsyncOperation request = AssetBundle.LoadFromMemoryAsync(bundleBytes);
-            AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
-            AnvilManager.m_bundles.Add(ID, anvilCallbackBase);
-            return (AnvilCallback<AssetBundle>)anvilCallbackBase;
-        }
-
         private void LoadSpawnerIDs(AssetBundleRequest IDAssets)
         {
             foreach (ItemSpawnerID id in IDAssets.allAssets)
@@ -170,21 +162,6 @@ namespace OtherLoader
             }
         }
 
-    }
-
-
-    /// <summary>
-    /// Credit to BlockBuilder57 for this incredibly useful extension
-    /// https://github.com/BlockBuilder57/LSIIC/blob/527927cb921c360d9c158008e24bdeaf2059440e/LSIIC/LSIIC.VirtualObjectsInjector/VirtualObjectsInjectorPlugin.cs#L146
-    /// </summary>
-    public static class DictionaryExtension
-    {
-        public static TValue AddOrCreate<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key) where TValue : new()
-        {
-            if (!dictionary.ContainsKey(key))
-                dictionary.Add(key, new TValue());
-            return dictionary[key];
-        }
     }
 
 }

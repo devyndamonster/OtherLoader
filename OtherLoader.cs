@@ -8,6 +8,8 @@ using HarmonyLib;
 using BepInEx.Logging;
 using FistVR;
 using Deli.Runtime;
+using Deli.VFS;
+using Deli.Immediate;
 
 namespace OtherLoader
 {
@@ -15,7 +17,8 @@ namespace OtherLoader
     {
 
         public static ManualLogSource OtherLogger;
-        public static List<AssetBundle> LoadedBundles = new List<AssetBundle>();
+        public static Dictionary<string, IFileHandle> BundleFiles = new Dictionary<string, IFileHandle>();
+        
 
         private void Awake()
         {
@@ -28,46 +31,27 @@ namespace OtherLoader
 
         private void DuringRuntime(RuntimeStage stage)
         {
+            LoaderUtils.DelayedByteReader = stage.DelayedReaders.Get<byte[]>();
+            LoaderUtils.ImmediateByteReader = stage.ImmediateReaders.Get<byte[]>();
             stage.RuntimeAssetLoaders[Source, "item"] = new ItemLoader().LoadAsset;
         }
 
-
-        /*
-        [HarmonyPatch(typeof(TNH_UIManager), "Start")] // Specify target method with HarmonyPatch attribute
+        [HarmonyPatch(typeof(AnvilManager), "GetAssetBundleAsyncInternal")]
         [HarmonyPrefix]
-        private static void PrintPrimeCats(AmmoSpawnerV2 __instance)
+        private static bool LoadModdedBundles(string bundle, ref AnvilCallback<AssetBundle> __result)
         {
-            OtherLogger.LogInfo("Priming Ammo Spawner Categories");
-
-            for (int i = 0; i < 10; i++)
+            if (BundleFiles.ContainsKey(bundle))
             {
-                AmmoSpawnerV2.CartridgeCategory item = new AmmoSpawnerV2.CartridgeCategory();
-                __instance.Categories.Add(item);
+                __result = LoaderUtils.LoadAssetBundleFromFile(BundleFiles[bundle]);
+                AnvilManager.m_bundles.Add(bundle, __result);
+                return false;
             }
-            for (int j = 0; j < AM.STypeList.Count; j++)
-            {
-                FVRFireArmRoundDisplayData fvrfireArmRoundDisplayData = AM.SRoundDisplayDataDic[AM.STypeList[j]];
-                OtherLogger.LogInfo("Ammo Type: " + AM.STypeList[j]);
-                OtherLogger.LogInfo("Display Name: " + fvrfireArmRoundDisplayData.DisplayName);
 
-                int num;
-                if (fvrfireArmRoundDisplayData.IsMeatFortress)
-                {
-                    num = 8;
-                }
-                else
-                {
-                    num = fvrfireArmRoundDisplayData.RoundPower - FVRObject.OTagFirearmRoundPower.Tiny;
-                }
-
-                OtherLogger.LogInfo("Category Number: " + num);
-
-                __instance.Categories[num].Entries.Add(fvrfireArmRoundDisplayData);
-                __instance.reverseCatDic.Add(fvrfireArmRoundDisplayData.Type, num);
-            }
+            return true;
         }
-        */
-
 
     }
+
+
+    
 }

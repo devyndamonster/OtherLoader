@@ -93,6 +93,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Loaders.cs" />
+    <Compile Include="LoaderUtils.cs" />
     <Compile Include="OtherLoader.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
