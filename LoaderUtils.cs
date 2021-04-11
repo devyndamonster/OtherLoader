@@ -43,7 +43,55 @@ namespace OtherLoader
             AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
             return (AnvilCallback<AssetBundle>)anvilCallbackBase;
         }
+
+
+        public static AnvilCallback<AssetBundle> LoadAssetBundleFromBytes(byte[] bundleBytes)
+        {
+            AsyncOperation request = AssetBundle.LoadFromMemoryAsync(bundleBytes);
+
+            AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
+            return (AnvilCallback<AssetBundle>)anvilCallbackBase;
+        }
+
     }
+
+
+    public static class LoaderStatus
+    {
+        private static Dictionary<string, float> activeLoaders = new Dictionary<string, float>();
+
+        public static float GetLoaderProgress()
+        {
+            if (activeLoaders.Count == 0) return 1;
+
+            float minProgress = activeLoaders.Values.First();
+
+            foreach(float prog in activeLoaders.Values)
+            {
+                minProgress = Mathf.Min(minProgress, prog);
+            }
+
+            return minProgress;
+        }
+
+        public static void AddLoader(string modID)
+        {
+            if (!activeLoaders.ContainsKey(modID)) activeLoaders.Add(modID, 0);
+            else OtherLogger.LogError("Tried to track progress on a mod that is already being tracked! ModID: " + modID);
+        }
+
+        public static void RemoveLoader(string modID)
+        {
+            if (activeLoaders.ContainsKey(modID)) activeLoaders.Remove(modID);
+        }
+
+        public static void UpdateProgress(string modID, float progress)
+        {
+            if(activeLoaders.ContainsKey(modID)) activeLoaders[modID] = progress;
+        }
+
+    }
+
 
     /// <summary>
     /// Credit to BlockBuilder57 for this incredibly useful extension

@@ -1,6 +1,7 @@
 ﻿using Anvil;
 using Deli;
 using Deli.Runtime;
+using Deli.Runtime.Yielding;
 using Deli.Setup;
 using Deli.VFS;
 using FistVR;
@@ -26,14 +27,25 @@ namespace OtherLoader
             }
 
             //First, we want to load the asset bundle itself
-            OtherLoader.OtherLogger.LogInfo("Beginning async loading of asset bundle");
-            AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundleFromFile(file);
+            OtherLogger.Log("Beginning async loading of mod: " + mod.Info.Name, OtherLogger.LogType.General);
+            LoaderStatus.AddLoader(mod.Info.Guid);
 
+            //Load the bytes of the bundle into memory
+            ResultYieldInstruction<byte[]> bundleYieldable = LoaderUtils.DelayedByteReader(file);
+            yield return bundleYieldable;
+            byte[] bundleBytes = bundleYieldable.Result;
+
+            LoaderStatus.UpdateProgress(mod.Info.Guid, 0.25f);
+
+            //Now get the asset bundle from those bytes
+            AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundleFromBytes(bundleBytes);
             yield return bundle;
+
+            LoaderStatus.UpdateProgress(mod.Info.Guid, 0.5f);
 
             if (bundle.Result == null)
             {
-                OtherLoader.OtherLogger.LogError("Asset Bundle was null!");
+                OtherLogger.LogError("Asset Bundle was null!");
                 yield break;
             }
 
@@ -47,6 +59,9 @@ namespace OtherLoader
             yield return bulletData;
             LoadBulletData(bulletData);
 
+            LoaderStatus.UpdateProgress(mod.Info.Guid, 0.75f);
+
+            //Before we load the spawnerIDs, we must add any new spawner category definitions
             AssetBundleRequest spawnerCats = bundle.Result.LoadAllAssetsAsync<ItemSpawnerCategoryDefinitions>();
             yield return spawnerCats;
             LoadSpawnerCategories(spawnerCats);
@@ -66,7 +81,8 @@ namespace OtherLoader
             {
                 AnvilManager.m_bundles.Add(file.Path, bundle);
             }
-            
+
+            LoaderStatus.RemoveLoader(mod.Info.Guid);
         }
 
 
@@ -77,12 +93,12 @@ namespace OtherLoader
                 foreach (ItemSpawnerCategoryDefinitions.Category newCategory in newLoadedCats.Categories)
                 {
 
-                    OtherLoader.OtherLogger.LogInfo("Loading New ItemSpawner Category: " + newCategory.DisplayName);
+                    OtherLogger.Log("Loading New ItemSpawner Category: " + newCategory.DisplayName, OtherLogger.LogType.Loading);
 
                     //If the loaded categories already contains this new category, we want to add subcategories
                     if (IM.CD.ContainsKey(newCategory.Cat))
                     {
-                        OtherLoader.OtherLogger.LogInfo("Category already exists! Adding subcategories");
+                        OtherLogger.Log("Category already exists! Adding subcategories", OtherLogger.LogType.Loading);
 
                         foreach (ItemSpawnerCategoryDefinitions.Category currentCat in IM.CDefs.Categories)
                         {
@@ -93,7 +109,7 @@ namespace OtherLoader
                                     //Only add this new subcategory if it is unique to the main category
                                     if(!currentCat.Subcats.Select(o => o.Subcat).Contains(newSubCat.Subcat))
                                     {
-                                        OtherLoader.OtherLogger.LogInfo("Adding subcategory: " + newSubCat.DisplayName);
+                                        OtherLogger.Log("Adding subcategory: " + newSubCat.DisplayName, OtherLogger.LogType.Loading);
 
                                         List<ItemSpawnerCategoryDefinitions.SubCategory> currSubCatList = currentCat.Subcats.ToList();
                                         currSubCatList.Add(newSubCat);
@@ -112,7 +128,7 @@ namespace OtherLoader
                     //If new category, we can just add the whole thing
                     else
                     {
-                        OtherLoader.OtherLogger.LogInfo("Is New Category!");
+                        OtherLogger.Log("This is a new primary category", OtherLogger.LogType.Loading);
 
                         List<ItemSpawnerCategoryDefinitions.Category> currentCatsList = IM.CDefs.Categories.ToList();
                         currentCatsList.Add(newCategory);
@@ -143,6 +159,8 @@ namespace OtherLoader
         {
             foreach (ItemSpawnerID id in IDAssets.allAssets)
             {
+                OtherLogger.Log("Adding itemspawner ID! Category: " + id.Category + ", SubCategory: " + id.SubCategory, OtherLogger.LogType.Loading);
+
                 IM.CD[id.Category].Add(id);
                 IM.SCD[id.SubCategory].Add(id);
 
@@ -159,7 +177,7 @@ namespace OtherLoader
             foreach (FVRObject item in fvrObjects.allAssets)
             {
                 if (item == null) continue;
-                OtherLoader.OtherLogger.LogInfo("Loading Item: " + item.ItemID);
+                OtherLogger.Log("Loading FVRObject: " + item.ItemID, OtherLogger.LogType.Loading);
 
                 item.m_anvilPrefab.Bundle = file.Path;
 
@@ -193,13 +211,16 @@ namespace OtherLoader
             {
                 if (data == null) continue;
 
-                OtherLoader.OtherLogger.LogInfo("Loading ammo display data!");
+                OtherLogger.Log("Loading ammo type: " + data.Type, OtherLogger.LogType.Loading);
 
-                OtherLoader.OtherLogger.LogInfo("Type: " + data.Type);
                 if (!AM.STypeDic.ContainsKey(data.Type))
                 {
-                    OtherLoader.OtherLogger.LogInfo("This is a new ammo type! Adding it to dictionary");
+                    OtherLogger.Log("This is a new ammo type! Adding it to dictionary", OtherLogger.LogType.Loading);
                     AM.STypeDic.Add(data.Type, new Dictionary<FireArmRoundClass, FVRFireArmRoundDisplayData.DisplayDataClass>());
+                }
+                else
+                {
+                    OtherLogger.Log("This is an existing ammo type, will add subclasses to this type", OtherLogger.LogType.Loading);
                 }
 
                 if (!AM.STypeList.Contains(data.Type))
@@ -227,18 +248,22 @@ namespace OtherLoader
 
                 foreach (FVRFireArmRoundDisplayData.DisplayDataClass roundClass in data.Classes)
                 {
-                    OtherLoader.OtherLogger.LogInfo("Class: " + roundClass.Class);
-                    if (!ManagerSingleton<AM>.Instance.TypeDic[data.Type].ContainsKey(roundClass.Class))
+                    OtherLogger.Log("Loading ammo class: " + roundClass.Class, OtherLogger.LogType.Loading);
+                    if (!AM.STypeDic[data.Type].ContainsKey(roundClass.Class))
                     {
-                        OtherLoader.OtherLogger.LogInfo("This is a new ammo class! Adding it to dictionary");
-                        ManagerSingleton<AM>.Instance.TypeDic[data.Type].Add(roundClass.Class, roundClass);
+                        OtherLogger.Log("This is a new ammo class! Adding it to dictionary", OtherLogger.LogType.Loading);
+                        AM.STypeDic[data.Type].Add(roundClass.Class, roundClass);
+                    }
+                    else
+                    {
+                        OtherLogger.LogWarning("Ammo class already exists for bullet type! Bullet will not be loaded! Type: " + data.Type + ", Class: " + roundClass.Class);
+                        return;
                     }
 
                     if (!AM.STypeClassLists[data.Type].Contains(roundClass.Class))
                     {
                         AM.STypeClassLists[data.Type].Add(roundClass.Class);
                     }
-
                 }
             }
         }

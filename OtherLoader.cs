@@ -16,10 +16,7 @@ namespace OtherLoader
 {
     public class OtherLoader : DeliBehaviour
     {
-
-        public static ManualLogSource OtherLogger;
         public static Dictionary<string, IFileHandle> BundleFiles = new Dictionary<string, IFileHandle>();
-
         public static ConfigEntry<bool> OptimizeMemory;
 
         private void Awake()
@@ -28,7 +25,7 @@ namespace OtherLoader
 
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
 
-            OtherLogger = BepInEx.Logging.Logger.CreateLogSource("OtherLoader");
+            OtherLogger.Init();
 
             Stages.Runtime += DuringRuntime;
         }
@@ -50,6 +47,7 @@ namespace OtherLoader
             LoaderUtils.ImmediateByteReader = stage.ImmediateReaders.Get<byte[]>();
             stage.RuntimeAssetLoaders[Source, "item"] = new ItemLoader().LoadAsset;
         }
+
 
         [HarmonyPatch(typeof(AnvilManager), "GetAssetBundleAsyncInternal")]
         [HarmonyPrefix]
@@ -76,6 +74,30 @@ namespace OtherLoader
 
             return true;
         }
+
+
+        /*
+        [HarmonyPatch(typeof(AM), "getRoundMesh")]
+        [HarmonyPrefix]
+        private static bool BeforeMesh(FireArmRoundType rType, FireArmRoundClass rClass)
+        {
+            OtherLogger.LogInfo("Type: " + rType + ", Class: " + rClass);
+            OtherLogger.LogInfo("Is type in Dictionary: " + ManagerSingleton<AM>.Instance.TypeDic.ContainsKey(rType));
+
+            if (ManagerSingleton<AM>.Instance.TypeDic.ContainsKey(rType))
+            {
+                OtherLogger.LogInfo("Is class in Dictionary: " + ManagerSingleton<AM>.Instance.TypeDic[rType].ContainsKey(rClass));
+
+                foreach(FireArmRoundClass tempClass in ManagerSingleton<AM>.Instance.TypeDic[rType].Keys)
+                {
+                    OtherLogger.LogInfo("Dictionary did contain class: " + tempClass);
+                }
+            }
+
+            return true;
+        }
+        */
+
     }
 
 
