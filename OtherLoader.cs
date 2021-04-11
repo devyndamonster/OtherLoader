@@ -18,6 +18,8 @@ namespace OtherLoader
     {
         public static Dictionary<string, IFileHandle> BundleFiles = new Dictionary<string, IFileHandle>();
         public static ConfigEntry<bool> OptimizeMemory;
+        public static ConfigEntry<bool> EnableLogging;
+        public static ConfigEntry<bool> LogLoading;
 
         private void Awake()
         {
@@ -25,7 +27,7 @@ namespace OtherLoader
 
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
 
-            OtherLogger.Init();
+            OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
 
             Stages.Runtime += DuringRuntime;
         }
@@ -37,6 +39,20 @@ namespace OtherLoader
                 "OptimizeMemory",
                 false,
                 "When enabled, modded assets will be loaded on-demand instead of kept in memory. Can cause small hiccups when spawning modded guns for the first time. Useful if you are low on RAM"
+                );
+
+            EnableLogging = Source.Config.Bind(
+                "Logging",
+                "EnableLogging",
+                true,
+                "When enabled, OtherLoader will log more than just errors and warning to the output log"
+                );
+
+            LogLoading = Source.Config.Bind(
+                "Logging",
+                "LogLoading",
+                false,
+                "When enabled, OtherLoader will log additional useful information during the loading process. EnableLogging must be set to true for this to have an effect"
                 );
         }
 

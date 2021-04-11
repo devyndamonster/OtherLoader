@@ -11,8 +11,8 @@ namespace OtherLoader
 
         public static ManualLogSource BepLog;
 
-        public static bool AllowLogging = false;
-        public static bool LogLoading = false;
+        private static bool AllowLogging = false;
+        private static bool LogLoading = false;
 
         public enum LogType
         {
@@ -20,9 +20,12 @@ namespace OtherLoader
             Loading
         }
 
-        public static void Init()
+        public static void Init(bool enabled, bool logLoading)
         {
             BepLog = BepInEx.Logging.Logger.CreateLogSource("OtherLoader");
+
+            AllowLogging = enabled;
+            LogLoading = logLoading;
         }
 
         public static void Log(string log, LogType type)

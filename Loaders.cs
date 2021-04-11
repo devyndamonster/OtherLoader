@@ -106,8 +106,8 @@ namespace OtherLoader
                             {
                                 foreach(ItemSpawnerCategoryDefinitions.SubCategory newSubCat in newCategory.Subcats)
                                 {
-                                    //Only add this new subcategory if it is unique to the main category
-                                    if(!currentCat.Subcats.Select(o => o.Subcat).Contains(newSubCat.Subcat))
+                                    //Only add this new subcategory if it is unique
+                                    if(!IM.CDefSubInfo.ContainsKey(newSubCat.Subcat))
                                     {
                                         OtherLogger.Log("Adding subcategory: " + newSubCat.DisplayName, OtherLogger.LogType.Loading);
 
@@ -119,6 +119,11 @@ namespace OtherLoader
 
                                         if (!IM.CDefSubInfo.ContainsKey(newSubCat.Subcat)) IM.CDefSubInfo.Add(newSubCat.Subcat, newSubCat);
                                         if (!IM.SCD.ContainsKey(newSubCat.Subcat)) IM.SCD.Add(newSubCat.Subcat, new List<ItemSpawnerID>());
+                                    }
+
+                                    else
+                                    {
+                                        OtherLogger.LogError("SubCategory type is already being used, and SubCategory will not be added! Make sure your subcategory is using a unique type! SubCategory Type: " + newSubCat.Subcat);
                                     }
                                 }
                             }
@@ -159,14 +164,21 @@ namespace OtherLoader
         {
             foreach (ItemSpawnerID id in IDAssets.allAssets)
             {
-                OtherLogger.Log("Adding itemspawner ID! Category: " + id.Category + ", SubCategory: " + id.SubCategory, OtherLogger.LogType.Loading);
+                OtherLogger.Log("Adding Itemspawner ID! Category: " + id.Category + ", SubCategory: " + id.SubCategory, OtherLogger.LogType.Loading);
 
-                IM.CD[id.Category].Add(id);
-                IM.SCD[id.SubCategory].Add(id);
+                if (IM.CD.ContainsKey(id.Category) && IM.SCD.ContainsKey(id.SubCategory)) {
+                    IM.CD[id.Category].Add(id);
+                    IM.SCD[id.SubCategory].Add(id);
 
-                if (!ManagerSingleton<IM>.Instance.SpawnerIDDic.ContainsKey(id.ItemID))
+                    if (!ManagerSingleton<IM>.Instance.SpawnerIDDic.ContainsKey(id.ItemID))
+                    {
+                        ManagerSingleton<IM>.Instance.SpawnerIDDic[id.ItemID] = id;
+                    }
+                }
+
+                else
                 {
-                    ManagerSingleton<IM>.Instance.SpawnerIDDic[id.ItemID] = id;
+                    OtherLogger.LogError("ItemSpawnerID could not be added, because either the main category or subcategory were not loaded! Item will not appear in the itemspawner! Item Display Name: " + id.DisplayName);
                 }
             }
         }
@@ -177,7 +189,14 @@ namespace OtherLoader
             foreach (FVRObject item in fvrObjects.allAssets)
             {
                 if (item == null) continue;
+
                 OtherLogger.Log("Loading FVRObject: " + item.ItemID, OtherLogger.LogType.Loading);
+
+                if (IM.OD.ContainsKey(item.ItemID))
+                {
+                    OtherLogger.LogError("The ItemID of FVRObject is already used! Item will not be loaded! ItemID: " + item.ItemID);
+                    continue;
+                }
 
                 item.m_anvilPrefab.Bundle = file.Path;
 
@@ -256,7 +275,7 @@ namespace OtherLoader
                     }
                     else
                     {
-                        OtherLogger.LogWarning("Ammo class already exists for bullet type! Bullet will not be loaded! Type: " + data.Type + ", Class: " + roundClass.Class);
+                        OtherLogger.LogError("Ammo class already exists for bullet type! Bullet will not be loaded! Type: " + data.Type + ", Class: " + roundClass.Class);
                         return;
                     }
 
