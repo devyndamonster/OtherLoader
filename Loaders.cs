@@ -27,11 +27,11 @@ namespace OtherLoader
             }
 
             //First, we want to load the asset bundle itself
-            OtherLogger.Log("Beginning async loading of mod: " + mod.Info.Name, OtherLogger.LogType.General);
+            OtherLogger.Log("Beginning async loading of mod: " + mod.Info.Name, OtherLogger.LogType.Loading);
             LoaderStatus.AddLoader(mod.Info.Guid);
 
             //Load the bytes of the bundle into memory
-            ResultYieldInstruction<byte[]> bundleYieldable = LoaderUtils.DelayedByteReader(file);
+            ResultYieldInstruction<byte[]> bundleYieldable = stage.DelayedReaders.Get<byte[]>()(file);
             yield return bundleYieldable;
             byte[] bundleBytes = bundleYieldable.Result;
 
