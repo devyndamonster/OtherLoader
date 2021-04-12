@@ -33,8 +33,6 @@ Once you have your asset bundle inside a `.Deli` file, you just need to point to
     "Devyn Myers"
   ],
   "assets": {
-    "patcher": {},
-    "setup": {},
     "runtime": {
         "YourAssetBundleName": "h3vr.otherloader.deli:item",
         "AnotherAssetBundleName": "h3vr.otherloader.deli:item"
