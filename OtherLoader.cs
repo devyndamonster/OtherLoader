@@ -31,7 +31,6 @@ namespace OtherLoader
 
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
 
-            Stages.Setup += DuringSetup;
             Stages.Runtime += DuringRuntime;
         }
 
