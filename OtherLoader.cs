@@ -21,6 +21,8 @@ namespace OtherLoader
         public static ConfigEntry<bool> EnableLogging;
         public static ConfigEntry<bool> LogLoading;
 
+        private static bool itemDBGenerated = false;
+
         private void Awake()
         {
             LoadConfigFile();
@@ -29,6 +31,7 @@ namespace OtherLoader
 
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
 
+            Stages.Setup += DuringSetup;
             Stages.Runtime += DuringRuntime;
         }
 
@@ -56,12 +59,11 @@ namespace OtherLoader
                 );
         }
 
-
         private void DuringRuntime(RuntimeStage stage)
         {
-            LoaderUtils.DelayedByteReader = stage.DelayedReaders.Get<byte[]>();
             LoaderUtils.ImmediateByteReader = stage.ImmediateReaders.Get<byte[]>();
-            stage.RuntimeAssetLoaders[Source, "item"] = new ItemLoader().LoadAsset;
+            LoaderUtils.DelayedByteReader = stage.DelayedReaders.Get<byte[]>();
+            stage.RuntimeAssetLoaders[Source, "item"] = new ItemLoader().LoadAssetAsync;
         }
 
 

@@ -19,29 +19,31 @@ namespace OtherLoader
     public class ItemLoader
     {
 
-        public IEnumerator LoadAsset(RuntimeStage stage, Mod mod, IHandle handle)
+        public IEnumerator LoadAssetAsync(RuntimeStage stage, Mod mod, IHandle handle)
         {
             if (handle is not IFileHandle file)
             {
                 throw new ArgumentException("Could not load item, make sure you are pointing to the asset bundle correctly");
             }
 
+            string uniqueAssetID = mod.Info.Guid + " : " + file.Name;
+
             //First, we want to load the asset bundle itself
-            OtherLogger.Log("Beginning async loading of mod: " + mod.Info.Name, OtherLogger.LogType.Loading);
-            LoaderStatus.AddLoader(mod.Info.Guid);
+            OtherLogger.Log("Beginning async loading of mod: " + uniqueAssetID, OtherLogger.LogType.Loading);
+            LoaderStatus.AddLoader(uniqueAssetID);
 
             //Load the bytes of the bundle into memory
             ResultYieldInstruction<byte[]> bundleYieldable = stage.DelayedReaders.Get<byte[]>()(file);
             yield return bundleYieldable;
             byte[] bundleBytes = bundleYieldable.Result;
 
-            LoaderStatus.UpdateProgress(mod.Info.Guid, 0.25f);
+            LoaderStatus.UpdateProgress(uniqueAssetID, 0.25f);
 
             //Now get the asset bundle from those bytes
             AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundleFromBytes(bundleBytes);
             yield return bundle;
 
-            LoaderStatus.UpdateProgress(mod.Info.Guid, 0.5f);
+            LoaderStatus.UpdateProgress(uniqueAssetID, 0.5f);
 
             if (bundle.Result == null)
             {
@@ -52,43 +54,43 @@ namespace OtherLoader
             //Now that the asset bundle is loaded, we need to load all the FVRObjects
             AssetBundleRequest fvrObjects = bundle.Result.LoadAllAssetsAsync<FVRObject>();
             yield return fvrObjects;
-            LoadFVRObjects(file, fvrObjects);
+            LoadFVRObjects(uniqueAssetID, fvrObjects.allAssets);
 
             //Now all the FVRObjects are loaded, we can load the bullet data
             AssetBundleRequest bulletData = bundle.Result.LoadAllAssetsAsync<FVRFireArmRoundDisplayData>();
             yield return bulletData;
-            LoadBulletData(bulletData);
+            LoadBulletData(bulletData.allAssets);
 
-            LoaderStatus.UpdateProgress(mod.Info.Guid, 0.75f);
+            LoaderStatus.UpdateProgress(uniqueAssetID, 0.75f);
 
             //Before we load the spawnerIDs, we must add any new spawner category definitions
             AssetBundleRequest spawnerCats = bundle.Result.LoadAllAssetsAsync<ItemSpawnerCategoryDefinitions>();
             yield return spawnerCats;
-            LoadSpawnerCategories(spawnerCats);
+            LoadSpawnerCategories(spawnerCats.allAssets);
 
             //Finally, add all the items to the spawner
             AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
             yield return spawnerIDs;
-            LoadSpawnerIDs(spawnerIDs);
+            LoadSpawnerIDs(spawnerIDs.allAssets);
             
             //If OptimizeMemory is true, we unload the asset bundle. If it's not true, the asset bundle will remain loaded, and the reference to it will be kept in the AnvilManager
-            OtherLoader.BundleFiles.Add(file.Path, file);
+            OtherLoader.BundleFiles.Add(uniqueAssetID, file);
             if (OtherLoader.OptimizeMemory.Value)
             {
                 bundle.Result.Unload(false);
             }
             else
             {
-                AnvilManager.m_bundles.Add(file.Path, bundle);
+                AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             }
 
-            LoaderStatus.RemoveLoader(mod.Info.Guid);
+            LoaderStatus.RemoveLoader(uniqueAssetID);
         }
 
 
-        private void LoadSpawnerCategories(AssetBundleRequest IDAssets)
+        private void LoadSpawnerCategories(UnityEngine.Object[] allAssets)
         {
-            foreach (ItemSpawnerCategoryDefinitions newLoadedCats in IDAssets.allAssets)
+            foreach (ItemSpawnerCategoryDefinitions newLoadedCats in allAssets)
             {
                 foreach (ItemSpawnerCategoryDefinitions.Category newCategory in newLoadedCats.Categories)
                 {
@@ -160,9 +162,9 @@ namespace OtherLoader
         }
 
 
-        private void LoadSpawnerIDs(AssetBundleRequest IDAssets)
+        private void LoadSpawnerIDs(UnityEngine.Object[] allAssets)
         {
-            foreach (ItemSpawnerID id in IDAssets.allAssets)
+            foreach (ItemSpawnerID id in allAssets)
             {
                 OtherLogger.Log("Adding Itemspawner ID! Category: " + id.Category + ", SubCategory: " + id.SubCategory, OtherLogger.LogType.Loading);
 
@@ -184,9 +186,9 @@ namespace OtherLoader
         }
 
 
-        private void LoadFVRObjects(IFileHandle file, AssetBundleRequest fvrObjects)
+        private void LoadFVRObjects(string bundleID, UnityEngine.Object[] allAssets)
         {
-            foreach (FVRObject item in fvrObjects.allAssets)
+            foreach (FVRObject item in allAssets)
             {
                 if (item == null) continue;
 
@@ -198,7 +200,7 @@ namespace OtherLoader
                     continue;
                 }
 
-                item.m_anvilPrefab.Bundle = file.Path;
+                item.m_anvilPrefab.Bundle = bundleID;
 
                 IM.OD.Add(item.ItemID, item);
                 ManagerSingleton<IM>.Instance.odicTagCategory.AddOrCreate(item.Category).Add(item);
@@ -224,9 +226,9 @@ namespace OtherLoader
         }
 
 
-        private void LoadBulletData(AssetBundleRequest bulletAssets)
+        private void LoadBulletData(UnityEngine.Object[] allAssets)
         {
-            foreach (FVRFireArmRoundDisplayData data in bulletAssets.allAssets)
+            foreach (FVRFireArmRoundDisplayData data in allAssets)
             {
                 if (data == null) continue;
 
