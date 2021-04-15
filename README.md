@@ -25,7 +25,7 @@ Once you have your asset bundle inside a `.Deli` file, you just need to point to
   "version": "0.1.0",
   "require": "0.3.1",
   "dependencies": {
-      "h3vr.otherloader.deli": "0.1.0"
+      "h3vr.otherloader.deli": "0.1.2"
   },
   "name": "ExampleAsset",
   "description": "Example",
