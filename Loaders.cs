@@ -19,14 +19,28 @@ namespace OtherLoader
     public class ItemLoader
     {
 
-        public IEnumerator LoadAssetAsync(RuntimeStage stage, Mod mod, IHandle handle)
+        public IEnumerator StartAssetLoad(RuntimeStage stage, Mod mod, IHandle handle)
         {
             if (handle is not IFileHandle file)
             {
                 throw new ArgumentException("Could not load item, make sure you are pointing to the asset bundle correctly");
             }
 
+            AnvilManager.Run(LoadAssetAsync(stage, mod, file));
+
+            yield return null;
+        }
+
+
+        public IEnumerator LoadAssetAsync(RuntimeStage stage, Mod mod, IFileHandle file)
+        {
             string uniqueAssetID = mod.Info.Guid + " : " + file.Name;
+
+            //If there are many active loaders at once, we should wait our turn
+            while(OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumLoaders >= OtherLoader.MaxActiveLoaders)
+            {
+                yield return null;
+            }
 
             //First, we want to load the asset bundle itself
             OtherLogger.Log("Beginning async loading of mod: " + uniqueAssetID, OtherLogger.LogType.Loading);

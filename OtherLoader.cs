@@ -17,11 +17,12 @@ namespace OtherLoader
     public class OtherLoader : DeliBehaviour
     {
         public static Dictionary<string, IFileHandle> BundleFiles = new Dictionary<string, IFileHandle>();
+        private static ConfigEntry<int> MaxActiveLoadersConfig;
         public static ConfigEntry<bool> OptimizeMemory;
         public static ConfigEntry<bool> EnableLogging;
         public static ConfigEntry<bool> LogLoading;
 
-        private static bool itemDBGenerated = false;
+        public static int MaxActiveLoaders = 0;
 
         private void Awake()
         {
@@ -56,13 +57,22 @@ namespace OtherLoader
                 false,
                 "When enabled, OtherLoader will log additional useful information during the loading process. EnableLogging must be set to true for this to have an effect"
                 );
+
+            MaxActiveLoadersConfig = Source.Config.Bind(
+                "General",
+                "MaxActiveLoaders",
+                0,
+                "Sets the number of mods that can be loading at once. Values less than 1 will result in all mods being loaded at the same time"
+                );
+
+            MaxActiveLoaders = MaxActiveLoadersConfig.Value;
         }
 
         private void DuringRuntime(RuntimeStage stage)
         {
             LoaderUtils.ImmediateByteReader = stage.ImmediateReaders.Get<byte[]>();
             LoaderUtils.DelayedByteReader = stage.DelayedReaders.Get<byte[]>();
-            stage.RuntimeAssetLoaders[Source, "item"] = new ItemLoader().LoadAssetAsync;
+            stage.RuntimeAssetLoaders[Source, "item"] = new ItemLoader().StartAssetLoad;
         }
 
 

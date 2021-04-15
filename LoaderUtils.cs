@@ -60,6 +60,8 @@ namespace OtherLoader
     {
         private static Dictionary<string, float> activeLoaders = new Dictionary<string, float>();
 
+        public static int NumLoaders { get => activeLoaders.Count; }
+
         public static float GetLoaderProgress()
         {
             if (activeLoaders.Count == 0) return 1;
@@ -77,7 +79,7 @@ namespace OtherLoader
         public static void AddLoader(string modID)
         {
             if (!activeLoaders.ContainsKey(modID)) activeLoaders.Add(modID, 0);
-            else OtherLogger.LogError("Tried to track progress on a mod that is already being tracked! ModID: " + modID);
+            else throw new Exception("Tried to track progress on a mod that is already being tracked! ModID: " + modID);
         }
 
         public static void RemoveLoader(string modID)
@@ -89,6 +91,7 @@ namespace OtherLoader
         {
             if(activeLoaders.ContainsKey(modID)) activeLoaders[modID] = progress;
         }
+
 
     }
 
