@@ -126,7 +126,7 @@ namespace OtherLoader
 
         private IEnumerator LoadLegacyAssetAsync(string path)
         {
-            string uniqueAssetID = "Legacy : " + path;
+            string uniqueAssetID = "Legacy : " + Path.GetFileName(path);
 
             //If there are many active loaders at once, we should wait our turn
             while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumLoaders >= OtherLoader.MaxActiveLoaders)
