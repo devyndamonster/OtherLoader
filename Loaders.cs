@@ -31,8 +31,29 @@ namespace OtherLoader
             yield return null;
         }
 
+        public void LoadLegacyAssets()
+        {
+            string legacyPath = Application.dataPath.Replace("/h3vr_Data", "/VirtualObjects");
 
-        public IEnumerator LoadAssetAsync(RuntimeStage stage, Mod mod, IFileHandle file)
+            if (!Directory.Exists(legacyPath))
+            {
+                Directory.CreateDirectory(legacyPath);
+            }
+
+            foreach(string bundlePath in Directory.GetFiles(legacyPath, "*", SearchOption.AllDirectories))
+            {
+                //Only allow files without file extensions to be loaded (assumed to be an asset bundle)
+                if(Path.GetFileName(bundlePath) != Path.GetFileNameWithoutExtension(bundlePath))
+                {
+                    continue;
+                }
+
+                AnvilManager.Run(LoadLegacyAssetAsync(bundlePath));
+            }
+        }
+
+
+        private IEnumerator LoadAssetAsync(RuntimeStage stage, Mod mod, IFileHandle file)
         {
             string uniqueAssetID = mod.Info.Guid + " : " + file.Name;
 
@@ -89,6 +110,68 @@ namespace OtherLoader
             
             //If OptimizeMemory is true, we unload the asset bundle. If it's not true, the asset bundle will remain loaded, and the reference to it will be kept in the AnvilManager
             OtherLoader.BundleFiles.Add(uniqueAssetID, file);
+            if (OtherLoader.OptimizeMemory.Value)
+            {
+                bundle.Result.Unload(false);
+            }
+            else
+            {
+                AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
+            }
+
+            LoaderStatus.RemoveLoader(uniqueAssetID);
+        }
+
+
+
+        private IEnumerator LoadLegacyAssetAsync(string path)
+        {
+            string uniqueAssetID = "Legacy : " + path;
+
+            //If there are many active loaders at once, we should wait our turn
+            while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumLoaders >= OtherLoader.MaxActiveLoaders)
+            {
+                yield return null;
+            }
+
+            //First, we want to load the asset bundle itself
+            OtherLogger.Log("Beginning async loading of legacy mod: " + uniqueAssetID, OtherLogger.LogType.Loading);
+            LoaderStatus.AddLoader(uniqueAssetID);
+            AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundleFromPath(path);
+            yield return bundle;
+
+            LoaderStatus.UpdateProgress(uniqueAssetID, 0.5f);
+
+            if (bundle.Result == null)
+            {
+                OtherLogger.LogError("Asset Bundle was null!");
+                yield break;
+            }
+
+            //Now that the asset bundle is loaded, we need to load all the FVRObjects
+            AssetBundleRequest fvrObjects = bundle.Result.LoadAllAssetsAsync<FVRObject>();
+            yield return fvrObjects;
+            LoadFVRObjects(uniqueAssetID, fvrObjects.allAssets);
+
+            //Now all the FVRObjects are loaded, we can load the bullet data
+            AssetBundleRequest bulletData = bundle.Result.LoadAllAssetsAsync<FVRFireArmRoundDisplayData>();
+            yield return bulletData;
+            LoadBulletData(bulletData.allAssets);
+
+            LoaderStatus.UpdateProgress(uniqueAssetID, 0.75f);
+
+            //Before we load the spawnerIDs, we must add any new spawner category definitions
+            AssetBundleRequest spawnerCats = bundle.Result.LoadAllAssetsAsync<ItemSpawnerCategoryDefinitions>();
+            yield return spawnerCats;
+            LoadSpawnerCategories(spawnerCats.allAssets);
+
+            //Finally, add all the items to the spawner
+            AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
+            yield return spawnerIDs;
+            LoadSpawnerIDs(spawnerIDs.allAssets);
+
+            //If OptimizeMemory is true, we unload the asset bundle. If it's not true, the asset bundle will remain loaded, and the reference to it will be kept in the AnvilManager
+            OtherLoader.LegacyBundles.Add(uniqueAssetID, path);
             if (OtherLoader.OptimizeMemory.Value)
             {
                 bundle.Result.Unload(false);

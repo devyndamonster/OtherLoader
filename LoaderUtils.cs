@@ -53,6 +53,14 @@ namespace OtherLoader
             return (AnvilCallback<AssetBundle>)anvilCallbackBase;
         }
 
+        public static AnvilCallback<AssetBundle> LoadAssetBundleFromPath(string path)
+        {
+            AsyncOperation request = AssetBundle.LoadFromFileAsync(path);
+
+            AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
+            return (AnvilCallback<AssetBundle>)anvilCallbackBase;
+        }
+
     }
 
 
