@@ -13,7 +13,8 @@ OtherLoader is an asset loader for H3VR, which functions similarly to other load
 1. Install the [Deli Mod Loader](https://github.com/Deli-Counter/Deli)
     - Deli requires the x64 version of BepInEx, you can find installation instructions for that [here]
 2. Drag the OtherLoader Deli file into the `Deli/mods` folder
-    - Any custom items that use OtherLoader also belong in the `Deli/mods` folder
+    - Custom items packaged as a .Deli file belong in the `Deli/mods` folder
+    - Legacy custom items (the ones made for LSIIC) go into the `Deli/mods/legacy/LegacyVirtualObjects`
 
 ## Making mods compatible with OtherLoader
 OtherLoader works similarly to LSIIC, in that it loads asset bundles into the game. Any custom item that was made for LSIIC can also be used with OtherLoader by simply packaging the asset bundles into a `.Deli` file.
