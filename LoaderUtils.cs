@@ -67,32 +67,43 @@ namespace OtherLoader
     public static class LoaderStatus
     {
         private static Dictionary<string, float> activeLoaders = new Dictionary<string, float>();
+        private static List<string> trackedLoaders = new List<string>();
 
         public static int NumLoaders { get => activeLoaders.Count; }
 
         public static float GetLoaderProgress()
         {
-            if (activeLoaders.Count == 0) return 1;
+            if (trackedLoaders.Count == 0) return 1;
 
-            float minProgress = activeLoaders.Values.First();
+            float totalProgress = 0;
 
             foreach(float prog in activeLoaders.Values)
             {
-                minProgress = Mathf.Min(minProgress, prog);
+                totalProgress += prog;
             }
 
-            return minProgress;
+            return totalProgress / trackedLoaders.Count;
         }
 
         public static void AddLoader(string modID)
         {
             if (!activeLoaders.ContainsKey(modID)) activeLoaders.Add(modID, 0);
-            else throw new Exception("Tried to track progress on a mod that is already being tracked! ModID: " + modID);
         }
 
         public static void RemoveLoader(string modID)
         {
             if (activeLoaders.ContainsKey(modID)) activeLoaders.Remove(modID);
+        }
+
+        public static void TrackLoader(string modID)
+        {
+            if (!trackedLoaders.Contains(modID)) trackedLoaders.Add(modID);
+            else throw new Exception("Tried to track progress on a mod that is already being tracked! ModID: " + modID);
+        }
+
+        public static void StopTrackingLoader(string modID)
+        {
+            trackedLoaders.Remove(modID);
         }
 
         public static void UpdateProgress(string modID, float progress)

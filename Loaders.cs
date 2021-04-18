@@ -33,7 +33,7 @@ namespace OtherLoader
 
         public void LoadLegacyAssets()
         {
-            string legacyPath = Application.dataPath.Replace("/h3vr_Data", "/VirtualObjects");
+            string legacyPath = Application.dataPath.Replace("/h3vr_Data", "/Deli/mods/legacy/LegacyVirtualObjects");
 
             if (!Directory.Exists(legacyPath))
             {
@@ -57,28 +57,32 @@ namespace OtherLoader
         {
             string uniqueAssetID = mod.Info.Guid + " : " + file.Name;
 
+            LoaderStatus.TrackLoader(uniqueAssetID);
+
             //If there are many active loaders at once, we should wait our turn
-            while(OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumLoaders >= OtherLoader.MaxActiveLoaders)
+            while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumLoaders >= OtherLoader.MaxActiveLoaders)
             {
                 yield return null;
             }
 
+            LoaderStatus.AddLoader(uniqueAssetID);
+
             //First, we want to load the asset bundle itself
             OtherLogger.Log("Beginning async loading of mod: " + uniqueAssetID, OtherLogger.LogType.Loading);
-            LoaderStatus.AddLoader(uniqueAssetID);
+            LoaderStatus.UpdateProgress(uniqueAssetID, UnityEngine.Random.Range(.1f, .3f));
 
             //Load the bytes of the bundle into memory
             ResultYieldInstruction<byte[]> bundleYieldable = stage.DelayedReaders.Get<byte[]>()(file);
             yield return bundleYieldable;
             byte[] bundleBytes = bundleYieldable.Result;
 
-            LoaderStatus.UpdateProgress(uniqueAssetID, 0.25f);
+            LoaderStatus.UpdateProgress(uniqueAssetID, UnityEngine.Random.Range(.4f, .7f));
 
             //Now get the asset bundle from those bytes
             AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundleFromBytes(bundleBytes);
             yield return bundle;
 
-            LoaderStatus.UpdateProgress(uniqueAssetID, 0.5f);
+            LoaderStatus.UpdateProgress(uniqueAssetID, 0.9f);
 
             if (bundle.Result == null)
             {
@@ -95,8 +99,6 @@ namespace OtherLoader
             AssetBundleRequest bulletData = bundle.Result.LoadAllAssetsAsync<FVRFireArmRoundDisplayData>();
             yield return bulletData;
             LoadBulletData(bulletData.allAssets);
-
-            LoaderStatus.UpdateProgress(uniqueAssetID, 0.75f);
 
             //Before we load the spawnerIDs, we must add any new spawner category definitions
             AssetBundleRequest spawnerCats = bundle.Result.LoadAllAssetsAsync<ItemSpawnerCategoryDefinitions>();
@@ -119,6 +121,7 @@ namespace OtherLoader
                 AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             }
 
+            LoaderStatus.StopTrackingLoader(uniqueAssetID);
             LoaderStatus.RemoveLoader(uniqueAssetID);
         }
 
@@ -128,19 +131,24 @@ namespace OtherLoader
         {
             string uniqueAssetID = "Legacy : " + Path.GetFileName(path);
 
+            LoaderStatus.TrackLoader(uniqueAssetID);
+
             //If there are many active loaders at once, we should wait our turn
             while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumLoaders >= OtherLoader.MaxActiveLoaders)
             {
                 yield return null;
             }
 
+            LoaderStatus.AddLoader(uniqueAssetID);
+
             //First, we want to load the asset bundle itself
             OtherLogger.Log("Beginning async loading of legacy mod: " + uniqueAssetID, OtherLogger.LogType.Loading);
-            LoaderStatus.AddLoader(uniqueAssetID);
+            LoaderStatus.UpdateProgress(uniqueAssetID, UnityEngine.Random.Range(.1f, .3f));
+
             AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundleFromPath(path);
             yield return bundle;
 
-            LoaderStatus.UpdateProgress(uniqueAssetID, 0.5f);
+            LoaderStatus.UpdateProgress(uniqueAssetID, 0.9f);
 
             if (bundle.Result == null)
             {
@@ -157,8 +165,6 @@ namespace OtherLoader
             AssetBundleRequest bulletData = bundle.Result.LoadAllAssetsAsync<FVRFireArmRoundDisplayData>();
             yield return bulletData;
             LoadBulletData(bulletData.allAssets);
-
-            LoaderStatus.UpdateProgress(uniqueAssetID, 0.75f);
 
             //Before we load the spawnerIDs, we must add any new spawner category definitions
             AssetBundleRequest spawnerCats = bundle.Result.LoadAllAssetsAsync<ItemSpawnerCategoryDefinitions>();
@@ -181,6 +187,7 @@ namespace OtherLoader
                 AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             }
 
+            LoaderStatus.StopTrackingLoader(uniqueAssetID);
             LoaderStatus.RemoveLoader(uniqueAssetID);
         }
 
