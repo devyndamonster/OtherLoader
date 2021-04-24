@@ -66,18 +66,19 @@ namespace OtherLoader
 
     public static class LoaderStatus
     {
-        private static Dictionary<string, float> activeLoaders = new Dictionary<string, float>();
-        private static List<string> trackedLoaders = new List<string>();
+        private static Dictionary<string, float> trackedLoaders = new Dictionary<string, float>();
+        private static List<string> activeLoaders = new List<string>();
 
-        public static int NumLoaders { get => activeLoaders.Count; }
+        public static int NumActiveLoaders { get => activeLoaders.Count; }
+        public static string LoadingItems { get => string.Join("\n", activeLoaders.ToArray()); }
 
         public static float GetLoaderProgress()
         {
-            if (trackedLoaders.Count == 0) return 1;
+            if (activeLoaders.Count == 0) return 1;
 
             float totalProgress = 0;
 
-            foreach(float prog in activeLoaders.Values)
+            foreach(float prog in trackedLoaders.Values)
             {
                 totalProgress += prog;
             }
@@ -85,30 +86,27 @@ namespace OtherLoader
             return totalProgress / trackedLoaders.Count;
         }
 
-        public static void AddLoader(string modID)
+        public static void AddActiveLoader(string modID)
         {
-            if (!activeLoaders.ContainsKey(modID)) activeLoaders.Add(modID, 0);
+            if (!activeLoaders.Contains(modID)) activeLoaders.Add(modID);
         }
 
-        public static void RemoveLoader(string modID)
+        public static void RemoveActiveLoader(string modID)
         {
-            if (activeLoaders.ContainsKey(modID)) activeLoaders.Remove(modID);
+            activeLoaders.Remove(modID);
         }
+
 
         public static void TrackLoader(string modID)
         {
-            if (!trackedLoaders.Contains(modID)) trackedLoaders.Add(modID);
+            if (!trackedLoaders.ContainsKey(modID)) trackedLoaders.Add(modID, 0);
             else throw new Exception("Tried to track progress on a mod that is already being tracked! ModID: " + modID);
         }
 
-        public static void StopTrackingLoader(string modID)
-        {
-            trackedLoaders.Remove(modID);
-        }
 
         public static void UpdateProgress(string modID, float progress)
         {
-            if(activeLoaders.ContainsKey(modID)) activeLoaders[modID] = progress;
+            if(trackedLoaders.ContainsKey(modID)) trackedLoaders[modID] = progress;
         }
 
 

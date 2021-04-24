@@ -60,15 +60,15 @@ namespace OtherLoader
             LoaderStatus.TrackLoader(uniqueAssetID);
 
             //If there are many active loaders at once, we should wait our turn
-            while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumLoaders >= OtherLoader.MaxActiveLoaders)
+            while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders)
             {
                 yield return null;
             }
 
-            LoaderStatus.AddLoader(uniqueAssetID);
+            LoaderStatus.AddActiveLoader(uniqueAssetID);
 
             //First, we want to load the asset bundle itself
-            OtherLogger.Log("Beginning async loading of mod: " + uniqueAssetID, OtherLogger.LogType.Loading);
+            OtherLogger.Log("Beginning async loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
             LoaderStatus.UpdateProgress(uniqueAssetID, UnityEngine.Random.Range(.1f, .3f));
 
             //Load the bytes of the bundle into memory
@@ -121,8 +121,10 @@ namespace OtherLoader
                 AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             }
 
-            LoaderStatus.StopTrackingLoader(uniqueAssetID);
-            LoaderStatus.RemoveLoader(uniqueAssetID);
+            LoaderStatus.UpdateProgress(uniqueAssetID, 1);
+            LoaderStatus.RemoveActiveLoader(uniqueAssetID);
+            OtherLogger.Log("Completed loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
+
         }
 
 
@@ -134,15 +136,15 @@ namespace OtherLoader
             LoaderStatus.TrackLoader(uniqueAssetID);
 
             //If there are many active loaders at once, we should wait our turn
-            while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumLoaders >= OtherLoader.MaxActiveLoaders)
+            while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders)
             {
                 yield return null;
             }
 
-            LoaderStatus.AddLoader(uniqueAssetID);
+            LoaderStatus.AddActiveLoader(uniqueAssetID);
 
             //First, we want to load the asset bundle itself
-            OtherLogger.Log("Beginning async loading of legacy mod: " + uniqueAssetID, OtherLogger.LogType.Loading);
+            OtherLogger.Log("Beginning async loading of legacy asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
             LoaderStatus.UpdateProgress(uniqueAssetID, UnityEngine.Random.Range(.1f, .3f));
 
             AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundleFromPath(path);
@@ -187,8 +189,9 @@ namespace OtherLoader
                 AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             }
 
-            LoaderStatus.StopTrackingLoader(uniqueAssetID);
-            LoaderStatus.RemoveLoader(uniqueAssetID);
+            LoaderStatus.UpdateProgress(uniqueAssetID, 1);
+            LoaderStatus.RemoveActiveLoader(uniqueAssetID);
+            OtherLogger.Log("Completed loading of legacy asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
         }
 
 
