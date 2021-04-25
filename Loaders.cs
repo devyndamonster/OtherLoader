@@ -110,17 +110,9 @@ namespace OtherLoader
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
             
-            //If OptimizeMemory is true, we unload the asset bundle. If it's not true, the asset bundle will remain loaded, and the reference to it will be kept in the AnvilManager
             OtherLoader.BundleFiles.Add(uniqueAssetID, file);
-            if (OtherLoader.OptimizeMemory.Value)
-            {
-                bundle.Result.Unload(false);
-            }
-            else
-            {
-                AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
-            }
-
+            AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
+            
             LoaderStatus.UpdateProgress(uniqueAssetID, 1);
             LoaderStatus.RemoveActiveLoader(uniqueAssetID);
             OtherLogger.Log("Completed loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
@@ -178,17 +170,9 @@ namespace OtherLoader
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
 
-            //If OptimizeMemory is true, we unload the asset bundle. If it's not true, the asset bundle will remain loaded, and the reference to it will be kept in the AnvilManager
             OtherLoader.LegacyBundles.Add(uniqueAssetID, path);
-            if (OtherLoader.OptimizeMemory.Value)
-            {
-                bundle.Result.Unload(false);
-            }
-            else
-            {
-                AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
-            }
-
+            AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
+            
             LoaderStatus.UpdateProgress(uniqueAssetID, 1);
             LoaderStatus.RemoveActiveLoader(uniqueAssetID);
             OtherLogger.Log("Completed loading of legacy asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);

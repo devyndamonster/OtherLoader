@@ -19,7 +19,7 @@ namespace OtherLoader
         public static Dictionary<string, IFileHandle> BundleFiles = new Dictionary<string, IFileHandle>();
         public static Dictionary<string, string> LegacyBundles = new Dictionary<string, string>();
         private static ConfigEntry<int> MaxActiveLoadersConfig;
-        public static ConfigEntry<bool> OptimizeMemory;
+        //public static ConfigEntry<bool> OptimizeMemory;
         public static ConfigEntry<bool> EnableLogging;
         public static ConfigEntry<bool> LogLoading;
 
@@ -38,12 +38,14 @@ namespace OtherLoader
 
         private void LoadConfigFile()
         {
+            /*
             OptimizeMemory = Source.Config.Bind(
                 "General",
                 "OptimizeMemory",
                 false,
                 "When enabled, modded assets will be loaded on-demand instead of kept in memory. Can cause small hiccups when spawning modded guns for the first time. Useful if you are low on RAM"
                 );
+            */
 
             EnableLogging = Source.Config.Bind(
                 "Logging",
@@ -62,7 +64,7 @@ namespace OtherLoader
             MaxActiveLoadersConfig = Source.Config.Bind(
                 "General",
                 "MaxActiveLoaders",
-                0,
+                6,
                 "Sets the number of mods that can be loading at once. Values less than 1 will result in all mods being loaded at the same time"
                 );
 
