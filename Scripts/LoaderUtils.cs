@@ -4,6 +4,7 @@ using Deli.Runtime.Yielding;
 using Deli.VFS;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
@@ -61,70 +62,52 @@ namespace OtherLoader
             return (AnvilCallback<AssetBundle>)anvilCallbackBase;
         }
 
-    }
 
-
-    public static class LoaderStatus
-    {
-        private static Dictionary<string, float> trackedLoaders = new Dictionary<string, float>();
-        private static List<string> activeLoaders = new List<string>();
-
-        public static int NumActiveLoaders { get => activeLoaders.Count; }
-        public static string LoadingItems { get => string.Join("\n", activeLoaders.ToArray()); }
-
-        public static float GetLoaderProgress()
+        public static Sprite LoadSprite(string path)
         {
-            if (activeLoaders.Count == 0) return 1;
-
-            float totalProgress = 0;
-
-            foreach(float prog in trackedLoaders.Values)
-            {
-                totalProgress += prog;
-            }
-
-            return totalProgress / trackedLoaders.Count;
+            Texture2D spriteTexture = LoadTexture(path);
+            if (spriteTexture == null) return null;
+            Sprite sprite = Sprite.Create(spriteTexture, new Rect(0, 0, spriteTexture.width, spriteTexture.height), new Vector2(0, 0), 100f);
+            sprite.name = Path.GetFileName(path);
+            return sprite;
         }
 
-        public static void AddActiveLoader(string modID)
+        public static Texture2D LoadTexture(string path)
         {
-            if (!activeLoaders.Contains(modID)) activeLoaders.Add(modID);
+            // Load a PNG or JPG file from disk to a Texture2D
+            // Returns null if load fails
+
+            Stream fileStream = File.OpenRead(path);
+            MemoryStream mem = new MemoryStream();
+
+            CopyStream(fileStream, mem);
+
+            byte[] fileData = mem.ToArray();
+
+            Texture2D tex2D = new Texture2D(2, 2);
+            if (tex2D.LoadImage(fileData)) return tex2D;
+
+            return null;
         }
 
-        public static void RemoveActiveLoader(string modID)
+        public static void SaveSpriteToPNG(Sprite image, string path)
         {
-            activeLoaders.Remove(modID);
+            SaveTextureToPNG(image.texture, path);
         }
 
-
-        public static void TrackLoader(string modID)
+        public static void SaveTextureToPNG(Texture2D texture, string path)
         {
-            if (!trackedLoaders.ContainsKey(modID)) trackedLoaders.Add(modID, 0);
-            else throw new Exception("Tried to track progress on a mod that is already being tracked! ModID: " + modID);
+            byte[] imageBytes = texture.EncodeToPNG();
+            File.WriteAllBytes(path, imageBytes);
         }
 
-
-        public static void UpdateProgress(string modID, float progress)
+        public static void CopyStream(Stream input, Stream output)
         {
-            if(trackedLoaders.ContainsKey(modID)) trackedLoaders[modID] = progress;
+            byte[] b = new byte[32768];
+            int r;
+            while ((r = input.Read(b, 0, b.Length)) > 0)
+                output.Write(b, 0, r);
         }
-
 
     }
-
-
-    /// <summary>
-    /// Credit to BlockBuilder57 for this incredibly useful extension
-    /// https://github.com/BlockBuilder57/LSIIC/blob/527927cb921c360d9c158008e24bdeaf2059440e/LSIIC/LSIIC.VirtualObjectsInjector/VirtualObjectsInjectorPlugin.cs#L146
-    /// </summary>
-    public static class DictionaryExtension
-    {
-        public static TValue AddOrCreate<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key) where TValue : new()
-        {
-            if (!dictionary.ContainsKey(key))
-                dictionary.Add(key, new TValue());
-            return dictionary[key];
-        }
-    }
-
 }

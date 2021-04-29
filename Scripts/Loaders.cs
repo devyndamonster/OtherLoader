@@ -172,10 +172,11 @@ namespace OtherLoader
 
             OtherLoader.LegacyBundles.Add(uniqueAssetID, path);
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
-            
+
+            OtherLogger.Log("Completed loading of legacy asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
+
             LoaderStatus.UpdateProgress(uniqueAssetID, 1);
             LoaderStatus.RemoveActiveLoader(uniqueAssetID);
-            OtherLogger.Log("Completed loading of legacy asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
         }
 
 
