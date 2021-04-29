@@ -29,6 +29,8 @@ namespace OtherLoader
         {
             LoadConfigFile();
 
+            CacheManager.Init();
+
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
 
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value);

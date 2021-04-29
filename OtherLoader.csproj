@@ -92,15 +92,20 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Loaders.cs" />
-    <Compile Include="LoaderUtils.cs" />
-    <Compile Include="OtherLoader.cs" />
-    <Compile Include="OtherLogger.cs" />
+    <Compile Include="Scripts\CacheManager.cs" />
+    <Compile Include="Scripts\Extensions.cs" />
+    <Compile Include="Scripts\Loaders.cs" />
+    <Compile Include="Scripts\LoaderStatus.cs" />
+    <Compile Include="Scripts\LoaderUtils.cs" />
+    <Compile Include="Scripts\ObjectTemplates\ItemSpawnerIDSerializable.cs" />
+    <Compile Include="Scripts\OtherLoader.cs" />
+    <Compile Include="Scripts\OtherLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\BepInEx.Core.5.4.0\build\BepInEx.Core.targets" Condition="Exists('packages\BepInEx.Core.5.4.0\build\BepInEx.Core.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
