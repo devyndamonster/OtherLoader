@@ -109,7 +109,7 @@ namespace OtherLoader
             AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
-            
+
             OtherLoader.BundleFiles.Add(uniqueAssetID, file);
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             
