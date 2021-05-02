@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace OtherLoader
 {
@@ -12,7 +13,6 @@ namespace OtherLoader
     {
         public bool IsDisplayedInMainEntry;
         public string DisplayName;
-        public string SpriteName;
         public string SubHeading;
         public string Description;
         public string InfographicName;
@@ -26,13 +26,13 @@ namespace OtherLoader
         public int UnlockCost;
         public bool IsUnlockedByDefault;
         public bool IsReward;
-
+        
         [JsonIgnore]
-        private ItemSpawnerID id;
+        public Sprite Sprite;
 
         public ItemSpawnerIDSerializable(ItemSpawnerID ID)
         {
-            id = ID;
+            if (ID == null) return;
 
             IsDisplayedInMainEntry = ID.IsDisplayedInMainEntry;
             DisplayName = ID.DisplayName;
@@ -58,50 +58,45 @@ namespace OtherLoader
 
             if(ID.SecondObject != null) SecondaryID = ID.SecondObject.ItemID ;
 
-            if (ID.Sprite != null) SpriteName = ID.Sprite.name + ".png";
-
-            if (ID.Infographic != null) InfographicName = ID.Infographic.name + ".png";
-
+            if (ID.Infographic != null && ID.Infographic.Poster != null) InfographicName = ID.Infographic.Poster.name;
         }
 
         public ItemSpawnerID GetItemSpawnerID(string path)
         {
-            if(id == null)
+            ItemSpawnerID id = new ItemSpawnerID();
+
+            id.IsDisplayedInMainEntry = IsDisplayedInMainEntry;
+            id.DisplayName = DisplayName;
+            id.SubHeading = SubHeading;
+            id.Description = Description;
+            id.Category = Category;
+            id.SubCategory = SubCategory;
+            id.ItemID = ItemID;
+            id.UsesLargeSpawnPad = UsesLargeSpawnPad;
+            id.UsesHugeSpawnPad = UsesHugeSpawnPad;
+            id.UnlockCost = UnlockCost;
+            id.IsUnlockedByDefault = IsUnlockedByDefault;
+            id.IsReward = IsReward;
+
+            if (IM.OD.ContainsKey(ItemID)) id.MainObject = IM.OD[ItemID];
+            else OtherLogger.LogError("FVRObject not found in object dictionary when building ItemSpawnerID from serialized data. MainObjectID: " + ItemID);
+
+            if (IM.OD.ContainsKey(SecondaryID)) id.SecondObject = IM.OD[SecondaryID];
+            else if (!string.IsNullOrEmpty(SecondaryID)) OtherLogger.LogError("FVRObject not found in object dictionary when building ItemSpawnerID from serialized data. SecondObjectID: " + SecondaryID);
+
+            if (Secondaries != null) id.Secondaries = Secondaries.Select(o => o.GetItemSpawnerID(path)).ToArray();
+
+            string iconPath = Path.Combine(path, CacheManager.ICON_PREFIX + ItemID + ".png");
+            if (File.Exists(iconPath))
             {
-                id = new ItemSpawnerID();
+                id.Sprite = LoaderUtils.LoadSprite(iconPath);
+            }
 
-                id.IsDisplayedInMainEntry = IsDisplayedInMainEntry;
-                id.DisplayName = DisplayName;
-                id.SubHeading = SubHeading;
-                id.Description = Description;
-                id.Category = Category;
-                id.SubCategory = SubCategory;
-                id.ItemID = ItemID;
-                id.UsesLargeSpawnPad = UsesLargeSpawnPad;
-                id.UsesHugeSpawnPad = UsesHugeSpawnPad;
-                id.UnlockCost = UnlockCost;
-                id.IsUnlockedByDefault = IsUnlockedByDefault;
-                id.IsReward = IsReward;
-
-                if (IM.OD.ContainsKey(ItemID)) id.MainObject = IM.OD[ItemID];
-                else OtherLogger.LogError("FVRObject not found in object dictionary when building ItemSpawnerID from serialized data. MainObjectID: " + ItemID);
-
-                if (IM.OD.ContainsKey(SecondaryID)) id.SecondObject = IM.OD[SecondaryID];
-                else if (!string.IsNullOrEmpty(SecondaryID)) OtherLogger.LogError("FVRObject not found in object dictionary when building ItemSpawnerID from serialized data. SecondObjectID: " + SecondaryID);
-
-                if (Secondaries != null) id.Secondaries = Secondaries.Select(o => o.GetItemSpawnerID(path)).ToArray();
-
-                if(File.Exists(path + SpriteName + ".png"))
-                {
-                    id.Sprite = LoaderUtils.LoadSprite(path + SpriteName + ".png");
-                }
-
-                if(File.Exists(path + InfographicName + ".png"))
-                {
-                    id.Infographic = new ItemSpawnerControlInfographic();
-                    id.Infographic.Poster = LoaderUtils.LoadTexture(path + InfographicName + ".png");
-                }
-
+            iconPath = Path.Combine(path, CacheManager.INFO_PREFIX + InfographicName + ".png");
+            if (File.Exists(iconPath))
+            {
+                id.Infographic = new ItemSpawnerControlInfographic();
+                id.Infographic.Poster = LoaderUtils.LoadTexture(iconPath);
             }
 
             return id;

@@ -97,31 +97,32 @@ namespace OtherLoader
 
         public static void SaveTextureToPNG(Texture2D texture, string path)
         {
-            try
-            {
-                byte[] imageBytes = texture.EncodeToPNG();
-                File.WriteAllBytes(path, imageBytes);
-            }
-            catch
-            {
+            byte[] imageBytes = texture.EncodeToPNG();
+            File.WriteAllBytes(path, imageBytes);
+        }
 
-                //This fun bundle of code was found here: https://answers.unity.com/questions/639947/how-to-get-the-pixels-of-a-texture-which-is-in-mem.html
-                texture.filterMode = FilterMode.Point;
-                RenderTexture rt = RenderTexture.GetTemporary(texture.width, texture.height);
-                rt.filterMode = FilterMode.Point;
-                RenderTexture.active = rt;
-                Graphics.Blit(texture, rt);
-                Texture2D img2 = new Texture2D(texture.width, texture.height);
-                img2.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
-                img2.Apply();
-                RenderTexture.active = null;
-                texture = img2;
+        public static void ForceSaveSpriteToPNG(Sprite image, string path)
+        {
+            ForceSaveTextureToPNG(image.texture, path);
+        }
+
+        public static void ForceSaveTextureToPNG(Texture2D texture, string path)
+        {
+            //This fun bundle of code was found here: https://answers.unity.com/questions/639947/how-to-get-the-pixels-of-a-texture-which-is-in-mem.html
+            texture.filterMode = FilterMode.Point;
+            RenderTexture rt = RenderTexture.GetTemporary(texture.width, texture.height);
+            rt.filterMode = FilterMode.Point;
+            RenderTexture.active = rt;
+            Graphics.Blit(texture, rt);
+            Texture2D img2 = new Texture2D(texture.width, texture.height);
+            img2.ReadPixels(new Rect(0, 0, texture.width, texture.height), 0, 0);
+            img2.Apply();
+            RenderTexture.active = null;
+            texture = img2;
 
 
-                byte[] imageBytes = texture.EncodeToPNG();
-                File.WriteAllBytes(path, imageBytes);
-            }
-            
+            byte[] imageBytes = texture.EncodeToPNG();
+            File.WriteAllBytes(path, imageBytes);
         }
 
         public static void CopyStream(Stream input, Stream output)

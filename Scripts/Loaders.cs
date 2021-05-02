@@ -110,6 +110,12 @@ namespace OtherLoader
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
 
+            if (!CacheManager.IsModCached(uniqueAssetID, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets))
+            {
+                CacheManager.DeleteCachedMod(uniqueAssetID);
+                yield return AnvilManager.Instance.StartCoroutine(CacheManager.CacheMod(uniqueAssetID, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets));
+            }
+
             OtherLoader.BundleFiles.Add(uniqueAssetID, file);
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             
@@ -169,6 +175,12 @@ namespace OtherLoader
             AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
+
+            if(!CacheManager.IsModCached(uniqueAssetID, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets))
+            {
+                CacheManager.DeleteCachedMod(uniqueAssetID);
+                yield return AnvilManager.Instance.StartCoroutine(CacheManager.CacheMod(uniqueAssetID, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets));
+            }
 
             OtherLoader.LegacyBundles.Add(uniqueAssetID, path);
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);

@@ -7,6 +7,7 @@ using System.Text;
 using UnityEngine;
 using Deli.Newtonsoft.Json;
 using Deli.Newtonsoft.Json.Converters;
+using System.Collections;
 
 namespace OtherLoader
 {
@@ -14,10 +15,12 @@ namespace OtherLoader
     {
         public static string CachePath;
 
-        private const string SPAWNER_ID_PREFIX = "SpawnerID_";
-        private const string FVROBJECT_PREFIX = "FVRObject_";
-        private const string AMMO_DATA_PREFIX = "AmmoData_";
-        private const string SPAWNER_CAT_PREFIX = "SpawnerCat_";
+        public const string SPAWNER_ID_PREFIX = "SpawnerID_";
+        public const string FVROBJECT_PREFIX = "FVRObject_";
+        public const string AMMO_DATA_PREFIX = "AmmoData_";
+        public const string SPAWNER_CAT_PREFIX = "SpawnerCat_";
+        public const string ICON_PREFIX = "Icon_";
+        public const string INFO_PREFIX = "Info_";
 
         public static void Init()
         {
@@ -48,7 +51,7 @@ namespace OtherLoader
             return true;
         }
 
-        public static void CacheMod(string assetBundleID, UnityEngine.Object[] itemSpawnerIDs, UnityEngine.Object[] FVRObjects, UnityEngine.Object[] ammoData, UnityEngine.Object[] itemSpawnerCats)
+        public static IEnumerator CacheMod(string assetBundleID, UnityEngine.Object[] itemSpawnerIDs, UnityEngine.Object[] FVRObjects, UnityEngine.Object[] ammoData, UnityEngine.Object[] itemSpawnerCats)
         {
             OtherLogger.Log("Caching Mod (" + assetBundleID + ")", OtherLogger.LogType.General);
 
@@ -56,11 +59,9 @@ namespace OtherLoader
             Directory.CreateDirectory(folderPath);
 
             //Yeah, I'm incrementing a number using a foreach loop. Cry about it
-            int prefixNum = 0;
             foreach(ItemSpawnerID spawnerID in itemSpawnerIDs)
             {
-                CacheItemSpawnerID(folderPath, spawnerID, prefixNum);
-                prefixNum += 1;
+                yield return AnvilManager.Instance.StartCoroutine(CacheItemSpawnerID(folderPath, spawnerID));
             }
         }
 
@@ -72,47 +73,84 @@ namespace OtherLoader
             }
         }
 
-        public static void CacheItemSpawnerID(string folderPath, ItemSpawnerID ID, int prefixNum)
+        public static IEnumerator CacheItemSpawnerID(string folderPath, ItemSpawnerID ID)
         {
             ItemSpawnerIDSerializable serID = new ItemSpawnerIDSerializable(ID);
 
             //Save the ItemSpawnerID to the cache
-            string filePath = Path.Combine(folderPath, SPAWNER_ID_PREFIX + prefixNum + ".json");
-            using (StreamWriter sw = File.CreateText(filePath))
+            string filePath = Path.Combine(folderPath, SPAWNER_ID_PREFIX + ID.ItemID + ".json");
+            if (!File.Exists(filePath))
             {
-                OtherLogger.Log("Caching SpawnerID (" + SPAWNER_ID_PREFIX + prefixNum + ")", OtherLogger.LogType.General);
-                string serData = JsonConvert.SerializeObject(serID, Formatting.Indented, new StringEnumConverter());
-                sw.WriteLine(serData);
-                sw.Close();
+                using (StreamWriter sw = File.CreateText(filePath))
+                {
+                    OtherLogger.Log("Caching SpawnerID (" + SPAWNER_ID_PREFIX + ID.ItemID + ")", OtherLogger.LogType.General);
+                    string serData = JsonConvert.SerializeObject(serID, Formatting.Indented, new StringEnumConverter());
+                    sw.WriteLine(serData);
+                    sw.Close();
+                }
             }
+            else
+            {
+                OtherLogger.LogError("A cached ItemSpawnerID is being overwritten (" + ID.ItemID + ")");
+            }
+
+            yield return null;
 
             //Save the main icon to the cache
-            string iconPath = Path.Combine(folderPath, "icon_" + prefixNum + ".png");
-            if(ID.Sprite != null)
+            string iconPath = Path.Combine(folderPath, ICON_PREFIX + ID.ItemID + ".png");
+            if (ID.Sprite != null)
             {
-                OtherLogger.Log("Caching Icon (icon_" + prefixNum + ")", OtherLogger.LogType.General);
-                LoaderUtils.SaveSpriteToPNG(ID.Sprite, iconPath);
-            }
-
-            //Save secondary icons to the cache
-            if(ID.Secondaries != null)
-            {
-                for(int i = 0; i < ID.Secondaries.Length; i++)
+                if (!File.Exists(iconPath))
                 {
-                    if (ID.Secondaries[i].Sprite == null) continue;
-
-                    OtherLogger.Log("Caching Secondary Icon (icon_" + prefixNum + "_" + i + ")", OtherLogger.LogType.General);
-                    iconPath = Path.Combine(folderPath, "icon_" + prefixNum + "_" + i + ".png");
-                    LoaderUtils.SaveSpriteToPNG(ID.Secondaries[i].Sprite, iconPath);
+                    OtherLogger.Log("Caching Icon (" + ICON_PREFIX + ID.ItemID + ")", OtherLogger.LogType.General);
+                    LoaderUtils.ForceSaveSpriteToPNG(ID.Sprite, iconPath);
                 }
             }
 
-            //Save infographic icons to the cache
-            if(ID.Infographic != null && ID.Infographic.Poster != null)
+            yield return null;
+
+            //Save the main infographic to cache
+            if (ID.Infographic != null && ID.Infographic.Poster != null)
             {
-                OtherLogger.Log("Caching Infographic (info_" + prefixNum + ")", OtherLogger.LogType.General);
-                iconPath = Path.Combine(folderPath, "info_" + prefixNum + ".png");
-                LoaderUtils.SaveTextureToPNG(ID.Infographic.Poster, iconPath);
+                iconPath = Path.Combine(folderPath, INFO_PREFIX + ID.Infographic.Poster.name + ".png");
+                if (!File.Exists(iconPath))
+                {
+                    OtherLogger.Log("Caching Infographic (" + INFO_PREFIX + ID.Infographic.Poster.name + ")", OtherLogger.LogType.General);
+                    LoaderUtils.ForceSaveTextureToPNG(ID.Infographic.Poster, iconPath);
+                }
+            }
+
+            yield return null;
+
+            //Save secondary icons and infographics to cache
+            if (ID.Secondaries != null)
+            {
+                for(int i = 0; i < ID.Secondaries.Length; i++)
+                {
+                    if (ID.Secondaries[i].Sprite != null)
+                    {
+                        iconPath = Path.Combine(folderPath, ICON_PREFIX + ID.Secondaries[i].ItemID + ".png");
+                        if (!File.Exists(iconPath))
+                        {
+                            OtherLogger.Log("Caching Secondary Icon (" + ICON_PREFIX + ID.Secondaries[i].ItemID + ")", OtherLogger.LogType.General);
+                            LoaderUtils.ForceSaveSpriteToPNG(ID.Secondaries[i].Sprite, iconPath);
+                        }
+                    }
+
+                    yield return null;
+
+                    if (ID.Secondaries[i].Infographic != null && ID.Secondaries[i].Infographic.Poster != null)
+                    {
+                        iconPath = Path.Combine(folderPath, INFO_PREFIX + ID.Secondaries[i].Infographic.Poster.name + ".png");
+                        if (!File.Exists(iconPath))
+                        {
+                            OtherLogger.Log("Caching Secondary Infographic (" + INFO_PREFIX + ID.Secondaries[i].Infographic.Poster.name + ")", OtherLogger.LogType.General);
+                            LoaderUtils.ForceSaveTextureToPNG(ID.Secondaries[i].Infographic.Poster, iconPath);
+                        }
+                    }
+
+                    yield return null;
+                }
             }
         }
 
