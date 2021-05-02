@@ -65,6 +65,19 @@ namespace OtherLoader
                 yield return null;
             }
 
+            int fileSize;
+            using (Stream s = file.OpenRead())
+            {
+                fileSize = (int)s.Length;
+                s.Close();
+            }
+
+            if (CacheManager.IsModCached(uniqueAssetID, fileSize))
+            {
+                OtherLogger.Log("Asset bundle is already cached (" + uniqueAssetID + ")", OtherLogger.LogType.General);
+                yield break;
+            }
+
             LoaderStatus.AddActiveLoader(uniqueAssetID);
 
             //First, we want to load the asset bundle itself
@@ -110,11 +123,8 @@ namespace OtherLoader
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
 
-            if (!CacheManager.IsModCached(uniqueAssetID, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets))
-            {
-                CacheManager.DeleteCachedMod(uniqueAssetID);
-                yield return AnvilManager.Instance.StartCoroutine(CacheManager.CacheMod(uniqueAssetID, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets));
-            }
+            CacheManager.DeleteCachedMod(uniqueAssetID);
+            yield return AnvilManager.Instance.StartCoroutine(CacheManager.CacheMod(uniqueAssetID, fileSize, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets));
 
             OtherLoader.BundleFiles.Add(uniqueAssetID, file);
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
@@ -137,6 +147,14 @@ namespace OtherLoader
             while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders)
             {
                 yield return null;
+            }
+
+            int fileSize = (int)(new FileInfo(path).Length);
+
+            if (CacheManager.IsModCached(uniqueAssetID, fileSize))
+            {
+                OtherLogger.Log("Asset bundle is already cached (" + uniqueAssetID + ")", OtherLogger.LogType.General);
+                yield break;
             }
 
             LoaderStatus.AddActiveLoader(uniqueAssetID);
@@ -176,12 +194,9 @@ namespace OtherLoader
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
 
-            if(!CacheManager.IsModCached(uniqueAssetID, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets))
-            {
-                CacheManager.DeleteCachedMod(uniqueAssetID);
-                yield return AnvilManager.Instance.StartCoroutine(CacheManager.CacheMod(uniqueAssetID, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets));
-            }
-
+            CacheManager.DeleteCachedMod(uniqueAssetID);
+            yield return AnvilManager.Instance.StartCoroutine(CacheManager.CacheMod(uniqueAssetID, fileSize, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets));
+            
             OtherLoader.LegacyBundles.Add(uniqueAssetID, path);
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
 

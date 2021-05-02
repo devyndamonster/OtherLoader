@@ -32,26 +32,28 @@ namespace OtherLoader
             }
         }
 
-        public static bool IsModCached(string assetBundleID, UnityEngine.Object[] itemSpawnerIDs, UnityEngine.Object[] FVRObjects, UnityEngine.Object[] ammoData, UnityEngine.Object[] itemSpawnerCats)
+        public static bool IsModCached(string assetBundleID, int fileSize)
         {
             string folderPath = ConvertIDToPath(assetBundleID);
-
             if (!Directory.Exists(folderPath)){
                 return false;
             }
 
-            if (Directory.GetFiles(folderPath, SPAWNER_ID_PREFIX + "*").Length != itemSpawnerIDs.Length) return false;
+            string dataPath = Path.Combine(folderPath, "CacheData.json");
+            if (!File.Exists(dataPath))
+            {
+                return false;
+            }
 
-            if (Directory.GetFiles(folderPath, FVROBJECT_PREFIX + "*").Length != FVRObjects.Length) return false;
+            string dataString = File.ReadAllText(dataPath);
+            CacheData data = JsonConvert.DeserializeObject<CacheData>(dataString);
 
-            if (Directory.GetFiles(folderPath, AMMO_DATA_PREFIX + "*").Length != ammoData.Length) return false;
-
-            if (Directory.GetFiles(folderPath, SPAWNER_CAT_PREFIX + "*").Length != itemSpawnerCats.Length) return false;
+            if (data.FileSize != fileSize) return false;
 
             return true;
         }
 
-        public static IEnumerator CacheMod(string assetBundleID, UnityEngine.Object[] itemSpawnerIDs, UnityEngine.Object[] FVRObjects, UnityEngine.Object[] ammoData, UnityEngine.Object[] itemSpawnerCats)
+        public static IEnumerator CacheMod(string assetBundleID, int fileSize, UnityEngine.Object[] itemSpawnerIDs, UnityEngine.Object[] FVRObjects, UnityEngine.Object[] ammoData, UnityEngine.Object[] itemSpawnerCats)
         {
             OtherLogger.Log("Caching Mod (" + assetBundleID + ")", OtherLogger.LogType.General);
 
@@ -59,9 +61,21 @@ namespace OtherLoader
             Directory.CreateDirectory(folderPath);
 
             //Yeah, I'm incrementing a number using a foreach loop. Cry about it
-            foreach(ItemSpawnerID spawnerID in itemSpawnerIDs)
+            foreach (ItemSpawnerID spawnerID in itemSpawnerIDs)
             {
                 yield return AnvilManager.Instance.StartCoroutine(CacheItemSpawnerID(folderPath, spawnerID));
+            }
+
+            //After everything is cached, we can save the cache data
+            string filePath = Path.Combine(folderPath, "CacheData.json");
+            using (StreamWriter sw = File.CreateText(filePath))
+            {
+                CacheData data = new CacheData();
+                data.FileSize = fileSize;
+
+                string serData = JsonConvert.SerializeObject(data, Formatting.Indented, new StringEnumConverter());
+                sw.WriteLine(serData);
+                sw.Close();
             }
         }
 
@@ -160,4 +174,10 @@ namespace OtherLoader
         }
 
     }
+
+    public class CacheData
+    {
+        public int FileSize;
+    }
+
 }

@@ -97,6 +97,7 @@
     <Compile Include="Scripts\Loaders.cs" />
     <Compile Include="Scripts\LoaderStatus.cs" />
     <Compile Include="Scripts\LoaderUtils.cs" />
+    <Compile Include="Scripts\ObjectTemplates\FVRObjectSerializable.cs" />
     <Compile Include="Scripts\ObjectTemplates\ItemSpawnerIDSerializable.cs" />
     <Compile Include="Scripts\OtherLoader.cs" />
     <Compile Include="Scripts\OtherLogger.cs" />
