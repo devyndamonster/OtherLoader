@@ -32,6 +32,7 @@ namespace OtherLoader
             CacheManager.Init();
 
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
+            Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));
 
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
 
@@ -130,27 +131,9 @@ namespace OtherLoader
         }
 
 
-        /*
-        [HarmonyPatch(typeof(AM), "getRoundMesh")]
-        [HarmonyPrefix]
-        private static bool BeforeMesh(FireArmRoundType rType, FireArmRoundClass rClass)
-        {
-            OtherLogger.LogInfo("Type: " + rType + ", Class: " + rClass);
-            OtherLogger.LogInfo("Is type in Dictionary: " + ManagerSingleton<AM>.Instance.TypeDic.ContainsKey(rType));
 
-            if (ManagerSingleton<AM>.Instance.TypeDic.ContainsKey(rType))
-            {
-                OtherLogger.LogInfo("Is class in Dictionary: " + ManagerSingleton<AM>.Instance.TypeDic[rType].ContainsKey(rClass));
 
-                foreach(FireArmRoundClass tempClass in ManagerSingleton<AM>.Instance.TypeDic[rType].Keys)
-                {
-                    OtherLogger.LogInfo("Dictionary did contain class: " + tempClass);
-                }
-            }
 
-            return true;
-        }
-        */
 
     }
 

@@ -90,10 +90,14 @@
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\UnityEngine.Core.5.6.0\lib\net35\UnityEngine.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>Libs\UnityEngine.UI.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Scripts\CacheManager.cs" />
     <Compile Include="Scripts\Extensions.cs" />
+    <Compile Include="Scripts\ItemSpawnerPatch.cs" />
     <Compile Include="Scripts\Loaders.cs" />
     <Compile Include="Scripts\LoaderStatus.cs" />
     <Compile Include="Scripts\LoaderUtils.cs" />

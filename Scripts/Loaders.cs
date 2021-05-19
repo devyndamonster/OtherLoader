@@ -267,6 +267,8 @@ namespace OtherLoader
                         currentCatsList.Add(newCategory);
                         IM.CDefs.Categories = currentCatsList.ToArray();
 
+                        OtherLogger.Log("Num CDefs: " + IM.CDefs.Categories.Length, OtherLogger.LogType.Loading);
+
                         if (!IM.CDefSubs.ContainsKey(newCategory.Cat)) IM.CDefSubs.Add(newCategory.Cat, new List<ItemSpawnerCategoryDefinitions.SubCategory>());
                         if (!IM.CDefInfo.ContainsKey(newCategory.Cat)) IM.CDefInfo.Add(newCategory.Cat, newCategory);
                         if (!IM.CD.ContainsKey(newCategory.Cat)) IM.CD.Add(newCategory.Cat, new List<ItemSpawnerID>());
@@ -280,10 +282,6 @@ namespace OtherLoader
                         }
                     }
                 }
-
-                
-
-                
             }
         }
 
