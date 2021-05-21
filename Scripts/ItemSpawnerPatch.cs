@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace OtherLoader
 {
@@ -440,20 +441,78 @@ namespace OtherLoader
             return visible;
         }
 
-
-
-
     }
 
 
     public class ItemSpawnerDataObject : MonoBehaviour
     {
+        public Text loadingText;
 
         public int currHomePage = 0;
         public int currCategoryPage = 0;
 
         public int maxHomePage = 0;
         public int maxCategoryPage = 0;
+
+
+        private void Awake()
+        {
+            CreateLoadingText();
+
+            loadingText.gameObject.SetActive(false);
+
+            LoaderStatus.ProgressUpdated += UpdateText;
+        }
+
+        private void UpdateText()
+        {
+            float progress = LoaderStatus.GetLoaderProgress();
+
+            if(progress < 1)
+            {
+                loadingText.gameObject.SetActive(true);
+                loadingText.text = "Loading Items : " + (int)(progress * 100) + "%";
+            }
+
+            else
+            {
+                loadingText.gameObject.SetActive(false);
+            }
+        }
+
+        private void CreateLoadingText()
+        {
+            OtherLogger.Log("Creating loading text on itemspawner", OtherLogger.LogType.General);
+
+            GameObject canvas = new GameObject("Canvas");
+            canvas.transform.SetParent(transform);
+            canvas.transform.rotation = transform.rotation;
+            canvas.transform.localPosition = Vector3.zero;
+
+            Canvas canvasComp = canvas.AddComponent<Canvas>();
+            RectTransform rect = canvasComp.GetComponent<RectTransform>();
+            canvasComp.renderMode = RenderMode.WorldSpace;
+            rect.sizeDelta = new Vector2(1, 1);
+
+            GameObject text = new GameObject("Text");
+            text.transform.SetParent(canvas.transform);
+            text.transform.rotation = transform.parent.rotation;
+            text.transform.localPosition = Vector3.zero + Vector3.up * 0.4f + Vector3.left * 0.25f;
+
+            text.AddComponent<CanvasRenderer>();
+            Text textComp = text.AddComponent<Text>();
+            Font ArialFont = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
+
+            textComp.text = "EXAMPLE TEXT";
+            textComp.alignment = TextAnchor.MiddleCenter;
+            textComp.fontSize = 32;
+            text.transform.localScale = new Vector3(0.002f, 0.002f, 0.002f);
+            textComp.font = ArialFont;
+            textComp.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            loadingText = textComp;
+        }
+
 
     }
 

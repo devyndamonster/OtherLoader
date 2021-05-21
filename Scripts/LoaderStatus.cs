@@ -5,6 +5,8 @@ using System.Text;
 
 namespace OtherLoader
 {
+    public delegate void StatusUpdate();
+
     public static class LoaderStatus
     {
         private static Dictionary<string, float> trackedLoaders = new Dictionary<string, float>();
@@ -13,6 +15,8 @@ namespace OtherLoader
 
         public static int NumActiveLoaders { get => activeLoaders.Count; }
         public static List<string> LoadingItems { get => new List<string>(activeLoaders); }
+
+        public static event StatusUpdate ProgressUpdated;
 
         public static float GetLoaderProgress()
         {
@@ -83,6 +87,8 @@ namespace OtherLoader
         public static void UpdateProgress(string modID, float progress)
         {
             if (trackedLoaders.ContainsKey(modID)) trackedLoaders[modID] = progress;
+
+            ProgressUpdated?.Invoke();
         }
     }
 }
