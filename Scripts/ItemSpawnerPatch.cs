@@ -365,6 +365,18 @@ namespace OtherLoader
         }
 
 
+        [HarmonyPatch(typeof(ItemSpawnerUI), "ButtonPress_DetailTile")]
+        [HarmonyPostfix]
+        private static void ButtonPressDetailPatch(int i, ItemSpawnerUI __instance)
+        {
+            if(__instance.m_IDSelectedForSpawn.Infographic != null)
+            {
+                __instance.ControlPoster.gameObject.SetActive(true);
+                __instance.ControlPoster.material.SetTexture("_MainTex", __instance.m_IDSelectedForSpawn.Infographic.Poster);
+            }
+        }
+
+
         public static int GetMaxHomePage()
         {
             int numCats = 0;
@@ -427,6 +439,9 @@ namespace OtherLoader
 
             return visible;
         }
+
+
+
 
     }
 
