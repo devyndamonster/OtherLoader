@@ -65,20 +65,6 @@ namespace OtherLoader
                 yield return null;
             }
 
-            /* Code for caching
-            int fileSize;
-            using (Stream s = file.OpenRead())
-            {
-                fileSize = (int)s.Length;
-                s.Close();
-            }
-
-            if (CacheManager.IsModCached(uniqueAssetID, fileSize))
-            {
-                OtherLogger.Log("Asset bundle is already cached (" + uniqueAssetID + ")", OtherLogger.LogType.General);
-                yield break;
-            }
-            */
 
             LoaderStatus.AddActiveLoader(uniqueAssetID);
 
@@ -105,6 +91,11 @@ namespace OtherLoader
                 yield break;
             }
 
+            //Load the mechanical accuracy entries
+            AssetBundleRequest accuracyCharts = bundle.Result.LoadAllAssetsAsync<FVRFireArmMechanicalAccuracyChart>();
+            yield return accuracyCharts;
+            LoadMechanicalAccuracyEntries(accuracyCharts.allAssets);
+
             //Now that the asset bundle is loaded, we need to load all the FVRObjects
             AssetBundleRequest fvrObjects = bundle.Result.LoadAllAssetsAsync<FVRObject>();
             yield return fvrObjects;
@@ -125,10 +116,6 @@ namespace OtherLoader
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
 
-            /*Code for caching
-            CacheManager.DeleteCachedMod(uniqueAssetID);
-            yield return AnvilManager.Instance.StartCoroutine(CacheManager.CacheMod(uniqueAssetID, fileSize, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets));
-            */
 
             OtherLoader.BundleFiles.Add(uniqueAssetID, file);
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
@@ -153,14 +140,6 @@ namespace OtherLoader
                 yield return null;
             }
 
-            /*Code for caching
-            int fileSize = (int)(new FileInfo(path).Length);
-            if (CacheManager.IsModCached(uniqueAssetID, fileSize))
-            {
-                OtherLogger.Log("Asset bundle is already cached (" + uniqueAssetID + ")", OtherLogger.LogType.General);
-                yield break;
-            }
-            */
 
             LoaderStatus.AddActiveLoader(uniqueAssetID);
 
@@ -179,7 +158,12 @@ namespace OtherLoader
                 yield break;
             }
 
-            //Now that the asset bundle is loaded, we need to load all the FVRObjects
+            //Load the mechanical accuracy entries
+            AssetBundleRequest accuracyCharts = bundle.Result.LoadAllAssetsAsync<FVRFireArmMechanicalAccuracyChart>();
+            yield return accuracyCharts;
+            LoadMechanicalAccuracyEntries(accuracyCharts.allAssets);
+
+            //Load all the FVRObjects
             AssetBundleRequest fvrObjects = bundle.Result.LoadAllAssetsAsync<FVRObject>();
             yield return fvrObjects;
             LoadFVRObjects(uniqueAssetID, fvrObjects.allAssets);
@@ -199,10 +183,6 @@ namespace OtherLoader
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
 
-            /*Code for caching
-            CacheManager.DeleteCachedMod(uniqueAssetID);
-            yield return AnvilManager.Instance.StartCoroutine(CacheManager.CacheMod(uniqueAssetID, fileSize, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets));
-            */
 
             OtherLoader.LegacyBundles.Add(uniqueAssetID, path);
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
@@ -211,6 +191,27 @@ namespace OtherLoader
 
             LoaderStatus.UpdateProgress(uniqueAssetID, 1);
             LoaderStatus.RemoveActiveLoader(uniqueAssetID);
+        }
+
+
+
+        private void LoadMechanicalAccuracyEntries(UnityEngine.Object[] allAssets)
+        {
+            foreach(FVRFireArmMechanicalAccuracyChart chart in allAssets)
+            {
+                foreach(FVRFireArmMechanicalAccuracyChart.MechanicalAccuracyEntry entry in chart.Entries)
+                {
+                    OtherLogger.Log("Loading new mechanical accuracy entry: " + entry.Class, OtherLogger.LogType.Loading);
+
+                    if (!AM.SMechanicalAccuracyDic.ContainsKey(entry.Class)){
+                        AM.SMechanicalAccuracyDic.Add(entry.Class, entry);
+                    }
+                    else
+                    {
+                        OtherLogger.LogError("Duplicate mechanical accuracy class found, will not use one of them! Make sure you're using unique mechanical accuracy classes!");
+                    }
+                }
+            }
         }
 
 

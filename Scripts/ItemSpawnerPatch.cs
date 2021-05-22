@@ -39,7 +39,6 @@ namespace OtherLoader
             __instance.B_Scan.SetActive(false);
             __instance.T_TopBar.text = "HOME";
 
-            OtherLogger.Log("Set mode to Home", OtherLogger.LogType.General);
 
             data.maxHomePage = GetMaxHomePage();
             if (data.currHomePage > data.maxHomePage) data.currHomePage = data.maxHomePage;
@@ -100,15 +99,10 @@ namespace OtherLoader
             __instance.B_Scan.SetActive(false);
             __instance.T_TopBar.text = "HOME | " + IM.CDefInfo[__instance.m_curCategory].DisplayName;
 
-            OtherLogger.Log("Set mode to Category", OtherLogger.LogType.General);
-
-            OtherLogger.Log("Curr category page before: " + data.currCategoryPage, OtherLogger.LogType.General);
 
             data.maxCategoryPage = GetMaxCategoryPage(IM.CDefInfo[__instance.m_curCategory]);
             if (data.currCategoryPage > data.maxCategoryPage) data.currCategoryPage = data.maxCategoryPage;
 
-            OtherLogger.Log("Curr category page after: " + data.currCategoryPage, OtherLogger.LogType.General);
-            OtherLogger.Log("Max category page: " + data.maxCategoryPage, OtherLogger.LogType.General);
 
             if (data.maxCategoryPage > 0)
             {
@@ -158,16 +152,13 @@ namespace OtherLoader
 
             List<ItemSpawnerCategoryDefinitions.Category> cats = GetVisibleCategories();
 
-            OtherLogger.Log("Visible categories: " + cats.Count, OtherLogger.LogType.General);
 
             int displayIndex = 0;
             for(int i = data.currHomePage * 10; i < cats.Count && displayIndex < 10; i++)
             {
-                OtherLogger.Log("Loop! Display Index: " + displayIndex + ", i: " + i, OtherLogger.LogType.General);
 
                 if (IM.CD.ContainsKey(IM.CDefs.Categories[i].Cat))
                 {
-                    OtherLogger.Log("Actually displaying this one", OtherLogger.LogType.General);
 
                     __instance.Tiles_SelectionPage[displayIndex].gameObject.SetActive(true);
                     __instance.Tiles_SelectionPage[displayIndex].Image.sprite = cats[i].Sprite;
@@ -175,7 +166,6 @@ namespace OtherLoader
                     __instance.Tiles_SelectionPage[displayIndex].Category = cats[i].Cat;
                     __instance.Tiles_SelectionPage[displayIndex].LockedCorner.gameObject.SetActive(false);
 
-                    OtherLogger.Log("Cat Name: " + cats[i].DisplayName, OtherLogger.LogType.General);
 
                     displayIndex += 1;
                 }
@@ -199,24 +189,19 @@ namespace OtherLoader
 
             List<ItemSpawnerCategoryDefinitions.SubCategory> subs = GetVisibleSubCategories(IM.CDefInfo[Category]);
 
-            OtherLogger.Log("Visible sub categories: " + subs.Count, OtherLogger.LogType.General);
 
             int displayIndex = 0;
             for (int i = data.currCategoryPage * 10; i < subs.Count && displayIndex < 10; i++)
             {
-                OtherLogger.Log("Loop! Display Index: " + displayIndex + ", i: " + i, OtherLogger.LogType.General);
 
                 if (IM.SCD.ContainsKey(IM.CDefSubs[Category][i].Subcat))
                 {
-                    OtherLogger.Log("Actually displaying this one", OtherLogger.LogType.General);
 
                     __instance.Tiles_SelectionPage[displayIndex].gameObject.SetActive(true);
                     __instance.Tiles_SelectionPage[displayIndex].Image.sprite = subs[i].Sprite;
                     __instance.Tiles_SelectionPage[displayIndex].Text.text = subs[i].DisplayName;
                     __instance.Tiles_SelectionPage[displayIndex].SubCategory = subs[i].Subcat;
                     __instance.Tiles_SelectionPage[displayIndex].LockedCorner.gameObject.SetActive(false);
-
-                    OtherLogger.Log("Sub Cat Name: " + subs[i].DisplayName, OtherLogger.LogType.General);
 
                     displayIndex += 1;
                 }
@@ -242,8 +227,6 @@ namespace OtherLoader
 
             if(__instance.m_curMode == ItemSpawnerUI.ItemSpawnerPageMode.Home)
             {
-                OtherLogger.Log("Next button pressed for Home", OtherLogger.LogType.General);
-
                 ItemSpawnerDataObject data = __instance.GetComponent<ItemSpawnerDataObject>();
 
                 __instance.ButtonPress(0);
@@ -269,8 +252,6 @@ namespace OtherLoader
 
             else if (__instance.m_curMode == ItemSpawnerUI.ItemSpawnerPageMode.Category)
             {
-                OtherLogger.Log("Next button pressed for Category", OtherLogger.LogType.General);
-
                 ItemSpawnerDataObject data = __instance.GetComponent<ItemSpawnerDataObject>();
 
                 __instance.ButtonPress(0);
@@ -294,8 +275,6 @@ namespace OtherLoader
                 return false;
             }
 
-            OtherLogger.Log("Next button pressed for something else", OtherLogger.LogType.General);
-
             return true;
         }
 
@@ -308,8 +287,6 @@ namespace OtherLoader
 
             if (__instance.m_curMode == ItemSpawnerUI.ItemSpawnerPageMode.Home)
             {
-                OtherLogger.Log("Prev button pressed for Home", OtherLogger.LogType.General);
-
                 ItemSpawnerDataObject data = __instance.GetComponent<ItemSpawnerDataObject>();
 
                 __instance.ButtonPress(1);
@@ -335,8 +312,6 @@ namespace OtherLoader
 
             else if (__instance.m_curMode == ItemSpawnerUI.ItemSpawnerPageMode.Category)
             {
-                OtherLogger.Log("Prev button pressed for Category", OtherLogger.LogType.General);
-
                 ItemSpawnerDataObject data = __instance.GetComponent<ItemSpawnerDataObject>();
 
                 __instance.ButtonPress(1);
@@ -359,8 +334,6 @@ namespace OtherLoader
 
                 return false;
             }
-
-            OtherLogger.Log("Prev button pressed for something else", OtherLogger.LogType.General);
 
             return true;
         }
@@ -482,8 +455,6 @@ namespace OtherLoader
 
         private void CreateLoadingText()
         {
-            OtherLogger.Log("Creating loading text on itemspawner", OtherLogger.LogType.General);
-
             GameObject canvas = new GameObject("Canvas");
             canvas.transform.SetParent(transform);
             canvas.transform.rotation = transform.rotation;
@@ -506,7 +477,7 @@ namespace OtherLoader
             textComp.text = "EXAMPLE TEXT";
             textComp.alignment = TextAnchor.MiddleCenter;
             textComp.fontSize = 32;
-            text.transform.localScale = new Vector3(0.002f, 0.002f, 0.002f);
+            text.transform.localScale = new Vector3(0.0015f, 0.0015f, 0.0015f);
             textComp.font = ArialFont;
             textComp.horizontalOverflow = HorizontalWrapMode.Overflow;
 
