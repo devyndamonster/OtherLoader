@@ -437,6 +437,11 @@ namespace OtherLoader
             LoaderStatus.ProgressUpdated += UpdateText;
         }
 
+        private void OnDestroy()
+        {
+            LoaderStatus.ProgressUpdated -= UpdateText;
+        }
+
         private void UpdateText()
         {
             float progress = LoaderStatus.GetLoaderProgress();
