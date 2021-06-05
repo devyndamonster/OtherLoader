@@ -2,8 +2,10 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using BepInEx;
 using HarmonyLib;
 using BepInEx.Logging;
 using FistVR;
@@ -16,6 +18,12 @@ namespace OtherLoader
 {
     public class OtherLoader : DeliBehaviour
     {
+        private const string TS_AUTHOR = "devyndamonster";
+        private const string TS_NAME = "OtherLoader";
+        public const string R2MM_ID = TS_AUTHOR + "-" + TS_NAME;
+
+        public static string Directory { get; } = Path.Combine(Paths.PluginPath, R2MM_ID);
+        
         public static Dictionary<string, IFileHandle> BundleFiles = new Dictionary<string, IFileHandle>();
         public static Dictionary<string, string> LegacyBundles = new Dictionary<string, string>();
         private static ConfigEntry<int> MaxActiveLoadersConfig;

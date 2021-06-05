@@ -24,7 +24,7 @@ namespace OtherLoader
 
         public static void Init()
         {
-            CachePath = Application.dataPath.Replace("/h3vr_Data", "/OtherLoaderCache");
+            CachePath = Path.Combine(OtherLoader.Directory, "cache");
 
             if (!Directory.Exists(CachePath))
             {
