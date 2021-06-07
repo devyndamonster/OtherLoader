@@ -42,8 +42,8 @@
     <Reference Include="ADepIn, Version=21.1.16.2315, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\ADepIn.21.1.16.2315\lib\net35\ADepIn.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp-Publicized">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\H3VR\Uninstalled\Assembly-CSharp-Publicized.dll</HintPath>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>Libs\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx, Version=5.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\BepInEx.BaseLib.5.4.0\lib\net35\BepInEx.dll</HintPath>
