@@ -88,6 +88,8 @@ namespace OtherLoader
             if (bundle.Result == null)
             {
                 OtherLogger.LogError("Asset Bundle was null!");
+                LoaderStatus.UpdateProgress(uniqueAssetID, 1);
+                LoaderStatus.RemoveActiveLoader(uniqueAssetID);
                 yield break;
             }
 
@@ -155,6 +157,8 @@ namespace OtherLoader
             if (bundle.Result == null)
             {
                 OtherLogger.LogError("Asset Bundle was null!");
+                LoaderStatus.UpdateProgress(uniqueAssetID, 1);
+                LoaderStatus.RemoveActiveLoader(uniqueAssetID);
                 yield break;
             }
 
