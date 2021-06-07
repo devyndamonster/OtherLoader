@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using BepInEx;
 using UnityEngine;
 
 namespace OtherLoader
@@ -33,7 +34,7 @@ namespace OtherLoader
 
         public void LoadLegacyAssets()
         {
-            string legacyPath = Application.dataPath.Replace("/h3vr_Data", "/Deli/mods/legacy/LegacyVirtualObjects");
+            string legacyPath = Path.Combine(OtherLoader.Directory, "LegacyVirtualObjects");
 
             if (!Directory.Exists(legacyPath))
             {
