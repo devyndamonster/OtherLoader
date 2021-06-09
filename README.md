@@ -11,7 +11,7 @@ OtherLoader is an asset loader for H3VR, which functions similarly to other load
 
 ## Installation
 1. Install version 0.4.1 of [Deli Mod Loader](https://github.com/Deli-Counter/Deli)
-    - Deli requires the x64 version of BepInEx, you can find installation instructions for that [here]
+    - Deli requires the x64 version of BepInEx
 2. Extract the OtherLoader `.zip` file into the BepInEx plugins folder
 
 ## Making a mod for OtherLoader
