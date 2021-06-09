@@ -10,23 +10,21 @@ OtherLoader is an asset loader for H3VR, which functions similarly to other load
 - It doesn't spam the console like LSIIC
 
 ## Installation
-1. Install the [Deli Mod Loader](https://github.com/Deli-Counter/Deli)
+1. Install version 0.4.1 of [Deli Mod Loader](https://github.com/Deli-Counter/Deli)
     - Deli requires the x64 version of BepInEx, you can find installation instructions for that [here]
-2. Drag the OtherLoader Deli file into the `Deli/mods` folder
-    - Custom items packaged as a .Deli file belong in the `Deli/mods` folder
-    - Legacy custom items (the ones made for LSIIC) go into the `Deli/mods/legacy/LegacyVirtualObjects`
+2. Extract the OtherLoader `.zip` file into the BepInEx plugins folder
 
-## Making mods compatible with OtherLoader
-OtherLoader works similarly to LSIIC, in that it loads asset bundles into the game. Any custom item that was made for LSIIC can also be used with OtherLoader by simply packaging the asset bundles into a `.Deli` file.
+## Making a mod for OtherLoader
 
-Once you have your asset bundle inside a `.Deli` file, you just need to point to it with a Deli manifest file. Here's an example of what that file might look like:
+To make your item mod use OtherLoader, you must package it as a Deli mod. Below is an example manifest file for a mod using OtherLoader
+
 ```
 {
   "guid": "h3vr.otherloader.example",
   "version": "0.1.0",
-  "require": "0.3.1",
+  "require": "0.4.1",
   "dependencies": {
-      "h3vr.otherloader.deli": "0.1.2"
+      "h3vr.otherloader.deli": "0.3.0"
   },
   "name": "ExampleAsset",
   "description": "Example",
@@ -41,3 +39,8 @@ Once you have your asset bundle inside a `.Deli` file, you just need to point to
   }
 }
 ```
+
+## Using legacy mods with OtherLoader
+Legacy mods (mods loaded with LSIIC) can be loaded by placing the virtual object files into the `Bepinex/plugins/Devyndamonster-OtherLoader/LegacyVirtualObjects` folder
+
+
