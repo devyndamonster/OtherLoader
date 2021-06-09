@@ -14,6 +14,9 @@ using System.Linq;
 using System.Text;
 using BepInEx;
 using UnityEngine;
+using Deli.VFS.Disk;
+
+
 
 namespace OtherLoader
 {
@@ -27,7 +30,33 @@ namespace OtherLoader
                 throw new ArgumentException("Could not load item, make sure you are pointing to the asset bundle correctly");
             }
 
-            AnvilManager.Run(LoadAssetAsync(stage, mod, file));
+            string uniqueAssetID = mod.Info.Guid + " : " + file.Name;
+
+            if (file is not IDiskHandle fileDisk)
+            {
+                IEnumerator routine = LoadAssetsFromFileAsync(stage, file, uniqueAssetID).TryCatch<Exception>(e =>
+                {
+                    OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
+                    OtherLogger.LogError(e.ToString());
+                    LoaderStatus.UpdateProgress(uniqueAssetID, 1);
+                    LoaderStatus.RemoveActiveLoader(uniqueAssetID);
+                });
+
+                AnvilManager.Instance.StartCoroutine(routine);
+            }
+
+            else
+            {
+                IEnumerator routine = LoadAssetsFromPathAsync(fileDisk.PathOnDisk, uniqueAssetID).TryCatch<Exception>(e =>
+                {
+                    OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
+                    OtherLogger.LogError(e.ToString());
+                    LoaderStatus.UpdateProgress(uniqueAssetID, 1);
+                    LoaderStatus.RemoveActiveLoader(uniqueAssetID);
+                });
+
+                AnvilManager.Instance.StartCoroutine(routine);
+            }
 
             yield return null;
         }
@@ -49,15 +78,23 @@ namespace OtherLoader
                     continue;
                 }
 
-                AnvilManager.Run(LoadLegacyAssetAsync(bundlePath));
+                string uniqueAssetID = "Legacy : " + Path.GetFileName(bundlePath);
+
+                IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, uniqueAssetID).TryCatch<Exception>(e =>
+                {
+                    OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
+                    OtherLogger.LogError(e.ToString());
+                    LoaderStatus.UpdateProgress(uniqueAssetID, 1);
+                    LoaderStatus.RemoveActiveLoader(uniqueAssetID);
+                });
+
+                AnvilManager.Instance.StartCoroutine(routine);
             }
         }
 
 
-        private IEnumerator LoadAssetAsync(RuntimeStage stage, Mod mod, IFileHandle file)
+        private IEnumerator LoadAssetsFromFileAsync(RuntimeStage stage, IFileHandle file, string uniqueAssetID)
         {
-            string uniqueAssetID = mod.Info.Guid + " : " + file.Name;
-
             LoaderStatus.TrackLoader(uniqueAssetID);
 
             //If there are many active loaders at once, we should wait our turn
@@ -65,7 +102,6 @@ namespace OtherLoader
             {
                 yield return null;
             }
-
 
             LoaderStatus.AddActiveLoader(uniqueAssetID);
 
@@ -86,55 +122,22 @@ namespace OtherLoader
 
             LoaderStatus.UpdateProgress(uniqueAssetID, 0.9f);
 
-            if (bundle.Result == null)
+            yield return ApplyLoadedAssetBundle(bundle, uniqueAssetID).TryCatch<Exception>(e =>
             {
-                OtherLogger.LogError("Asset Bundle was null!");
+                OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
+                OtherLogger.LogError(e.ToString());
                 LoaderStatus.UpdateProgress(uniqueAssetID, 1);
                 LoaderStatus.RemoveActiveLoader(uniqueAssetID);
-                yield break;
-            }
+            });
 
-            //Load the mechanical accuracy entries
-            AssetBundleRequest accuracyCharts = bundle.Result.LoadAllAssetsAsync<FVRFireArmMechanicalAccuracyChart>();
-            yield return accuracyCharts;
-            LoadMechanicalAccuracyEntries(accuracyCharts.allAssets);
-
-            //Now that the asset bundle is loaded, we need to load all the FVRObjects
-            AssetBundleRequest fvrObjects = bundle.Result.LoadAllAssetsAsync<FVRObject>();
-            yield return fvrObjects;
-            LoadFVRObjects(uniqueAssetID, fvrObjects.allAssets);
-
-            //Now all the FVRObjects are loaded, we can load the bullet data
-            AssetBundleRequest bulletData = bundle.Result.LoadAllAssetsAsync<FVRFireArmRoundDisplayData>();
-            yield return bulletData;
-            LoadBulletData(bulletData.allAssets);
-
-            //Before we load the spawnerIDs, we must add any new spawner category definitions
-            AssetBundleRequest spawnerCats = bundle.Result.LoadAllAssetsAsync<ItemSpawnerCategoryDefinitions>();
-            yield return spawnerCats;
-            LoadSpawnerCategories(spawnerCats.allAssets);
-
-            //Finally, add all the items to the spawner
-            AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
-            yield return spawnerIDs;
-            LoadSpawnerIDs(spawnerIDs.allAssets);
-
-
-            OtherLoader.BundleFiles.Add(uniqueAssetID, file);
-            AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
-            
             LoaderStatus.UpdateProgress(uniqueAssetID, 1);
             LoaderStatus.RemoveActiveLoader(uniqueAssetID);
-            OtherLogger.Log("Completed loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
-
         }
 
 
 
-        private IEnumerator LoadLegacyAssetAsync(string path)
+        private IEnumerator LoadAssetsFromPathAsync(string path, string uniqueAssetID)
         {
-            string uniqueAssetID = "Legacy : " + Path.GetFileName(path);
-
             LoaderStatus.TrackLoader(uniqueAssetID);
 
             //If there are many active loaders at once, we should wait our turn
@@ -143,7 +146,6 @@ namespace OtherLoader
                 yield return null;
             }
 
-
             LoaderStatus.AddActiveLoader(uniqueAssetID);
 
             //First, we want to load the asset bundle itself
@@ -151,18 +153,28 @@ namespace OtherLoader
             LoaderStatus.UpdateProgress(uniqueAssetID, UnityEngine.Random.Range(.1f, .3f));
 
             AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundleFromPath(path);
+
             yield return bundle;
 
             LoaderStatus.UpdateProgress(uniqueAssetID, 0.9f);
 
-            if (bundle.Result == null)
+            yield return ApplyLoadedAssetBundle(bundle, uniqueAssetID).TryCatch<Exception>(e =>
             {
-                OtherLogger.LogError("Asset Bundle was null!");
+                OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
+                OtherLogger.LogError(e.ToString());
                 LoaderStatus.UpdateProgress(uniqueAssetID, 1);
                 LoaderStatus.RemoveActiveLoader(uniqueAssetID);
-                yield break;
-            }
+            });
 
+            OtherLoader.LegacyBundles.Add(uniqueAssetID, path);
+            LoaderStatus.UpdateProgress(uniqueAssetID, 1);
+            LoaderStatus.RemoveActiveLoader(uniqueAssetID);
+        }
+
+
+
+        private IEnumerator ApplyLoadedAssetBundle(AnvilCallback<AssetBundle> bundle, string uniqueAssetID)
+        {
             //Load the mechanical accuracy entries
             AssetBundleRequest accuracyCharts = bundle.Result.LoadAllAssetsAsync<FVRFireArmMechanicalAccuracyChart>();
             yield return accuracyCharts;
@@ -188,15 +200,10 @@ namespace OtherLoader
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
 
-
-            OtherLoader.LegacyBundles.Add(uniqueAssetID, path);
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
-
-            OtherLogger.Log("Completed loading of legacy asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
-
-            LoaderStatus.UpdateProgress(uniqueAssetID, 1);
-            LoaderStatus.RemoveActiveLoader(uniqueAssetID);
+            OtherLogger.Log("Completed loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
         }
+
 
 
 

@@ -3,6 +3,7 @@ using Deli.Runtime;
 using Deli.Runtime.Yielding;
 using Deli.VFS;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -132,6 +133,31 @@ namespace OtherLoader
             while ((r = input.Read(b, 0, b.Length)) > 0)
                 output.Write(b, 0, r);
         }
+
+
+
+        /// <summary>
+        /// Code borrowed from the Sodalite repo untill it officially releases
+        /// </summary>
+        public static IEnumerator TryCatch<T>(this IEnumerator @this, Action<T> handler) where T : Exception
+        {
+            bool MoveNext()
+            {
+                try
+                {
+                    return @this.MoveNext();
+                }
+                catch (T e)
+                {
+                    handler(e);
+                    return false;
+                }
+            }
+
+            while (MoveNext())
+                yield return @this.Current;
+        }
+
 
     }
 }

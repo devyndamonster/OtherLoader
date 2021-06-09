@@ -39,17 +39,20 @@ namespace OtherLoader
 
         public static void RemoveActiveLoader(string modID)
         {
-            activeLoaders.Remove(modID);
-
-            if (!modID.StartsWith("Legacy"))
+            if (activeLoaders.Contains(modID))
             {
-                string guid = modID.Split(':')[0].Trim();
-                orderedLoadingLists[guid].Remove(modID);
-            }
+                activeLoaders.Remove(modID);
 
-            if (GetLoaderProgress() >= 1)
-            {
-                OtherLogger.Log("All Items Loaded!", OtherLogger.LogType.General);
+                if (!modID.StartsWith("Legacy"))
+                {
+                    string guid = modID.Split(':')[0].Trim();
+                    orderedLoadingLists[guid].Remove(modID);
+                }
+
+                if (GetLoaderProgress() >= 1)
+                {
+                    OtherLogger.Log("All Items Loaded!", OtherLogger.LogType.General);
+                }
             }
         }
 
