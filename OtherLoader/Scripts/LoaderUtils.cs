@@ -1,8 +1,4 @@
-﻿using Deli.Immediate;
-using Deli.Runtime;
-using Deli.Runtime.Yielding;
-using Deli.VFS;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -14,10 +10,6 @@ namespace OtherLoader
 {
     public static class LoaderUtils
     {
-
-        public static DelayedReader<byte[]> DelayedByteReader;
-        public static ImmediateReader<byte[]> ImmediateByteReader;
-
         /*
         public static AnvilCallback<AssetBundle> LoadAssetBundleFromFileAsync(IFileHandle file)
         {
@@ -35,27 +27,7 @@ namespace OtherLoader
         }
         */
 
-
-        public static AnvilCallback<AssetBundle> LoadAssetBundleFromFile(IFileHandle file)
-        {
-            byte[] bundleBytes = ImmediateByteReader(file);
-
-            AsyncOperation request = AssetBundle.LoadFromMemoryAsync(bundleBytes);
-
-            AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
-            return (AnvilCallback<AssetBundle>)anvilCallbackBase;
-        }
-
-
-        public static AnvilCallback<AssetBundle> LoadAssetBundleFromBytes(byte[] bundleBytes)
-        {
-            AsyncOperation request = AssetBundle.LoadFromMemoryAsync(bundleBytes);
-
-            AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
-            return (AnvilCallback<AssetBundle>)anvilCallbackBase;
-        }
-
-        public static AnvilCallback<AssetBundle> LoadAssetBundleFromPath(string path)
+        public static AnvilCallback<AssetBundle> LoadAssetBundle(string path)
         {
             AsyncOperation request = AssetBundle.LoadFromFileAsync(path);
 
@@ -132,30 +104,6 @@ namespace OtherLoader
             int r;
             while ((r = input.Read(b, 0, b.Length)) > 0)
                 output.Write(b, 0, r);
-        }
-
-
-
-        /// <summary>
-        /// Code borrowed from the Sodalite repo untill it officially releases
-        /// </summary>
-        public static IEnumerator TryCatch<T>(this IEnumerator @this, Action<T> handler) where T : Exception
-        {
-            bool MoveNext()
-            {
-                try
-                {
-                    return @this.MoveNext();
-                }
-                catch (T e)
-                {
-                    handler(e);
-                    return false;
-                }
-            }
-
-            while (MoveNext())
-                yield return @this.Current;
         }
 
 

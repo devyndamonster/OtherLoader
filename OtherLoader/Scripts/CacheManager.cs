@@ -5,8 +5,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using UnityEngine;
-using Deli.Newtonsoft.Json;
-using Deli.Newtonsoft.Json.Converters;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System.Collections;
 
 namespace OtherLoader

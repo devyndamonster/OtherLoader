@@ -1,4 +1,4 @@
-﻿using Deli.Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using FistVR;
 using System;
 using System.Collections.Generic;
