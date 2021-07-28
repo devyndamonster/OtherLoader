@@ -63,32 +63,34 @@ namespace OtherLoader
 
         public void LoadLegacyAssets()
         {
-            string legacyPath = Path.Combine(OtherLoader.Directory, "LegacyVirtualObjects");
+            OtherLogger.Log("Plugins folder found (" + OtherLoader.PluginsDirectory + ")", OtherLogger.LogType.General);
 
-            if (!Directory.Exists(legacyPath))
-            {
-                Directory.CreateDirectory(legacyPath);
-            }
+            string[] legacyPaths = Directory.GetDirectories(OtherLoader.PluginsDirectory, "LegacyVirtualObjects", SearchOption.AllDirectories);
 
-            foreach(string bundlePath in Directory.GetFiles(legacyPath, "*", SearchOption.AllDirectories))
+            foreach(string legacyPath in legacyPaths)
             {
-                //Only allow files without file extensions to be loaded (assumed to be an asset bundle)
-                if(Path.GetFileName(bundlePath) != Path.GetFileNameWithoutExtension(bundlePath))
+                OtherLogger.Log("Legacy folder found (" + legacyPath + ")", OtherLogger.LogType.General);
+
+                foreach (string bundlePath in Directory.GetFiles(legacyPath, "*", SearchOption.AllDirectories))
                 {
-                    continue;
+                    //Only allow files without file extensions to be loaded (assumed to be an asset bundle)
+                    if (Path.GetFileName(bundlePath) != Path.GetFileNameWithoutExtension(bundlePath))
+                    {
+                        continue;
+                    }
+
+                    string uniqueAssetID = "Legacy : " + Path.GetFileName(bundlePath);
+
+                    IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, uniqueAssetID).TryCatch<Exception>(e =>
+                    {
+                        OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
+                        OtherLogger.LogError(e.ToString());
+                        LoaderStatus.UpdateProgress(uniqueAssetID, 1);
+                        LoaderStatus.RemoveActiveLoader(uniqueAssetID);
+                    });
+
+                    AnvilManager.Instance.StartCoroutine(routine);
                 }
-
-                string uniqueAssetID = "Legacy : " + Path.GetFileName(bundlePath);
-
-                IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, uniqueAssetID).TryCatch<Exception>(e =>
-                {
-                    OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
-                    OtherLogger.LogError(e.ToString());
-                    LoaderStatus.UpdateProgress(uniqueAssetID, 1);
-                    LoaderStatus.RemoveActiveLoader(uniqueAssetID);
-                });
-
-                AnvilManager.Instance.StartCoroutine(routine);
             }
         }
 

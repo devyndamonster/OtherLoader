@@ -18,11 +18,7 @@ namespace OtherLoader
 {
     public class OtherLoader : DeliBehaviour
     {
-        private const string TS_AUTHOR = "devyndamonster";
-        private const string TS_NAME = "OtherLoader";
-        public const string R2MM_ID = TS_AUTHOR + "-" + TS_NAME;
-
-        public static string Directory { get; } = Path.Combine(Paths.PluginPath, R2MM_ID);
+        public static string PluginsDirectory { get; } = Path.Combine(Paths.BepInExRootPath, "/plugins");
         
         public static Dictionary<string, IFileHandle> BundleFiles = new Dictionary<string, IFileHandle>();
         public static Dictionary<string, string> LegacyBundles = new Dictionary<string, string>();

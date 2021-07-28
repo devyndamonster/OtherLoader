@@ -24,7 +24,7 @@ namespace OtherLoader
 
         public static void Init()
         {
-            CachePath = Path.Combine(OtherLoader.Directory, "cache");
+            CachePath = Path.Combine(OtherLoader.PluginsDirectory, "cache");
 
             if (!Directory.Exists(CachePath))
             {
