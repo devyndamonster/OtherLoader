@@ -48,6 +48,12 @@ namespace OtherLoader
                 }
             }
         }
+        
+        public static void TrackLoader(string modID)
+        {
+            if (!trackedLoaders.ContainsKey(modID)) trackedLoaders.Add(modID, 0);
+            else throw new Exception("Tried to track progress on a mod that is already being tracked! ModID: " + modID);
+        }
 
         public static void UpdateProgress(string modID, float progress)
         {
