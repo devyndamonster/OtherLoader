@@ -63,9 +63,13 @@ namespace OtherLoader
 
         public void LoadLegacyAssets()
         {
-            OtherLogger.Log("Plugins folder found (" + OtherLoader.PluginsDirectory + ")", OtherLogger.LogType.General);
 
-            string[] legacyPaths = Directory.GetDirectories(OtherLoader.PluginsDirectory, "LegacyVirtualObjects", SearchOption.AllDirectories);
+            if (!Directory.Exists(OtherLoader.MainLegacyDirectory)) Directory.CreateDirectory(OtherLoader.MainLegacyDirectory);
+
+            OtherLogger.Log("Plugins folder found (" + Paths.PluginPath + ")", OtherLogger.LogType.General);
+
+            List<string> legacyPaths = Directory.GetDirectories(Paths.PluginPath, "LegacyVirtualObjects", SearchOption.AllDirectories).ToList();
+            legacyPaths.Add(OtherLoader.MainLegacyDirectory);
 
             foreach(string legacyPath in legacyPaths)
             {

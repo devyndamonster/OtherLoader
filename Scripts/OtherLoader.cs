@@ -18,8 +18,8 @@ namespace OtherLoader
 {
     public class OtherLoader : DeliBehaviour
     {
-        public static string PluginsDirectory { get; } = Path.Combine(Paths.BepInExRootPath, "/plugins");
-        
+        public static string MainLegacyDirectory { get; } = Application.dataPath.Replace("/h3vr_Data", "/LegacyVirtualObjects");
+
         public static Dictionary<string, IFileHandle> BundleFiles = new Dictionary<string, IFileHandle>();
         public static Dictionary<string, string> LegacyBundles = new Dictionary<string, string>();
         private static ConfigEntry<int> MaxActiveLoadersConfig;
@@ -33,7 +33,7 @@ namespace OtherLoader
         {
             LoadConfigFile();
 
-            CacheManager.Init();
+            //CacheManager.Init();
 
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));
