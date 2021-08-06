@@ -41,6 +41,6 @@ To make your item mod use OtherLoader, you must package it as a Deli mod. Below 
 ```
 
 ## Using legacy mods with OtherLoader
-Legacy mods (mods loaded with LSIIC) can be loaded by placing the virtual object files into the `Bepinex/plugins/Devyndamonster-OtherLoader/LegacyVirtualObjects` folder
+Legacy mods (mods loaded with LSIIC) can be loaded by placing the virtual object files into the `H3VR/LegacyVirtualObjects` folder
 
 
