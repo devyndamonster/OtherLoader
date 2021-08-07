@@ -18,7 +18,6 @@ namespace OtherLoader
     [BepInDependency(StratumRoot.GUID, StratumRoot.Version)]
     public class OtherLoader : StratumPlugin
     {
-        public new static PluginDirectories Directories { get; private set; }
         public static string MainLegacyDirectory { get; } = Application.dataPath.Replace("/h3vr_Data", "/LegacyVirtualObjects");
         
         public static Dictionary<string, FileInfo> BundleFiles = new Dictionary<string, FileInfo>();
@@ -32,7 +31,6 @@ namespace OtherLoader
 
         private void Awake()
         {
-            Directories = base.Directories;
             LoadConfigFile();
 
             //CacheManager.Init();

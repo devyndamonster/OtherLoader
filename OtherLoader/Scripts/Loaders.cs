@@ -74,10 +74,8 @@ namespace OtherLoader
 
         private IEnumerator LoadAssetsFromPathAsync(string path, string uniqueAssetID)
         {
-            LoaderStatus.TrackLoader(uniqueAssetID);
-            
             //If there are many active loaders at once, we should wait our turn
-            while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders || !LoaderStatus.CanOrderedModLoad(uniqueAssetID))
+            while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders)
             {
                 yield return null;
             }
@@ -85,7 +83,7 @@ namespace OtherLoader
             LoaderStatus.AddActiveLoader(uniqueAssetID);
 
             //First, we want to load the asset bundle itself
-            OtherLogger.Log("Beginning async loading of legacy asset bundle (" + uniqueAssetID + ") with load order type (" + orderType + ")", OtherLogger.LogType.General);
+            OtherLogger.Log("Beginning async loading of legacy asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
             LoaderStatus.UpdateProgress(uniqueAssetID, UnityEngine.Random.Range(.1f, .3f));
 
             AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundle(path);
