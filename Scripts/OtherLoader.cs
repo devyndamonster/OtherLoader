@@ -84,7 +84,9 @@ namespace OtherLoader
             LoaderUtils.DelayedByteReader = stage.DelayedReaders.Get<byte[]>();
 
             ItemLoader loader = new ItemLoader();
-            stage.RuntimeAssetLoaders[Source, "item"] = loader.StartAssetLoad;
+            stage.RuntimeAssetLoaders[Source, "item"] = loader.StartAssetLoadFirst;
+            stage.RuntimeAssetLoaders[Source, "item_last"] = loader.StartAssetLoadLast;
+            stage.RuntimeAssetLoaders[Source, "item_unordered"] = loader.StartAssetLoadUnordered;
             loader.LoadLegacyAssets();
         }
 

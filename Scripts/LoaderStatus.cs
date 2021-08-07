@@ -7,11 +7,51 @@ namespace OtherLoader
 {
     public delegate void StatusUpdate();
 
+    public enum LoadOrderType
+    {
+        LoadFirst,
+        LoadLast,
+        LoadUnordered
+    }
+
+    public class ModLoadOrderContainer
+    {
+        public List<string> loadFirst = new List<string>();
+        public List<string> loadUnordered = new List<string>();
+        public List<string> loadLast = new List<string>();
+
+        public void AddToLoadOrder(string modID, LoadOrderType loadOrderType)
+        {
+            if (loadOrderType == LoadOrderType.LoadFirst) loadFirst.Add(modID);
+            else if (loadOrderType == LoadOrderType.LoadLast) loadLast.Add(modID);
+            else if (loadOrderType == LoadOrderType.LoadUnordered) loadUnordered.Add(modID);
+        }
+
+        public bool CanModLoad(string modID)
+        {
+            if (loadFirst.Contains(modID) && loadFirst[0] == modID) return true;
+
+            else if (loadUnordered.Contains(modID) && loadFirst.Count == 0) return true;
+
+            else if (loadLast.Contains(modID) && loadFirst.Count == 0 && loadUnordered.Count == 0 && loadLast[0] == modID) return true;
+
+            return false;
+        }
+
+        public void RemoveFromLoadOrder(string modID)
+        {
+            if (loadFirst.Contains(modID)) loadFirst.Remove(modID);
+            else if (loadUnordered.Contains(modID)) loadUnordered.Remove(modID);
+            else if (loadLast.Contains(modID)) loadLast.Remove(modID);
+        }
+    }
+
+
     public static class LoaderStatus
     {
         private static Dictionary<string, float> trackedLoaders = new Dictionary<string, float>();
         private static List<string> activeLoaders = new List<string>();
-        private static Dictionary<string, List<string>> orderedLoadingLists = new Dictionary<string, List<string>>();
+        private static Dictionary<string, ModLoadOrderContainer> orderedLoadingLists = new Dictionary<string, ModLoadOrderContainer>();
 
         public static int NumActiveLoaders { get => activeLoaders.Count; }
         public static List<string> LoadingItems { get => new List<string>(activeLoaders); }
@@ -46,7 +86,7 @@ namespace OtherLoader
                 if (!modID.StartsWith("Legacy"))
                 {
                     string guid = modID.Split(':')[0].Trim();
-                    orderedLoadingLists[guid].Remove(modID);
+                    orderedLoadingLists[guid].RemoveFromLoadOrder(modID);
                 }
 
                 if (GetLoaderProgress() >= 1)
@@ -57,7 +97,7 @@ namespace OtherLoader
         }
 
 
-        public static void TrackLoader(string modID)
+        public static void TrackLoader(string modID, LoadOrderType loadOrderType)
         {
             if (!trackedLoaders.ContainsKey(modID)) trackedLoaders.Add(modID, 0);
             else throw new Exception("Tried to track progress on a mod that is already being tracked! ModID: " + modID);
@@ -66,26 +106,21 @@ namespace OtherLoader
             if (!modID.StartsWith("Legacy"))
             {
                 string guid = modID.Split(':')[0].Trim();
-                if (!orderedLoadingLists.ContainsKey(guid)) orderedLoadingLists.Add(guid, new List<string>());
-                orderedLoadingLists[guid].Add(modID);
+                if (!orderedLoadingLists.ContainsKey(guid)) orderedLoadingLists.Add(guid, new ModLoadOrderContainer());
+                orderedLoadingLists[guid].AddToLoadOrder(modID, loadOrderType);
             }
         }
 
         public static bool CanOrderedModLoad(string modID)
         {
-            if(modID.StartsWith("Legacy")) throw new Exception("Tried to check load order for legacy mod! ModID: " + modID);
+            if (modID.StartsWith("Legacy")) return true;
 
             string guid = modID.Split(':')[0].Trim();
 
             if (!orderedLoadingLists.ContainsKey(guid)) throw new Exception("Mod was not found in load order! ModID: " + modID);
 
-            if (!orderedLoadingLists[guid].Contains(modID)) throw new Exception("Asset Bundle was not found in load order! ModID: " + modID);
-
-            if (orderedLoadingLists[guid][0] == modID) return true;
-
-            return false;
+            return orderedLoadingLists[guid].CanModLoad(modID);
         }
-
 
         public static void UpdateProgress(string modID, float progress)
         {

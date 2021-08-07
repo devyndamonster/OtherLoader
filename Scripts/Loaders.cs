@@ -23,7 +23,26 @@ namespace OtherLoader
     public class ItemLoader
     {
 
-        public IEnumerator StartAssetLoad(RuntimeStage stage, Mod mod, IHandle handle)
+        public IEnumerator StartAssetLoadUnordered(RuntimeStage stage, Mod mod, IHandle handle)
+        {
+            StartAssetLoad(stage, mod, handle, LoadOrderType.LoadUnordered);
+            yield return null;
+        }
+
+        public IEnumerator StartAssetLoadFirst(RuntimeStage stage, Mod mod, IHandle handle)
+        {
+            StartAssetLoad(stage, mod, handle, LoadOrderType.LoadFirst);
+            yield return null;
+        }
+
+        public IEnumerator StartAssetLoadLast(RuntimeStage stage, Mod mod, IHandle handle)
+        {
+            StartAssetLoad(stage, mod, handle, LoadOrderType.LoadLast);
+            yield return null;
+        }
+
+
+        public void StartAssetLoad(RuntimeStage stage, Mod mod, IHandle handle, LoadOrderType orderType)
         {
             if (handle is not IFileHandle file)
             {
@@ -34,7 +53,7 @@ namespace OtherLoader
 
             if (file is not IDiskHandle fileDisk)
             {
-                IEnumerator routine = LoadAssetsFromFileAsync(stage, file, uniqueAssetID).TryCatch<Exception>(e =>
+                IEnumerator routine = LoadAssetsFromFileAsync(stage, file, uniqueAssetID, orderType).TryCatch<Exception>(e =>
                 {
                     OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
                     OtherLogger.LogError(e.ToString());
@@ -47,7 +66,7 @@ namespace OtherLoader
 
             else
             {
-                IEnumerator routine = LoadAssetsFromPathAsync(fileDisk.PathOnDisk, uniqueAssetID).TryCatch<Exception>(e =>
+                IEnumerator routine = LoadAssetsFromPathAsync(fileDisk.PathOnDisk, uniqueAssetID, orderType).TryCatch<Exception>(e =>
                 {
                     OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
                     OtherLogger.LogError(e.ToString());
@@ -57,8 +76,6 @@ namespace OtherLoader
 
                 AnvilManager.Instance.StartCoroutine(routine);
             }
-
-            yield return null;
         }
 
         public void LoadLegacyAssets()
@@ -85,7 +102,7 @@ namespace OtherLoader
 
                     string uniqueAssetID = "Legacy : " + Path.GetFileName(bundlePath);
 
-                    IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, uniqueAssetID).TryCatch<Exception>(e =>
+                    IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, uniqueAssetID, LoadOrderType.LoadUnordered).TryCatch<Exception>(e =>
                     {
                         OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
                         OtherLogger.LogError(e.ToString());
@@ -99,9 +116,9 @@ namespace OtherLoader
         }
 
 
-        private IEnumerator LoadAssetsFromFileAsync(RuntimeStage stage, IFileHandle file, string uniqueAssetID)
+        private IEnumerator LoadAssetsFromFileAsync(RuntimeStage stage, IFileHandle file, string uniqueAssetID, LoadOrderType orderType)
         {
-            LoaderStatus.TrackLoader(uniqueAssetID);
+            LoaderStatus.TrackLoader(uniqueAssetID, orderType);
 
             //If there are many active loaders at once, we should wait our turn
             while ((OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders) || !LoaderStatus.CanOrderedModLoad(uniqueAssetID))
@@ -112,7 +129,7 @@ namespace OtherLoader
             LoaderStatus.AddActiveLoader(uniqueAssetID);
 
             //First, we want to load the asset bundle itself
-            OtherLogger.Log("Beginning async loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
+            OtherLogger.Log("Beginning async loading of asset bundle (" + uniqueAssetID + ") with load order type (" + orderType + ")", OtherLogger.LogType.General);
             LoaderStatus.UpdateProgress(uniqueAssetID, UnityEngine.Random.Range(.1f, .3f));
 
             //Load the bytes of the bundle into memory
@@ -142,12 +159,12 @@ namespace OtherLoader
 
 
 
-        private IEnumerator LoadAssetsFromPathAsync(string path, string uniqueAssetID)
+        private IEnumerator LoadAssetsFromPathAsync(string path, string uniqueAssetID, LoadOrderType orderType)
         {
-            LoaderStatus.TrackLoader(uniqueAssetID);
+            LoaderStatus.TrackLoader(uniqueAssetID, orderType);
 
             //If there are many active loaders at once, we should wait our turn
-            while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders)
+            while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders || !LoaderStatus.CanOrderedModLoad(uniqueAssetID))
             {
                 yield return null;
             }
@@ -155,7 +172,7 @@ namespace OtherLoader
             LoaderStatus.AddActiveLoader(uniqueAssetID);
 
             //First, we want to load the asset bundle itself
-            OtherLogger.Log("Beginning async loading of legacy asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
+            OtherLogger.Log("Beginning async loading of legacy asset bundle (" + uniqueAssetID + ") with load order type (" + orderType + ")", OtherLogger.LogType.General);
             LoaderStatus.UpdateProgress(uniqueAssetID, UnityEngine.Random.Range(.1f, .3f));
 
             AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundleFromPath(path);
