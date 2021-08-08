@@ -74,6 +74,8 @@ namespace OtherLoader
 
         private IEnumerator LoadAssetsFromPathAsync(string path, string uniqueAssetID)
         {
+            LoaderStatus.TrackLoader(uniqueAssetID);
+            
             //If there are many active loaders at once, we should wait our turn
             while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders)
             {
