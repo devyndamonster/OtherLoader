@@ -41,11 +41,6 @@ namespace OtherLoader
             if (activeLoaders.Contains(modID))
             {
                 activeLoaders.Remove(modID);
-
-                if (GetLoaderProgress() >= 1)
-                {
-                    OtherLogger.Log("All Items Loaded!", OtherLogger.LogType.General);
-                }
             }
         }
         
