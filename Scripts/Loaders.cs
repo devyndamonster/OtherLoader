@@ -1,4 +1,4 @@
-﻿using Anvil;
+using Anvil;
 using Deli;
 using Deli.Runtime;
 using Deli.Runtime.Yielding;
@@ -15,7 +15,8 @@ using System.Text;
 using BepInEx;
 using UnityEngine;
 using Deli.VFS.Disk;
-
+using OtherLoader.CustomIDs;
+using Valve.VR.InteractionSystem;
 
 
 namespace OtherLoader
@@ -222,13 +223,63 @@ namespace OtherLoader
             AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
-
+            
+            //handle handling grab/release/slot sets
+            AssetBundleRequest HandlingGrabSet = bundle.Result.LoadAllAssetsAsync<HandlingGrabSet>();
+            yield return HandlingGrabSet;
+            LoadHandlingGrabSetEntries(HandlingGrabSet.allAssets);
+            AssetBundleRequest HandlingReleaseSet = bundle.Result.LoadAllAssetsAsync<HandlingReleaseSet>();
+            yield return HandlingReleaseSet;
+            LoadHandlingReleaseSetEntries(HandlingReleaseSet.allAssets);
+            AssetBundleRequest HandlingSlotSet = bundle.Result.LoadAllAssetsAsync<HandlingReleaseIntoSlotSet>();
+            yield return HandlingSlotSet;
+            LoadHandlingSlotSetEntries(HandlingSlotSet.allAssets);
+            //audio bullet impact sets; handled similarly to the ones above
+            AssetBundleRequest BulletImpactSet = bundle.Result.LoadAllAssetsAsync<AudioBulletImpactSet>();
+            yield return BulletImpactSet;
+            LoadImpactSetEntries(BulletImpactSet.allAssets);
+            
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             OtherLogger.Log("Completed loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
         }
+        
+        private void LoadHandlingGrabSetEntries(UnityEngine.Object[] allAssets)
+        { //nothing fancy; just dumps them into the lists above and logs it
+            foreach (HandlingGrabSet grabSet in allAssets)
+            {
+                OtherLogger.Log("Loading new handling grab set entry: " + grabSet.name, OtherLogger.LogType.Loading);
+                ManagerSingleton<SM>.Instance.m_handlingGrabDic.Add(grabSet.Type, grabSet);
+            }
+        }
 
+        private void LoadHandlingReleaseSetEntries(UnityEngine.Object[] allAssets)
+        {
+            foreach (HandlingReleaseSet releaseSet in allAssets)
+            {
+                OtherLogger.Log("Loading new handling release set entry: " + releaseSet.name, OtherLogger.LogType.Loading);
+                ManagerSingleton<SM>.Instance.m_handlingReleaseDic.Add(releaseSet.Type, releaseSet);
+            }
+        }
 
+        private void LoadHandlingSlotSetEntries(UnityEngine.Object[] allAssets)
+        {
+            foreach (HandlingReleaseIntoSlotSet slotSet in allAssets)
+            {
+                OtherLogger.Log("Loading new handling QB slot set entry: " + slotSet.name, OtherLogger.LogType.Loading);
+                ManagerSingleton<SM>.Instance.m_handlingReleaseIntoSlotDic.Add(slotSet.Type, slotSet);
+            }
+        }
 
+        private void LoadImpactSetEntries(UnityEngine.Object[] allAssets)
+        {
+            foreach (AudioBulletImpactSet impactSet in allAssets)
+            {
+                OtherLogger.Log("Loading new bullet impact set entry: " + impactSet.name, OtherLogger.LogType.Loading);
+                //this is probably the stupidest workaround, but it works and it's short. it just adds impactset to the impact sets
+                ManagerSingleton<SM>.Instance.AudioBulletImpactSets.Concat(new AudioBulletImpactSet[] {impactSet});
+                ManagerSingleton<SM>.Instance.m_bulletHitDic.Add(impactSet.Type, impactSet);
+            }
+        }
 
         private void LoadMechanicalAccuracyEntries(UnityEngine.Object[] allAssets)
         {
