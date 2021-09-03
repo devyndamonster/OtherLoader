@@ -238,6 +238,9 @@ namespace OtherLoader
             AssetBundleRequest BulletImpactSet = bundle.Result.LoadAllAssetsAsync<AudioBulletImpactSet>();
             yield return BulletImpactSet;
             LoadImpactSetEntries(BulletImpactSet.allAssets);
+            AssetBundleRequest Quickbelts = bundle.Result.LoadAllAssetsAsync<QuickbeltID>();
+            yield return Quickbelts;
+            LoadQuickbeltEntries(Quickbelts.allAssets);
             
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             OtherLogger.Log("Completed loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
@@ -280,6 +283,16 @@ namespace OtherLoader
                 ManagerSingleton<SM>.Instance.m_bulletHitDic.Add(impactSet.Type, impactSet);
             }
         }
+
+        private void LoadQuickbeltEntries(UnityEngine.Object[] allAssets)
+        {
+            foreach (QuickbeltID quickbelt in allAssets)
+            {
+                Array.Resize(ref GM.Instance.QuickbeltConfigurations, GM.Instance.QuickbeltConfigurations.Length + 1);
+                GM.Instance.QuickbeltConfigurations[GM.Instance.QuickbeltConfigurations.Length - 1] = quickbelt.quickbeltPrefab;
+            }
+        }
+
 
         private void LoadMechanicalAccuracyEntries(UnityEngine.Object[] allAssets)
         {
