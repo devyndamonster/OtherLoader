@@ -115,7 +115,6 @@ namespace OtherLoader
 			ButtonPreviousPage.SetActive(true);
 			if (currentPage <= 0) ButtonPreviousPage.SetActive(false);
 			int pages = Mathf.CeilToInt(QBslotButtonSet.ButtonsInSet.Length / QuickbeltPanelPatch.QBsPerPage);
-			pages--; //pages goes 1-2-3, current page goes 0-1-2, so fix it
 			if(currentPage >= pages) ButtonNextPage.SetActive(false);
 		}
 
