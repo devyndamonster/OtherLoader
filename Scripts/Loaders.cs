@@ -292,7 +292,7 @@ namespace OtherLoader
             foreach (AudioImpactSet AIS in allAssets)
             {
                 //resize SM's AIS list to its length + 1, insert AIS into list
-                Debug.Log("Loading new Audio Impact Set: " + AIS.name);
+                OtherLogger.Log("Loading new Audio Impact Set: " + AIS.name, OtherLogger.LogType.Loading);
                 Array.Resize(ref ManagerSingleton<SM>.Instance.AudioImpactSets, ManagerSingleton<SM>.Instance.AudioImpactSets.Length + 1);
                 ManagerSingleton<SM>.Instance.AudioImpactSets[ManagerSingleton<SM>.Instance.AudioImpactSets.Length - 1] = AIS;
                 //clears impactdic
