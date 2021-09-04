@@ -15,7 +15,6 @@ using System.Text;
 using BepInEx;
 using UnityEngine;
 using Deli.VFS.Disk;
-using OtherLoader.CustomIDs;
 using Valve.VR.InteractionSystem;
 
 
@@ -238,7 +237,7 @@ namespace OtherLoader
             AssetBundleRequest BulletImpactSet = bundle.Result.LoadAllAssetsAsync<AudioBulletImpactSet>();
             yield return BulletImpactSet;
             LoadImpactSetEntries(BulletImpactSet.allAssets);
-            AssetBundleRequest Quickbelts = bundle.Result.LoadAllAssetsAsync<QuickbeltID>();
+            AssetBundleRequest Quickbelts = bundle.Result.LoadAllAssetsAsync<GameObject>();
             yield return Quickbelts;
             LoadQuickbeltEntries(Quickbelts.allAssets);
             
@@ -286,10 +285,19 @@ namespace OtherLoader
 
         private void LoadQuickbeltEntries(UnityEngine.Object[] allAssets)
         {
-            foreach (QuickbeltID quickbelt in allAssets)
+            foreach (GameObject quickbelt in allAssets)
             {
-                Array.Resize(ref GM.Instance.QuickbeltConfigurations, GM.Instance.QuickbeltConfigurations.Length + 1);
-                GM.Instance.QuickbeltConfigurations[GM.Instance.QuickbeltConfigurations.Length - 1] = quickbelt.quickbeltPrefab;
+                string[] QBnameSplit = quickbelt.name.Split('_');
+                if (QBnameSplit.Length > 1)
+                {
+                    if (QBnameSplit[QBnameSplit.Length - 2] == "QuickBelt")
+                    {
+                        OtherLogger.Log("Adding QuickBelt " + quickbelt.name, OtherLogger.LogType.Loading);
+                        Array.Resize(ref GM.Instance.QuickbeltConfigurations,
+                            GM.Instance.QuickbeltConfigurations.Length + 1);
+                        GM.Instance.QuickbeltConfigurations[GM.Instance.QuickbeltConfigurations.Length - 1] = quickbelt;
+                    }
+                }
             }
         }
 
