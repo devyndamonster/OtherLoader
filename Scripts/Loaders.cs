@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using ADepIn;
 using BepInEx;
 using UnityEngine;
 using Deli.VFS.Disk;
@@ -237,6 +238,9 @@ namespace OtherLoader
             AssetBundleRequest BulletImpactSet = bundle.Result.LoadAllAssetsAsync<AudioBulletImpactSet>();
             yield return BulletImpactSet;
             LoadImpactSetEntries(BulletImpactSet.allAssets);
+            AssetBundleRequest AudioImpactSet = bundle.Result.LoadAllAssetsAsync<AudioImpactSet>();
+            yield return AudioImpactSet;
+            LoadAudioImpactSetEntries(AudioImpactSet.allAssets);
             AssetBundleRequest Quickbelts = bundle.Result.LoadAllAssetsAsync<GameObject>();
             yield return Quickbelts;
             LoadQuickbeltEntries(Quickbelts.allAssets);
@@ -280,6 +284,23 @@ namespace OtherLoader
                 //this is probably the stupidest workaround, but it works and it's short. it just adds impactset to the impact sets
                 ManagerSingleton<SM>.Instance.AudioBulletImpactSets.Concat(new AudioBulletImpactSet[] {impactSet});
                 ManagerSingleton<SM>.Instance.m_bulletHitDic.Add(impactSet.Type, impactSet);
+            }
+        }
+
+        private void LoadAudioImpactSetEntries(UnityEngine.Object[] allAssets)
+        {
+            foreach (AudioImpactSet AIS in allAssets)
+            {
+                //resize SM's AIS list to its length + 1, insert AIS into list
+                Debug.Log("Loading new Audio Impact Set: " + AIS.name);
+                Array.Resize(ref ManagerSingleton<SM>.Instance.AudioImpactSets, ManagerSingleton<SM>.Instance.AudioImpactSets.Length + 1);
+                ManagerSingleton<SM>.Instance.AudioImpactSets[ManagerSingleton<SM>.Instance.AudioImpactSets.Length - 1] = AIS;
+                //clears impactdic
+                ManagerSingleton<SM>.Instance.m_impactDic =
+                    new Dictionary<ImpactType, Dictionary<MatSoundType, Dictionary<AudioImpactIntensity, AudioEvent>>>();
+                //remakes impactdic
+                ManagerSingleton<SM>.Instance.generateImpactDictionary(); //TODO: this is an inefficient method. pls dont remake
+                //the dictionary every time a new one is added! oh well. it works
             }
         }
 
