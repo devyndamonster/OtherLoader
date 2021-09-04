@@ -95,6 +95,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Scripts\QuickbeltPanelPatch.cs" />
     <Compile Include="Scripts\CacheManager.cs" />
     <Compile Include="Scripts\Extensions.cs" />
     <Compile Include="Scripts\ItemSpawnerPatch.cs" />
