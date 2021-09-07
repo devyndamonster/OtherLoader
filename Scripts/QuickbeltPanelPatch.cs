@@ -25,10 +25,7 @@ namespace OtherLoader
 			GameObject template = __instance.OBS_Handedness.ButtonsInSet[0].gameObject; //get and save a template- we'll use this to make the other buttons
 			foreach (FVRPointableButton qb in __instance.OBS_SlotStyle.ButtonsInSet) //delete all the currently existing screens
 				Object.Destroy(qb.gameObject);
-			
-			//add the extra pages and page switch button
-			//TODO: do that please, but also do it later i hate this
-			
+
 			//remake the ButtonsInSet array that holds all the QB buttons
 			__instance.OBS_SlotStyle.ButtonsInSet = new FVRPointableButton[GM.Instance.QuickbeltConfigurations.Length];
 			for (var i = 0; i < __instance.OBS_SlotStyle.ButtonsInSet.Length; i++)
