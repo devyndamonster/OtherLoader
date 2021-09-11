@@ -153,9 +153,7 @@ namespace OtherLoader
                 LoaderStatus.UpdateProgress(uniqueAssetID, 1);
                 LoaderStatus.RemoveActiveLoader(uniqueAssetID);
             });
-            
-            
-            OtherLoader.BundleFiles.Add(uniqueAssetID, file);
+
             LoaderStatus.UpdateProgress(uniqueAssetID, 1);
             LoaderStatus.RemoveActiveLoader(uniqueAssetID);
         }
@@ -247,16 +245,8 @@ namespace OtherLoader
             yield return Quickbelts;
             LoadQuickbeltEntries(Quickbelts.allAssets);
             
+            AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             OtherLogger.Log("Completed loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
-            if (OtherLoader.OptimizeMemory.Value)
-            {
-                Debug.Log("Unloading assetbundle " + bundle.m_result.name);
-                bundle.Result.Unload(false);
-            }
-            else
-            {
-                AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
-            }
         }
         
         private void LoadHandlingGrabSetEntries(UnityEngine.Object[] allAssets)
@@ -464,7 +454,6 @@ namespace OtherLoader
                 }
 
                 item.m_anvilPrefab.Bundle = bundleID;
-                if(String.IsNullOrEmpty(item.m_anvilPrefab.Bundle)) Debug.Log("item " + item.ItemID + " has no bumdle");
 
                 IM.OD.Add(item.ItemID, item);
                 ManagerSingleton<IM>.Instance.odicTagCategory.AddOrCreate(item.Category).Add(item);

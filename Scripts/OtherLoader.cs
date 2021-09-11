@@ -23,7 +23,7 @@ namespace OtherLoader
         public static Dictionary<string, IFileHandle> BundleFiles = new Dictionary<string, IFileHandle>();
         public static Dictionary<string, string> LegacyBundles = new Dictionary<string, string>();
         private static ConfigEntry<int> MaxActiveLoadersConfig;
-        public static ConfigEntry<bool> OptimizeMemory;
+        //public static ConfigEntry<bool> OptimizeMemory;
         public static ConfigEntry<bool> EnableLogging;
         public static ConfigEntry<bool> LogLoading;
 
@@ -37,7 +37,6 @@ namespace OtherLoader
 
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));
-            Harmony.CreateAndPatchAll(typeof(AnvilPatch));
 
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
 
@@ -46,14 +45,14 @@ namespace OtherLoader
 
         private void LoadConfigFile()
         {
-            
+            /*
             OptimizeMemory = Source.Config.Bind(
                 "General",
                 "OptimizeMemory",
                 false,
                 "When enabled, modded assets will be loaded on-demand instead of kept in memory. Can cause small hiccups when spawning modded guns for the first time. Useful if you are low on RAM"
                 );
-            
+            */
 
             EnableLogging = Source.Config.Bind(
                 "Logging",
@@ -102,33 +101,32 @@ namespace OtherLoader
                 AnvilCallbackBase anvilCallbackBase;
                 if (AnvilManager.m_bundles.TryGetValue(bundle, out anvilCallbackBase))
                 {
-                    Debug.Log("Assetbunde " + bundle + " loaded!");
                     __result = anvilCallbackBase as AnvilCallback<AssetBundle>;
                     return false;
                 }
+
                 //If the bundle is not already loaded, then load it
                 else
                 {
-                    Debug.Log("Assetbunde " + bundle + " not yet loaded! Loading!");
                     __result = LoaderUtils.LoadAssetBundleFromFile(BundleFiles[bundle]);
                     AnvilManager.m_bundles.Add(bundle, __result);
                     return false;
                 }
             }
+
             else if (LegacyBundles.ContainsKey(bundle))
             {
                 //If this is a modded bundle, we should first check if the bundle is already loaded
                 AnvilCallbackBase anvilCallbackBase;
                 if (AnvilManager.m_bundles.TryGetValue(bundle, out anvilCallbackBase))
                 {
-                    Debug.Log("Assetbunde " + bundle + " loaded!");
                     __result = anvilCallbackBase as AnvilCallback<AssetBundle>;
                     return false;
                 }
+
                 //If the bundle is not already loaded, then load it
                 else
                 {
-                    Debug.Log("Assetbunde " + bundle + " not yet loaded! Loading!");
                     __result = LoaderUtils.LoadAssetBundleFromPath(LegacyBundles[bundle]);
                     AnvilManager.m_bundles.Add(bundle, __result);
                     return false;

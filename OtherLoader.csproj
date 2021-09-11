@@ -42,11 +42,14 @@
     <Reference Include="ADepIn, Version=21.1.16.2315, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\ADepIn.21.1.16.2315\lib\net35\ADepIn.dll</HintPath>
     </Reference>
-    <Reference Include="Assembly-CSharp, Version=1.2.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>E:\SteamLibrary\steamapps\common\H3VR\h3vr_Data\Managed\publicized_assemblies\Assembly-CSharp_publicized.dll</HintPath>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>Libs\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="BepInEx, Version=5.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\BepInEx.BaseLib.5.4.0\lib\net35\BepInEx.dll</HintPath>
+    </Reference>
+    <Reference Include="BepInEx.Harmony">
+      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\H3VR\BepInEx\core\BepInEx.Harmony.dll</HintPath>
     </Reference>
     <Reference Include="Deli.Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Deli.Newtonsoft.Json.12.0.3\lib\net35\Deli.Newtonsoft.Json.dll</HintPath>
@@ -92,7 +95,6 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Scripts\AnvilPatch.cs" />
     <Compile Include="Scripts\QuickbeltPanelPatch.cs" />
     <Compile Include="Scripts\CacheManager.cs" />
     <Compile Include="Scripts\Extensions.cs" />
