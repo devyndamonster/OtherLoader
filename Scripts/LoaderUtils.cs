@@ -1,7 +1,4 @@
-﻿using Deli.Immediate;
-using Deli.Runtime;
-using Deli.Runtime.Yielding;
-using Deli.VFS;
+﻿
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,9 +11,6 @@ namespace OtherLoader
 {
     public static class LoaderUtils
     {
-
-        public static DelayedReader<byte[]> DelayedByteReader;
-        public static ImmediateReader<byte[]> ImmediateByteReader;
 
         /*
         public static AnvilCallback<AssetBundle> LoadAssetBundleFromFileAsync(IFileHandle file)
@@ -36,11 +30,9 @@ namespace OtherLoader
         */
 
 
-        public static AnvilCallback<AssetBundle> LoadAssetBundleFromFile(IFileHandle file)
+        public static AnvilCallback<AssetBundle> LoadAssetBundle(string path)
         {
-            byte[] bundleBytes = ImmediateByteReader(file);
-
-            AsyncOperation request = AssetBundle.LoadFromMemoryAsync(bundleBytes);
+            AsyncOperation request = AssetBundle.LoadFromFileAsync(path);
 
             AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
             return (AnvilCallback<AssetBundle>)anvilCallbackBase;

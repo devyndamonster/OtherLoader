@@ -1,4 +1,4 @@
-﻿using Deli.Setup;
+﻿
 using UnityEngine;
 using System;
 using System.Collections.Generic;
@@ -9,18 +9,19 @@ using BepInEx;
 using HarmonyLib;
 using BepInEx.Logging;
 using FistVR;
-using Deli.Runtime;
-using Deli.VFS;
-using Deli.Immediate;
 using BepInEx.Configuration;
+using Stratum;
+using System.Collections;
 
 namespace OtherLoader
 {
-    public class OtherLoader : DeliBehaviour
+    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.0.0")]
+    [BepInDependency(StratumRoot.GUID, StratumRoot.Version)]
+    public class OtherLoader : StratumPlugin
     {
         public static string MainLegacyDirectory { get; } = Application.dataPath.Replace("/h3vr_Data", "/LegacyVirtualObjects");
 
-        public static Dictionary<string, IFileHandle> BundleFiles = new Dictionary<string, IFileHandle>();
+        public static Dictionary<string, FileInfo> BundleFiles = new Dictionary<string, FileInfo>();
         public static Dictionary<string, string> LegacyBundles = new Dictionary<string, string>();
         private static ConfigEntry<int> MaxActiveLoadersConfig;
         //public static ConfigEntry<bool> OptimizeMemory;
@@ -40,8 +41,6 @@ namespace OtherLoader
             Harmony.CreateAndPatchAll(typeof(QuickbeltPanelPatch));
 
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
-
-            Stages.Runtime += DuringRuntime;
         }
 
         private void LoadConfigFile()
@@ -55,21 +54,21 @@ namespace OtherLoader
                 );
             */
 
-            EnableLogging = Source.Config.Bind(
+            EnableLogging = Config.Bind(
                 "Logging",
                 "EnableLogging",
                 true,
                 "When enabled, OtherLoader will log more than just errors and warning to the output log"
                 );
 
-            LogLoading = Source.Config.Bind(
+            LogLoading = Config.Bind(
                 "Logging",
                 "LogLoading",
                 false,
                 "When enabled, OtherLoader will log additional useful information during the loading process. EnableLogging must be set to true for this to have an effect"
                 );
 
-            MaxActiveLoadersConfig = Source.Config.Bind(
+            MaxActiveLoadersConfig = Config.Bind(
                 "General",
                 "MaxActiveLoaders",
                 6,
@@ -79,17 +78,19 @@ namespace OtherLoader
             MaxActiveLoaders = MaxActiveLoadersConfig.Value;
         }
 
-        private void DuringRuntime(RuntimeStage stage)
+        public override void OnSetup(IStageContext<Empty> ctx)
         {
-            LoaderUtils.ImmediateByteReader = stage.ImmediateReaders.Get<byte[]>();
-            LoaderUtils.DelayedByteReader = stage.DelayedReaders.Get<byte[]>();
-
-            ItemLoader loader = new ItemLoader();
-            stage.RuntimeAssetLoaders[Source, "item"] = loader.StartAssetLoadFirst;
-            stage.RuntimeAssetLoaders[Source, "item_last"] = loader.StartAssetLoadLast;
-            stage.RuntimeAssetLoaders[Source, "item_unordered"] = loader.StartAssetLoadUnordered;
-            loader.LoadLegacyAssets();
         }
+
+        public override IEnumerator OnRuntime(IStageContext<IEnumerator> ctx)
+        {
+            ItemLoader loader = new ItemLoader();
+            ctx.Loaders.Add("item", loader.StartAssetLoad);
+            loader.LoadLegacyAssets(StartCoroutine);
+
+            yield break;
+        }
+
 
 
         [HarmonyPatch(typeof(AnvilManager), "GetAssetBundleAsyncInternal")]
@@ -109,7 +110,7 @@ namespace OtherLoader
                 //If the bundle is not already loaded, then load it
                 else
                 {
-                    __result = LoaderUtils.LoadAssetBundleFromFile(BundleFiles[bundle]);
+                    __result = LoaderUtils.LoadAssetBundle(BundleFiles[bundle].FullName);
                     AnvilManager.m_bundles.Add(bundle, __result);
                     return false;
                 }
@@ -128,7 +129,7 @@ namespace OtherLoader
                 //If the bundle is not already loaded, then load it
                 else
                 {
-                    __result = LoaderUtils.LoadAssetBundleFromPath(LegacyBundles[bundle]);
+                    __result = LoaderUtils.LoadAssetBundle(LegacyBundles[bundle]);
                     AnvilManager.m_bundles.Add(bundle, __result);
                     return false;
                 }
