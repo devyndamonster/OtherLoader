@@ -12,42 +12,7 @@ namespace OtherLoader
     public static class LoaderUtils
     {
 
-        /*
-        public static AnvilCallback<AssetBundle> LoadAssetBundleFromFileAsync(IFileHandle file)
-        {
-            //Want to read bytes asyncronously
-            ResultYieldInstruction<byte[]> readBytes = DelayedByteReader(file);
-            //yield return readBytes;
-            byte[] bundleBytes = readBytes.Result;
-
-            //We need an AsyncOperation for loading the AssetBundle
-            AsyncOperation request = AssetBundle.LoadFromMemoryAsync(bundleBytes);
-
-            //Everything needs to be packaged in one happy AnvilCallback
-            AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
-            return (AnvilCallback<AssetBundle>)anvilCallbackBase;
-        }
-        */
-
-
         public static AnvilCallback<AssetBundle> LoadAssetBundle(string path)
-        {
-            AsyncOperation request = AssetBundle.LoadFromFileAsync(path);
-
-            AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
-            return (AnvilCallback<AssetBundle>)anvilCallbackBase;
-        }
-
-
-        public static AnvilCallback<AssetBundle> LoadAssetBundleFromBytes(byte[] bundleBytes)
-        {
-            AsyncOperation request = AssetBundle.LoadFromMemoryAsync(bundleBytes);
-
-            AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
-            return (AnvilCallback<AssetBundle>)anvilCallbackBase;
-        }
-
-        public static AnvilCallback<AssetBundle> LoadAssetBundleFromPath(string path)
         {
             AsyncOperation request = AssetBundle.LoadFromFileAsync(path);
 

@@ -21,8 +21,9 @@ namespace OtherLoader
     {
         public static string MainLegacyDirectory { get; } = Application.dataPath.Replace("/h3vr_Data", "/LegacyVirtualObjects");
 
-        public static Dictionary<string, FileInfo> BundleFiles = new Dictionary<string, FileInfo>();
-        public static Dictionary<string, string> LegacyBundles = new Dictionary<string, string>();
+        // A dictionary of asset bundles managed by OtherLoader. The key is the UniqueAssetID, and the value is the path to that file
+        public static Dictionary<string, string> ManagedBundles = new Dictionary<string, string>();
+
         private static ConfigEntry<int> MaxActiveLoadersConfig;
         public static ConfigEntry<bool> OptimizeMemory;
         public static ConfigEntry<bool> EnableLogging;
@@ -99,7 +100,7 @@ namespace OtherLoader
         [HarmonyPrefix]
         private static bool LoadModdedBundles(string bundle, ref AnvilCallback<AssetBundle> __result)
         {
-            if (BundleFiles.ContainsKey(bundle))
+            if (ManagedBundles.ContainsKey(bundle))
             {
                 //If this is a modded bundle, we should first check if the bundle is already loaded
                 AnvilCallbackBase anvilCallbackBase;
@@ -112,26 +113,7 @@ namespace OtherLoader
                 //If the bundle is not already loaded, then load it
                 else
                 {
-                    __result = LoaderUtils.LoadAssetBundle(BundleFiles[bundle].FullName);
-                    AnvilManager.m_bundles.Add(bundle, __result);
-                    return false;
-                }
-            }
-
-            else if (LegacyBundles.ContainsKey(bundle))
-            {
-                //If this is a modded bundle, we should first check if the bundle is already loaded
-                AnvilCallbackBase anvilCallbackBase;
-                if (AnvilManager.m_bundles.TryGetValue(bundle, out anvilCallbackBase))
-                {
-                    __result = anvilCallbackBase as AnvilCallback<AssetBundle>;
-                    return false;
-                }
-
-                //If the bundle is not already loaded, then load it
-                else
-                {
-                    __result = LoaderUtils.LoadAssetBundle(LegacyBundles[bundle]);
+                    __result = LoaderUtils.LoadAssetBundle(ManagedBundles[bundle]);
                     AnvilManager.m_bundles.Add(bundle, __result);
                     return false;
                 }

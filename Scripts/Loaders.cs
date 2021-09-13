@@ -91,10 +91,12 @@ namespace OtherLoader
 
         private IEnumerator LoadAssetsFromPathAsync(string path, string uniqueAssetID, LoadOrderType loadOrder)
         {
+            //Start tracking this bundle and then wait a frame for everything else to be tracked
             LoaderStatus.TrackLoader(uniqueAssetID, loadOrder);
+            yield return null;
 
             //If there are many active loaders at once, we should wait our turn
-            while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders)
+            while ((OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders) || !LoaderStatus.CanOrderedModLoad(uniqueAssetID))
             {
                 yield return null;
             }
@@ -106,7 +108,6 @@ namespace OtherLoader
             LoaderStatus.UpdateProgress(uniqueAssetID, UnityEngine.Random.Range(.1f, .3f));
 
             AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundle(path);
-
             yield return bundle;
 
             LoaderStatus.UpdateProgress(uniqueAssetID, 0.9f);
@@ -119,7 +120,7 @@ namespace OtherLoader
                 LoaderStatus.RemoveActiveLoader(uniqueAssetID);
             });
 
-            OtherLoader.LegacyBundles.Add(uniqueAssetID, path);
+            OtherLoader.ManagedBundles.Add(uniqueAssetID, path);
             LoaderStatus.UpdateProgress(uniqueAssetID, 1);
             LoaderStatus.RemoveActiveLoader(uniqueAssetID);
         }
