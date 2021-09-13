@@ -20,13 +20,28 @@ namespace OtherLoader
 
         private int _counter;
 
-        public IEnumerator StartAssetLoad(FileSystemInfo handle)
+        public IEnumerator StartAssetLoadUnordered(FileSystemInfo handle)
+        {
+            return StartAssetLoad(handle, LoadOrderType.LoadUnordered);
+        }
+
+        public IEnumerator StartAssetLoadFirst(FileSystemInfo handle)
+        {
+            return StartAssetLoad(handle, LoadOrderType.LoadFirst);
+        }
+
+        public IEnumerator StartAssetLoadLast(FileSystemInfo handle)
+        {
+            return StartAssetLoad(handle, LoadOrderType.LoadLast);
+        }
+
+        public IEnumerator StartAssetLoad(FileSystemInfo handle, LoadOrderType loadOrder)
         {
             FileInfo file = handle.ConsumeFile();
 
             string uniqueAssetID = _counter++ + " : " + file.Name;
 
-            return LoadAssetsFromPathAsync(file.FullName, uniqueAssetID).TryCatch(e =>
+            return LoadAssetsFromPathAsync(file.FullName, uniqueAssetID, loadOrder).TryCatch(e =>
             {
                 OtherLogger.LogError("Failed to load mod (" + file + ")");
                 OtherLogger.LogError(e.ToString());
@@ -60,7 +75,7 @@ namespace OtherLoader
 
                     string uniqueAssetID = "Legacy : " + Path.GetFileName(bundlePath);
 
-                    IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, uniqueAssetID).TryCatch<Exception>(e =>
+                    IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, uniqueAssetID, LoadOrderType.LoadUnordered).TryCatch<Exception>(e =>
                     {
                         OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
                         OtherLogger.LogError(e.ToString());
@@ -74,9 +89,9 @@ namespace OtherLoader
         }
 
 
-        private IEnumerator LoadAssetsFromPathAsync(string path, string uniqueAssetID)
+        private IEnumerator LoadAssetsFromPathAsync(string path, string uniqueAssetID, LoadOrderType loadOrder)
         {
-            LoaderStatus.TrackLoader(uniqueAssetID);
+            LoaderStatus.TrackLoader(uniqueAssetID, loadOrder);
 
             //If there are many active loaders at once, we should wait our turn
             while (OtherLoader.MaxActiveLoaders > 0 && LoaderStatus.NumActiveLoaders >= OtherLoader.MaxActiveLoaders)

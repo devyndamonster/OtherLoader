@@ -24,7 +24,7 @@ namespace OtherLoader
         public static Dictionary<string, FileInfo> BundleFiles = new Dictionary<string, FileInfo>();
         public static Dictionary<string, string> LegacyBundles = new Dictionary<string, string>();
         private static ConfigEntry<int> MaxActiveLoadersConfig;
-        //public static ConfigEntry<bool> OptimizeMemory;
+        public static ConfigEntry<bool> OptimizeMemory;
         public static ConfigEntry<bool> EnableLogging;
         public static ConfigEntry<bool> LogLoading;
 
@@ -45,14 +45,14 @@ namespace OtherLoader
 
         private void LoadConfigFile()
         {
-            /*
-            OptimizeMemory = Source.Config.Bind(
+            
+            OptimizeMemory = Config.Bind(
                 "General",
                 "OptimizeMemory",
                 false,
                 "When enabled, modded assets will be loaded on-demand instead of kept in memory. Can cause small hiccups when spawning modded guns for the first time. Useful if you are low on RAM"
                 );
-            */
+            
 
             EnableLogging = Config.Bind(
                 "Logging",
@@ -85,7 +85,9 @@ namespace OtherLoader
         public override IEnumerator OnRuntime(IStageContext<IEnumerator> ctx)
         {
             ItemLoader loader = new ItemLoader();
-            ctx.Loaders.Add("item", loader.StartAssetLoad);
+            ctx.Loaders.Add("item", loader.StartAssetLoadFirst);
+            ctx.Loaders.Add("item_unordered", loader.StartAssetLoadUnordered);
+            ctx.Loaders.Add("item_last", loader.StartAssetLoadLast);
             loader.LoadLegacyAssets(StartCoroutine);
 
             yield break;
