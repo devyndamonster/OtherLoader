@@ -18,8 +18,6 @@ namespace OtherLoader
     public class ItemLoader
     {
 
-        private int _counter;
-
         public IEnumerator StartAssetLoadUnordered(FileSystemInfo handle)
         {
             return StartAssetLoad(handle, LoadOrderType.LoadUnordered);
@@ -35,11 +33,16 @@ namespace OtherLoader
             return StartAssetLoad(handle, LoadOrderType.LoadLast);
         }
 
+        public IEnumerator StartAssetLoadFirstLate(FileSystemInfo handle)
+        {
+            return RegisterLoadAssetsLate(handle, LoadOrderType.LoadLast);
+        }
+
         public IEnumerator StartAssetLoad(FileSystemInfo handle, LoadOrderType loadOrder)
         {
             FileInfo file = handle.ConsumeFile();
 
-            string uniqueAssetID = _counter++ + " : " + file.Name;
+            string uniqueAssetID = file.FullName.Replace(file.Name, "") + " : " + file.Name;
 
             return LoadAssetsFromPathAsync(file.FullName, uniqueAssetID, loadOrder).TryCatch(e =>
             {
@@ -50,6 +53,29 @@ namespace OtherLoader
             });
         }
 
+        public IEnumerator RegisterLoadAssetsLate(FileSystemInfo handle, LoadOrderType loadOrder)
+        {
+            FileInfo file = handle.ConsumeFile();
+
+            //In order to get this bundle to load later, we want to replace the file path for the already loaded FVRObject
+            string uniqueAssetID = file.FullName.Replace(file.Name, "") + " : " + file.Name.Replace("late_", "");
+            OtherLoader.ManagedBundles[uniqueAssetID] = file.FullName;
+
+            AnvilCallbackBase anvilCallbackBase;
+            if (AnvilManager.m_bundles.TryGetValue(uniqueAssetID, out anvilCallbackBase))
+            {
+                AnvilManager.m_bundles.m_lookup.Remove(uniqueAssetID);
+                AnvilManager.m_bundles.m_loading.Remove(anvilCallbackBase);
+
+                OtherLogger.Log("Registered asset bundle to load later (" + uniqueAssetID + ")", OtherLogger.LogType.General);
+            }
+            else
+            {
+                OtherLogger.LogError("Tried to register bundle to load later, but pre-bundle had not yet been loaded! (" + uniqueAssetID + ")");
+            }
+
+            yield return null;
+        }
 
         public void LoadLegacyAssets(CoroutineStarter starter)
         {
@@ -179,7 +205,10 @@ namespace OtherLoader
             AssetBundleRequest Quickbelts = bundle.Result.LoadAllAssetsAsync<GameObject>();
             yield return Quickbelts;
             LoadQuickbeltEntries(Quickbelts.allAssets);
-            
+
+            //CacheManager.DeleteCachedMod(uniqueAssetID);
+            //yield return AnvilManager.Instance.StartCoroutine(CacheManager.CacheMod(uniqueAssetID, 0, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets));
+
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             OtherLogger.Log("Completed loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
         }

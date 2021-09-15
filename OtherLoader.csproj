@@ -89,6 +89,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Scripts\ObjectTemplates\ItemSpawnerCategorySerializable.cs" />
     <Compile Include="Scripts\QuickbeltPanelPatch.cs" />
     <Compile Include="Scripts\CacheManager.cs" />
     <Compile Include="Scripts\Extensions.cs" />

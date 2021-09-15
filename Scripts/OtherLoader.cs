@@ -35,7 +35,7 @@ namespace OtherLoader
         {
             LoadConfigFile();
 
-            //CacheManager.Init();
+            CacheManager.Init();
 
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));
@@ -89,6 +89,7 @@ namespace OtherLoader
             ctx.Loaders.Add("item", loader.StartAssetLoadFirst);
             ctx.Loaders.Add("item_unordered", loader.StartAssetLoadUnordered);
             ctx.Loaders.Add("item_last", loader.StartAssetLoadLast);
+            ctx.Loaders.Add("item_late", loader.StartAssetLoadFirstLate);
             loader.LoadLegacyAssets(StartCoroutine);
 
             yield break;
@@ -106,6 +107,7 @@ namespace OtherLoader
                 AnvilCallbackBase anvilCallbackBase;
                 if (AnvilManager.m_bundles.TryGetValue(bundle, out anvilCallbackBase))
                 {
+                    OtherLogger.Log("Tried to load asset bundle, and it's already loaded : " + bundle, OtherLogger.LogType.General);
                     __result = anvilCallbackBase as AnvilCallback<AssetBundle>;
                     return false;
                 }
@@ -113,6 +115,7 @@ namespace OtherLoader
                 //If the bundle is not already loaded, then load it
                 else
                 {
+                    OtherLogger.Log("Tried to load asset bundle, and it's not yet loaded : " + bundle, OtherLogger.LogType.General);
                     __result = LoaderUtils.LoadAssetBundle(ManagedBundles[bundle]);
                     AnvilManager.m_bundles.Add(bundle, __result);
                     return false;
