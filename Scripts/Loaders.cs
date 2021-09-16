@@ -20,31 +20,36 @@ namespace OtherLoader
 
         public IEnumerator StartAssetLoadUnordered(FileSystemInfo handle)
         {
-            return StartAssetLoad(handle, LoadOrderType.LoadUnordered);
+            return StartAssetLoad(handle, LoadOrderType.LoadUnordered, true);
         }
 
         public IEnumerator StartAssetLoadFirst(FileSystemInfo handle)
         {
-            return StartAssetLoad(handle, LoadOrderType.LoadFirst);
+            return StartAssetLoad(handle, LoadOrderType.LoadFirst, true);
         }
 
         public IEnumerator StartAssetLoadLast(FileSystemInfo handle)
         {
-            return StartAssetLoad(handle, LoadOrderType.LoadLast);
+            return StartAssetLoad(handle, LoadOrderType.LoadLast, true);
         }
 
-        public IEnumerator StartAssetLoadFirstLate(FileSystemInfo handle)
+        public IEnumerator StartAssetDataLoad(FileSystemInfo handle)
         {
-            return RegisterLoadAssetsLate(handle, LoadOrderType.LoadLast);
+            return StartAssetLoad(handle, LoadOrderType.LoadUnordered, false);
         }
 
-        public IEnumerator StartAssetLoad(FileSystemInfo handle, LoadOrderType loadOrder)
+        public IEnumerator RegisterAssetLoadFirstLate(FileSystemInfo handle)
+        {
+            return RegisterAssetLoadLate(handle, LoadOrderType.LoadLast);
+        }
+
+        public IEnumerator StartAssetLoad(FileSystemInfo handle, LoadOrderType loadOrder, bool allowUnload)
         {
             FileInfo file = handle.ConsumeFile();
 
-            string uniqueAssetID = file.FullName.Replace(file.Name, "") + " : " + file.Name;
+            string uniqueAssetID = file.FullName.Replace(file.Name, "").Split(':')[1] + " : " + file.Name;
 
-            return LoadAssetsFromPathAsync(file.FullName, uniqueAssetID, loadOrder).TryCatch(e =>
+            return LoadAssetsFromPathAsync(file.FullName, uniqueAssetID, loadOrder, allowUnload).TryCatch(e =>
             {
                 OtherLogger.LogError("Failed to load mod (" + file + ")");
                 OtherLogger.LogError(e.ToString());
@@ -53,12 +58,13 @@ namespace OtherLoader
             });
         }
 
-        public IEnumerator RegisterLoadAssetsLate(FileSystemInfo handle, LoadOrderType loadOrder)
+
+        public IEnumerator RegisterAssetLoadLate(FileSystemInfo handle, LoadOrderType loadOrder)
         {
             FileInfo file = handle.ConsumeFile();
 
             //In order to get this bundle to load later, we want to replace the file path for the already loaded FVRObject
-            string uniqueAssetID = file.FullName.Replace(file.Name, "") + " : " + file.Name.Replace("late_", "");
+            string uniqueAssetID = file.FullName.Replace(file.Name, "").Split(':')[1] + " : " + file.Name.Replace("late_", "");
             OtherLoader.ManagedBundles[uniqueAssetID] = file.FullName;
 
             AnvilCallbackBase anvilCallbackBase;
@@ -79,7 +85,6 @@ namespace OtherLoader
 
         public void LoadLegacyAssets(CoroutineStarter starter)
         {
-
             if (!Directory.Exists(OtherLoader.MainLegacyDirectory)) Directory.CreateDirectory(OtherLoader.MainLegacyDirectory);
 
             OtherLogger.Log("Plugins folder found (" + Paths.PluginPath + ")", OtherLogger.LogType.General);
@@ -101,7 +106,7 @@ namespace OtherLoader
 
                     string uniqueAssetID = "Legacy : " + Path.GetFileName(bundlePath);
 
-                    IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, uniqueAssetID, LoadOrderType.LoadUnordered).TryCatch<Exception>(e =>
+                    IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, uniqueAssetID, LoadOrderType.LoadUnordered, true).TryCatch<Exception>(e =>
                     {
                         OtherLogger.LogError("Failed to load mod (" + uniqueAssetID + ")");
                         OtherLogger.LogError(e.ToString());
@@ -115,7 +120,7 @@ namespace OtherLoader
         }
 
 
-        private IEnumerator LoadAssetsFromPathAsync(string path, string uniqueAssetID, LoadOrderType loadOrder)
+        private IEnumerator LoadAssetsFromPathAsync(string path, string uniqueAssetID, LoadOrderType loadOrder, bool allowUnload)
         {
             //Start tracking this bundle and then wait a frame for everything else to be tracked
             LoaderStatus.TrackLoader(uniqueAssetID, loadOrder);
@@ -145,6 +150,16 @@ namespace OtherLoader
                 LoaderStatus.UpdateProgress(uniqueAssetID, 1);
                 LoaderStatus.RemoveActiveLoader(uniqueAssetID);
             });
+
+            if (allowUnload && OtherLoader.OptimizeMemory.Value)
+            {
+                OtherLogger.Log("Unloading asset bundle (Optimize Memory is true)", OtherLogger.LogType.Loading);
+                bundle.Result.Unload(false);
+            }
+            else
+            {
+                AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
+            }
 
             OtherLoader.ManagedBundles.Add(uniqueAssetID, path);
             LoaderStatus.UpdateProgress(uniqueAssetID, 1);
@@ -209,7 +224,6 @@ namespace OtherLoader
             //CacheManager.DeleteCachedMod(uniqueAssetID);
             //yield return AnvilManager.Instance.StartCoroutine(CacheManager.CacheMod(uniqueAssetID, 0, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets));
 
-            AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             OtherLogger.Log("Completed loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
         }
         

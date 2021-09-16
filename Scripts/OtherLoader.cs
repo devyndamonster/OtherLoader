@@ -86,10 +86,12 @@ namespace OtherLoader
         public override IEnumerator OnRuntime(IStageContext<IEnumerator> ctx)
         {
             ItemLoader loader = new ItemLoader();
+            ctx.Loaders.Add("item_data", loader.StartAssetDataLoad);
             ctx.Loaders.Add("item", loader.StartAssetLoadFirst);
             ctx.Loaders.Add("item_unordered", loader.StartAssetLoadUnordered);
             ctx.Loaders.Add("item_last", loader.StartAssetLoadLast);
-            ctx.Loaders.Add("item_late", loader.StartAssetLoadFirstLate);
+            ctx.Loaders.Add("item_late", loader.RegisterAssetLoadFirstLate);
+            
             loader.LoadLegacyAssets(StartCoroutine);
 
             yield break;

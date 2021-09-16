@@ -85,10 +85,20 @@ namespace OtherLoader
 
             OtherLogger.Log($"Tracking modded bundle ({modID}), Load Order ({loadOrderType})", OtherLogger.LogType.Loading);
 
+            orderedLoadingLists.Keys.ToList().ForEach(o => OtherLogger.Log($"Current loading list entry keys ({o})", OtherLogger.LogType.Loading));
+
+            
             //Add bundle to load order
-            string guid = modID.Split(':')[0].Trim();
-            if (!orderedLoadingLists.ContainsKey(guid)) orderedLoadingLists.Add(guid, new ModLoadOrderContainer());
-            orderedLoadingLists[guid].AddToLoadOrder(modID, loadOrderType);
+            string modPath = LoaderUtils.GetModPathFromUniqueID(modID);
+
+            OtherLogger.Log($"Is mod in load order ({modPath}) : {orderedLoadingLists.ContainsKey(modPath)}", OtherLogger.LogType.Loading);
+            if (!orderedLoadingLists.ContainsKey(modPath))
+            {
+                OtherLogger.Log("Adding new load order entry for mod", OtherLogger.LogType.Loading);
+                orderedLoadingLists.Add(modPath, new ModLoadOrderContainer());
+            }
+               
+            orderedLoadingLists[modPath].AddToLoadOrder(modID, loadOrderType);
             
         }
 
@@ -99,11 +109,11 @@ namespace OtherLoader
         /// <returns></returns>
         public static bool CanOrderedModLoad(string modID)
         {
-            string guid = modID.Split(':')[0].Trim();
+            string modPath = LoaderUtils.GetModPathFromUniqueID(modID);
 
-            if (!orderedLoadingLists.ContainsKey(guid)) throw new Exception("Mod was not found in load order! ModID: " + modID);
+            if (!orderedLoadingLists.ContainsKey(modPath)) throw new Exception("Mod was not found in load order! ModID: " + modID);
 
-            return orderedLoadingLists[guid].CanBundleLoad(modID);
+            return orderedLoadingLists[modPath].CanBundleLoad(modID);
         }
 
         public static void UpdateProgress(string modID, float progress)
@@ -149,6 +159,8 @@ namespace OtherLoader
                     if(loadUnordered.Count != 0 || loadLast.Count != 0)
                     {
                         OtherLogger.LogError($"Mod is set to load first, but it looks like unordered or load last mods are already loading! ModID ({modID})");
+                        loadUnordered.ForEach(o => OtherLogger.LogError($"Load Unordered ModID ({o.ModID})"));
+                        loadLast.ForEach(o => OtherLogger.LogError($"Load Last ModID ({o.ModID})"));
                     }
                 }
 
@@ -160,6 +172,7 @@ namespace OtherLoader
                     if (loadLast.Count != 0)
                     {
                         OtherLogger.LogError($"Mod is set to load unordered, but it looks like load last mods are already loading! ModID ({modID})");
+                        loadLast.ForEach(o => OtherLogger.LogError($"Load Last ModID ({o.ModID})"));
                     }
                 }
 
