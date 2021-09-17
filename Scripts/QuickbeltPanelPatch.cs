@@ -18,19 +18,19 @@ namespace OtherLoader
 		[HarmonyPrefix]
 		public static bool Patch_AddScreens(OptionsScreen_Quickbelt __instance)
 		{
-			//make the page handler to handle multiple pages
+			//make the page handler; this handles changing pages
 			var pageHandler = __instance.gameObject.AddComponent<QBslotPageHandler>();
 			pageHandler.QBslotButtonSet = __instance.OBS_SlotStyle;
 			
 			GameObject template = __instance.OBS_Handedness.ButtonsInSet[0].gameObject; //get and save a template- we'll use this to make the other buttons
-			foreach (FVRPointableButton qb in __instance.OBS_SlotStyle.ButtonsInSet) //delete all the currently existing screens
+			foreach (FVRPointableButton qb in __instance.OBS_SlotStyle.ButtonsInSet) //delete all the currently existing buttons
 				Object.Destroy(qb.gameObject);
 
 			//remake the ButtonsInSet array that holds all the QB buttons
 			__instance.OBS_SlotStyle.ButtonsInSet = new FVRPointableButton[GM.Instance.QuickbeltConfigurations.Length];
 			for (var i = 0; i < __instance.OBS_SlotStyle.ButtonsInSet.Length; i++)
 			{
-				int pagePos = i % QBS_PER_PAGE; //14 QBs per page + 2 for page nav (qbsperpage is default 14)
+				int pagePos = i % QBS_PER_PAGE; //14 QBs per page + 2 for page nav (qbs_per_page is default 14)
 				int column = pagePos % 4; // 4 QBs per column
 				var row = (int)Mathf.Floor((pagePos / 4f)); //4QBs per row
 
@@ -66,7 +66,7 @@ namespace OtherLoader
 			pageHandler.ButtonNextPage = pageButtonUIButton.gameObject; //set pageHandler's next page button
 			return true;
 		}
-
+		
 		public static Button SetQBSlotOptionsPanelButton(GameObject button, int row, int column, string text)
 		{
 			//localposition multiplier to position the button
@@ -81,15 +81,13 @@ namespace OtherLoader
 			uiButton.onClick.RemoveAllListeners();
 			return uiButton;
 		}
-
-		[HarmonyPatch(typeof(OptionsScreen_Quickbelt), "InitScreen")]
+		
+		[HarmonyPatch(typeof(FVRPlayerBody), "ConfigureQuickbelt")]
 		[HarmonyPrefix]
-		public static bool Patch_OutOfIndexPreventer()
+		public static bool Patch_OutOfIndexPreventer(ref int index)
 		{
-			if (GM.Options.QuickbeltOptions.QuickbeltPreset > GM.Instance.QuickbeltConfigurations.Length)
-			{
-				GM.Options.QuickbeltOptions.QuickbeltPreset = 0;
-			}
+			//anton's code actually does this, but it doesn't work because he didn't subtract the length by one.
+			index = Mathf.Clamp(index, 0, ManagerSingleton<GM>.Instance.QuickbeltConfigurations.Length - 1);
 			return true;
 		}
 	}
