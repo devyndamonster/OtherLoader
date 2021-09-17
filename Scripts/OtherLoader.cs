@@ -37,6 +37,7 @@ namespace OtherLoader
 
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));
+            Harmony.CreateAndPatchAll(typeof(QuickbeltPanelPatch));
 
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
 
