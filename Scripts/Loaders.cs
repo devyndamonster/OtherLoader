@@ -194,7 +194,8 @@ namespace OtherLoader
             LoaderStatus.UpdateProgress(uniqueAssetID, 1);
             LoaderStatus.RemoveActiveLoader(uniqueAssetID);
         }
-        
+
+
 
         private IEnumerator ApplyLoadedAssetBundle(AnvilCallback<AssetBundle> bundle, string uniqueAssetID)
         {
@@ -224,30 +225,25 @@ namespace OtherLoader
             LoadSpawnerIDs(spawnerIDs.allAssets);
             
             //handle handling grab/release/slot sets
-            AssetBundleRequest handlingGrabSet = bundle.Result.LoadAllAssetsAsync<HandlingGrabSet>();
-            yield return handlingGrabSet;
-            LoadHandlingGrabSetEntries(handlingGrabSet.allAssets);
-            
-            AssetBundleRequest handlingReleaseSet = bundle.Result.LoadAllAssetsAsync<HandlingReleaseSet>();
-            yield return handlingReleaseSet;
-            LoadHandlingReleaseSetEntries(handlingReleaseSet.allAssets);
-            
-            AssetBundleRequest handlingSlotSet = bundle.Result.LoadAllAssetsAsync<HandlingReleaseIntoSlotSet>();
-            yield return handlingSlotSet;
-            LoadHandlingSlotSetEntries(handlingSlotSet.allAssets);
-            
+            AssetBundleRequest HandlingGrabSet = bundle.Result.LoadAllAssetsAsync<HandlingGrabSet>();
+            yield return HandlingGrabSet;
+            LoadHandlingGrabSetEntries(HandlingGrabSet.allAssets);
+            AssetBundleRequest HandlingReleaseSet = bundle.Result.LoadAllAssetsAsync<HandlingReleaseSet>();
+            yield return HandlingReleaseSet;
+            LoadHandlingReleaseSetEntries(HandlingReleaseSet.allAssets);
+            AssetBundleRequest HandlingSlotSet = bundle.Result.LoadAllAssetsAsync<HandlingReleaseIntoSlotSet>();
+            yield return HandlingSlotSet;
+            LoadHandlingSlotSetEntries(HandlingSlotSet.allAssets);
             //audio bullet impact sets; handled similarly to the ones above
-            AssetBundleRequest bulletImpactSet = bundle.Result.LoadAllAssetsAsync<AudioBulletImpactSet>();
-            yield return bulletImpactSet;
-            LoadImpactSetEntries(bulletImpactSet.allAssets);
-            
-            AssetBundleRequest audioImpactSet = bundle.Result.LoadAllAssetsAsync<AudioImpactSet>();
-            yield return audioImpactSet;
-            LoadAudioImpactSetEntries(audioImpactSet.allAssets);
-            
-            AssetBundleRequest quickbelts = bundle.Result.LoadAllAssetsAsync<GameObject>();
-            yield return quickbelts;
-            LoadQuickbeltEntries(quickbelts.allAssets);
+            AssetBundleRequest BulletImpactSet = bundle.Result.LoadAllAssetsAsync<AudioBulletImpactSet>();
+            yield return BulletImpactSet;
+            LoadImpactSetEntries(BulletImpactSet.allAssets);
+            AssetBundleRequest AudioImpactSet = bundle.Result.LoadAllAssetsAsync<AudioImpactSet>();
+            yield return AudioImpactSet;
+            LoadAudioImpactSetEntries(AudioImpactSet.allAssets);
+            AssetBundleRequest Quickbelts = bundle.Result.LoadAllAssetsAsync<GameObject>();
+            yield return Quickbelts;
+            LoadQuickbeltEntries(Quickbelts.allAssets);
             
             AnvilManager.m_bundles.Add(uniqueAssetID, bundle);
             OtherLogger.Log("Completed loading of asset bundle (" + uniqueAssetID + ")", OtherLogger.LogType.General);
