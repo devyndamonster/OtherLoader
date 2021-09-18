@@ -10,32 +10,29 @@ using Object = UnityEngine.Object;
 
 namespace OtherLoader
 {
-	public class QuickbeltPanelPatch
+	public static class QuickbeltPanelPatch
 	{
-		public static readonly int QBsPerPage = 14;
+		public const int QBS_PER_PAGE = 14;
 		//this entire thing just patches the quickbelt buttons to be dynamic and adds em in properly
 		[HarmonyPatch(typeof(OptionsScreen_Quickbelt), "Awake")]
 		[HarmonyPrefix]
 		public static bool Patch_AddScreens(OptionsScreen_Quickbelt __instance)
 		{
-			//make the page handler to handle multiple pages
+			//make the page handler; this handles changing pages
 			var pageHandler = __instance.gameObject.AddComponent<QBslotPageHandler>();
 			pageHandler.QBslotButtonSet = __instance.OBS_SlotStyle;
 			
-			var template = __instance.OBS_Handedness.ButtonsInSet[0].gameObject; //get and save a template- we'll use this to make the other buttons
-			foreach (var qb in __instance.OBS_SlotStyle.ButtonsInSet) //delete all the currently existing screens
+			GameObject template = __instance.OBS_Handedness.ButtonsInSet[0].gameObject; //get and save a template- we'll use this to make the other buttons
+			foreach (FVRPointableButton qb in __instance.OBS_SlotStyle.ButtonsInSet) //delete all the currently existing buttons
 				Object.Destroy(qb.gameObject);
-			
-			//add the extra pages and page switch button
-			//TODO: do that please, but also do it later i hate this
-			
+
 			//remake the ButtonsInSet array that holds all the QB buttons
 			__instance.OBS_SlotStyle.ButtonsInSet = new FVRPointableButton[GM.Instance.QuickbeltConfigurations.Length];
-			for (int i = 0; i < __instance.OBS_SlotStyle.ButtonsInSet.Length; i++)
+			for (var i = 0; i < __instance.OBS_SlotStyle.ButtonsInSet.Length; i++)
 			{
-				int pagePos = i % QBsPerPage; //14 QBs per page + 2 for page nav (qbsperpage is default 14)
+				int pagePos = i % QBS_PER_PAGE; //14 QBs per page + 2 for page nav (qbs_per_page is default 14)
 				int column = pagePos % 4; // 4 QBs per column
-				int row = (int) Mathf.Floor((pagePos / 4f)); //4QBs per row
+				var row = (int)Mathf.Floor((pagePos / 4f)); //4QBs per row
 
 				//set fistvr button location / references
 				//spawn off template; set proper parent
@@ -44,55 +41,53 @@ namespace OtherLoader
 				FVRPointableButton newButtonsButton = newButton.GetComponent<FVRPointableButton>(); //get pointablebutton
 				__instance.OBS_SlotStyle.ButtonsInSet[i] = newButtonsButton; //add the pointable button to the list
 				string QBname = GM.Instance.QuickbeltConfigurations[i].name.Split('_').Last(); //get name based off prefab name
-				Button UnityUIButton = SetQBSlotOptionsPanelButton(newButton, row, column, QBname);
+				Button uiButton = SetQBSlotOptionsPanelButton(newButton, row, column, QBname);
 
 				//Before you ask, "__instance.SetSlotStyle(i)" will not work
 				//what it calls moves with i, and i can't get it to stay. neither will
 				//some hack that makes a new int on the fly based off i. 
 				
 				//set the QB style
-				UnityUIButton.onClick.AddListener(delegate { __instance.SetSlotStyle(UnityUIButton.transform.GetSiblingIndex()); });
+				uiButton.onClick.AddListener(() => { __instance.SetSlotStyle(uiButton.transform.GetSiblingIndex()); });
 				//tell the button group handler the button's been pressed
-				UnityUIButton.onClick.AddListener(delegate { __instance.OBS_SlotStyle.SetSelectedButton(UnityUIButton.transform.GetSiblingIndex()); });
+				uiButton.onClick.AddListener(()  =>{ __instance.OBS_SlotStyle.SetSelectedButton(uiButton.transform.GetSiblingIndex()); });
 			}
 			
 			//make last page button. see the forloop for comments, it's basically the same
 			GameObject pageButton = Object.Instantiate(template, __instance.OBS_SlotStyle.transform, true);
 			Button pageButtonUIButton = SetQBSlotOptionsPanelButton(pageButton, 3, 2, "Previous Page");
-			pageButtonUIButton.onClick.AddListener(delegate { pageHandler.GotoPreviousPage(); });
+			pageButtonUIButton.onClick.AddListener(() => { pageHandler.GotoPreviousPage(); });
 			pageHandler.ButtonPreviousPage = pageButtonUIButton.gameObject; //set pageHandler's prev page button
 			
 			//make next page button.
 			pageButton = Object.Instantiate(template, __instance.OBS_SlotStyle.transform, true);
 			pageButtonUIButton = SetQBSlotOptionsPanelButton(pageButton, 3, 3, "Next Page");
-			pageButtonUIButton.onClick.AddListener(delegate { pageHandler.GotoNextPage(); });
+			pageButtonUIButton.onClick.AddListener(() => { pageHandler.GotoNextPage(); });
 			pageHandler.ButtonNextPage = pageButtonUIButton.gameObject; //set pageHandler's next page button
 			return true;
 		}
-
+		
 		public static Button SetQBSlotOptionsPanelButton(GameObject button, int row, int column, string text)
 		{
 			//localposition multiplier to position the button
-			float buttonx = -100 + (125 * column);
-			float buttony = -40 + (-45 * row);
+			float buttonX = -100 + (125 * column);
+			float buttonY = -40 + (-45 * row);
 			//set the localpositions
-			button.transform.localPosition = new Vector3(buttonx, buttony, button.transform.localPosition.z);
+			button.transform.localPosition = new Vector3(buttonX, buttonY, button.transform.localPosition.z);
 			//set the text
 			button.gameObject.transform.GetChild(0).GetComponent<Text>().text = text;
 			//remove listeners; return button for adding listeners
-			Button UIbutton = button.GetComponent<Button>(); 
-			UIbutton.onClick.RemoveAllListeners();
-			return UIbutton;
+			var uiButton = button.GetComponent<Button>(); 
+			uiButton.onClick.RemoveAllListeners();
+			return uiButton;
 		}
-
-		[HarmonyPatch(typeof(OptionsScreen_Quickbelt), "InitScreen")]
+		
+		[HarmonyPatch(typeof(FVRPlayerBody), "ConfigureQuickbelt")]
 		[HarmonyPrefix]
-		public static bool Patch_OutOfIndexPreventer()
+		public static bool Patch_OutOfIndexPreventer(ref int index)
 		{
-			if (GM.Options.QuickbeltOptions.QuickbeltPreset > GM.Instance.QuickbeltConfigurations.Length)
-			{
-				GM.Options.QuickbeltOptions.QuickbeltPreset = 0;
-			}
+			//anton's code actually does this, but it doesn't work because he didn't subtract the length by one.
+			index = Mathf.Clamp(index, 0, ManagerSingleton<GM>.Instance.QuickbeltConfigurations.Length - 1);
 			return true;
 		}
 	}
@@ -114,7 +109,7 @@ namespace OtherLoader
 			ButtonNextPage.SetActive(true);
 			ButtonPreviousPage.SetActive(true);
 			if (currentPage <= 0) ButtonPreviousPage.SetActive(false);
-			int pages = Mathf.CeilToInt(QBslotButtonSet.ButtonsInSet.Length / QuickbeltPanelPatch.QBsPerPage);
+			int pages = Mathf.CeilToInt(QBslotButtonSet.ButtonsInSet.Length / QuickbeltPanelPatch.QBS_PER_PAGE);
 			if(currentPage >= pages) ButtonNextPage.SetActive(false);
 		}
 
@@ -122,9 +117,9 @@ namespace OtherLoader
 		{
 			SetButtons();
 			//disable every button
-			foreach (var button in QBslotButtonSet.ButtonsInSet) button.gameObject.SetActive(false);
-			int startPoint = currentPage * QuickbeltPanelPatch.QBsPerPage; //the first button in the page
-			int endPoint = startPoint + QuickbeltPanelPatch.QBsPerPage; //the end point
+			foreach (FVRPointableButton button in QBslotButtonSet.ButtonsInSet) button.gameObject.SetActive(false);
+			int startPoint = currentPage * QuickbeltPanelPatch.QBS_PER_PAGE; //the first button in the page
+			int endPoint = startPoint + QuickbeltPanelPatch.QBS_PER_PAGE; //the end point
 			
 			//set every button from startpoint to endpoint to active
 			for (int i = startPoint; i < endPoint; i++)
