@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -37,6 +38,11 @@ namespace OtherLoader
             this.BundleID = BundleID;
             this.LoadOrderType = LoadOrderType;
             Status = BundleStatus.Waiting;
+        }
+
+        public string GetBundlePath()
+        {
+            return Path.Combine(LoaderUtils.GetModPathFromUniqueID(BundleID), LoaderUtils.GetBundleNameFromUniqueID(BundleID));
         }
     }
 
@@ -294,7 +300,7 @@ namespace OtherLoader
                     {
                         if (dep.BundleID == bundleID) break;
 
-                        if (dep.Status == BundleStatus.Unloaded)
+                        if (!AnvilManager.m_bundles.m_lookup.ContainsKey(dep.BundleID))
                         {
                             depList.Add(dep);
                         }
@@ -305,7 +311,7 @@ namespace OtherLoader
                 {
                     foreach (BundleInfo dep in loadFirst)
                     {
-                        if (dep.Status == BundleStatus.Unloaded)
+                        if (!AnvilManager.m_bundles.m_lookup.ContainsKey(dep.BundleID))
                         {
                             depList.Add(dep);
                         }
@@ -316,7 +322,7 @@ namespace OtherLoader
                 {
                     foreach (BundleInfo dep in loadFirst)
                     {
-                        if (dep.Status == BundleStatus.Unloaded)
+                        if (!AnvilManager.m_bundles.m_lookup.ContainsKey(dep.BundleID))
                         {
                             depList.Add(dep);
                         }
@@ -324,7 +330,7 @@ namespace OtherLoader
 
                     foreach (BundleInfo dep in loadUnordered)
                     {
-                        if (dep.Status == BundleStatus.Unloaded)
+                        if (!AnvilManager.m_bundles.m_lookup.ContainsKey(dep.BundleID))
                         {
                             depList.Add(dep);
                         }
@@ -334,7 +340,7 @@ namespace OtherLoader
                     {
                         if (dep.BundleID == bundleID) break;
 
-                        if (dep.Status == BundleStatus.Unloaded)
+                        if (!AnvilManager.m_bundles.m_lookup.ContainsKey(dep.BundleID))
                         {
                             depList.Add(dep);
                         }

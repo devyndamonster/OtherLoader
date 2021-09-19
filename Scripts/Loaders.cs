@@ -39,7 +39,7 @@ namespace OtherLoader
 
         public IEnumerator StartAssetDataLoad(FileSystemInfo handle)
         {
-            return StartAssetLoad(handle, LoadOrderType.LoadUnordered, false);
+            return StartAssetLoad(handle, LoadOrderType.LoadFirst, false);
         }
 
         public IEnumerator RegisterAssetLoadFirstLate(FileSystemInfo handle)
@@ -168,7 +168,7 @@ namespace OtherLoader
 
             OtherLoader.ManagedBundles.Add(bundleID, path);
             LoaderStatus.UpdateProgress(bundleID, 1);
-            LoaderStatus.RemoveActiveLoader(bundleID, !OtherLoader.OptimizeMemory.Value);
+            LoaderStatus.RemoveActiveLoader(bundleID, !(OtherLoader.OptimizeMemory.Value && allowUnload));
         }
 
 

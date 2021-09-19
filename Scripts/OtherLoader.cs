@@ -110,7 +110,7 @@ namespace OtherLoader
                 AnvilCallbackBase anvilCallbackBase;
                 if (AnvilManager.m_bundles.TryGetValue(bundle, out anvilCallbackBase))
                 {
-                    OtherLogger.Log("Tried to load asset bundle, and it's already loaded : " + bundle, OtherLogger.LogType.Loading);
+                    OtherLogger.Log("Tried to load modded asset bundle, and it's already loaded : " + bundle, OtherLogger.LogType.Loading);
                     __result = anvilCallbackBase as AnvilCallback<AssetBundle>;
                     return false;
                 }
@@ -118,11 +118,31 @@ namespace OtherLoader
                 //If the bundle is not already loaded, then load it
                 else
                 {
-                    OtherLogger.Log("Tried to load asset bundle, and it's not yet loaded : " + bundle, OtherLogger.LogType.Loading);
-                    OtherLogger.Log("Dependencies:", OtherLogger.LogType.Loading);
-                    LoaderStatus.GetBundleDependencies(bundle).ForEach(o => OtherLogger.Log(o.BundleID, OtherLogger.LogType.Loading));
+                    OtherLogger.Log("Tried to load modded asset bundle, and it's not yet loaded : " + bundle, OtherLogger.LogType.Loading);
+                    
+                    AnvilCallback<AssetBundle> mainCallback = LoaderUtils.LoadAssetBundle(ManagedBundles[bundle]);
+                    List<BundleInfo> dependencies = LoaderStatus.GetBundleDependencies(bundle);
 
-                    __result = LoaderUtils.LoadAssetBundle(ManagedBundles[bundle]);
+                    if (dependencies.Count > 0)
+                    {
+                        OtherLogger.Log("Dependencies:", OtherLogger.LogType.Loading);
+                        dependencies.ForEach(o => OtherLogger.Log(o.GetBundlePath(), OtherLogger.LogType.Loading));
+
+                        //Start with the last dependency, and loop through from second to last dep up to the first dep
+                        //The first dep in the list is the dependency for all other dependencies, so it is the deepest
+                        AnvilCallback<AssetBundle> dependency = LoaderUtils.LoadAssetBundle(dependencies.Last().GetBundlePath());
+                        mainCallback.m_dependancy = dependency;
+                        AnvilManager.m_bundles.Add(dependencies.Last().BundleID, dependency);
+
+                        for (int i = dependencies.Count - 2; i >= 0; i--)
+                        {
+                            dependency.m_dependancy = LoaderUtils.LoadAssetBundle(dependencies[i].GetBundlePath());
+                            dependency = dependency.m_dependancy;
+                            AnvilManager.m_bundles.Add(dependencies[i].BundleID, dependency);
+                        }
+                    }
+
+                    __result = mainCallback;
                     AnvilManager.m_bundles.Add(bundle, __result);
                     return false;
                 }
