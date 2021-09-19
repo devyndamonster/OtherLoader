@@ -21,14 +21,14 @@ namespace OtherLoader
         }
 
 
-        public static string GetModPathFromUniqueID(string uniqueAssetID) 
+        public static string GetModPathFromUniqueID(string bundleID) 
         {
-            return uniqueAssetID.Split(':')[0].Trim();
+            return bundleID.Split(new string[] { " : " }, StringSplitOptions.None)[0].Trim();
         }
 
-        public static string GetBundleNameFromUniqueID(string uniqueAssetID)
+        public static string GetBundleNameFromUniqueID(string bundleID)
         {
-            return uniqueAssetID.Split(':')[1].Trim();
+            return bundleID.Split(new string[] { " : " }, StringSplitOptions.None)[1].Trim();
         }
 
 

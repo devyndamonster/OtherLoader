@@ -12,6 +12,7 @@ using FistVR;
 using BepInEx.Configuration;
 using Stratum;
 using System.Collections;
+using Anvil;
 
 namespace OtherLoader
 {
@@ -101,7 +102,7 @@ namespace OtherLoader
 
         [HarmonyPatch(typeof(AnvilManager), "GetAssetBundleAsyncInternal")]
         [HarmonyPrefix]
-        private static bool LoadModdedBundles(string bundle, ref AnvilCallback<AssetBundle> __result)
+        private static bool LoadModdedBundlesPatch(string bundle, ref AnvilCallback<AssetBundle> __result)
         {
             if (ManagedBundles.ContainsKey(bundle))
             {
@@ -109,7 +110,7 @@ namespace OtherLoader
                 AnvilCallbackBase anvilCallbackBase;
                 if (AnvilManager.m_bundles.TryGetValue(bundle, out anvilCallbackBase))
                 {
-                    OtherLogger.Log("Tried to load asset bundle, and it's already loaded : " + bundle, OtherLogger.LogType.General);
+                    OtherLogger.Log("Tried to load asset bundle, and it's already loaded : " + bundle, OtherLogger.LogType.Loading);
                     __result = anvilCallbackBase as AnvilCallback<AssetBundle>;
                     return false;
                 }
@@ -117,7 +118,10 @@ namespace OtherLoader
                 //If the bundle is not already loaded, then load it
                 else
                 {
-                    OtherLogger.Log("Tried to load asset bundle, and it's not yet loaded : " + bundle, OtherLogger.LogType.General);
+                    OtherLogger.Log("Tried to load asset bundle, and it's not yet loaded : " + bundle, OtherLogger.LogType.Loading);
+                    OtherLogger.Log("Dependencies:", OtherLogger.LogType.Loading);
+                    LoaderStatus.GetBundleDependencies(bundle).ForEach(o => OtherLogger.Log(o.ModID, OtherLogger.LogType.Loading));
+
                     __result = LoaderUtils.LoadAssetBundle(ManagedBundles[bundle]);
                     AnvilManager.m_bundles.Add(bundle, __result);
                     return false;
@@ -128,6 +132,26 @@ namespace OtherLoader
         }
 
 
+        //This patch courtesy of Potatoes
+        [HarmonyPatch(typeof(AnvilAsset), "GetGameObjectAsync")]
+        [HarmonyPatch(typeof(AnvilAsset), "GetGameObject")]
+        [HarmonyPrefix]
+        public static bool SetBundlePatch(AnvilAsset __instance)
+        {
+            if (string.IsNullOrEmpty(__instance.m_anvilPrefab.Bundle))
+            {
+                var fvro = __instance as FVRObject;
+                if (fvro != null)
+                {
+                    FVRObject thisObject;
+                    if (IM.OD.TryGetValue(fvro.ItemID, out thisObject))
+                    {
+                        __instance.m_anvilPrefab.Bundle = thisObject.m_anvilPrefab.Bundle;
+                    }
+                }
+            }
+            return true;
+        }
 
 
 

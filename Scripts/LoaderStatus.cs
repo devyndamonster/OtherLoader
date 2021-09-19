@@ -16,14 +16,14 @@ namespace OtherLoader
 
     public class BundleLoadStatus
     {
-        public string ModID;
+        public string BundleID;
         public bool IsLoaded;
         public bool CanLoad;
         public LoadOrderType LoadOrderType;
 
-        public BundleLoadStatus(string ModID, bool IsLoaded, LoadOrderType LoadOrderType)
+        public BundleLoadStatus(string BundleID, bool IsLoaded, LoadOrderType LoadOrderType)
         {
-            this.ModID = ModID;
+            this.BundleID = BundleID;
             this.IsLoaded = IsLoaded;
             this.CanLoad = false;
             this.LoadOrderType = LoadOrderType;
@@ -56,19 +56,19 @@ namespace OtherLoader
             return totalProgress / trackedLoaders.Count;
         }
 
-        public static void AddActiveLoader(string modID)
+        public static void AddActiveLoader(string bundleID)
         {
-            if (!activeLoaders.Contains(modID)) activeLoaders.Add(modID);
+            if (!activeLoaders.Contains(bundleID)) activeLoaders.Add(bundleID);
         }
 
-        public static void RemoveActiveLoader(string modID)
+        public static void RemoveActiveLoader(string bundleID)
         {
-            if (activeLoaders.Contains(modID))
+            if (activeLoaders.Contains(bundleID))
             {
-                activeLoaders.Remove(modID);
+                activeLoaders.Remove(bundleID);
 
-                string guid = modID.Split(':')[0].Trim();
-                orderedLoadingLists[guid].MarkBundleAsLoaded(modID);
+                string modPath = LoaderUtils.GetModPathFromUniqueID(bundleID);
+                orderedLoadingLists[modPath].MarkBundleAsLoaded(bundleID);
                 
                 if (GetLoaderProgress() >= 1)
                 {
@@ -78,49 +78,55 @@ namespace OtherLoader
         }
 
 
-        public static void TrackLoader(string modID, LoadOrderType loadOrderType)
+        public static void TrackLoader(string bundleID, LoadOrderType loadOrderType, bool isLoadedImmediate)
         {
-            if (!trackedLoaders.ContainsKey(modID)) trackedLoaders.Add(modID, 0);
-            else throw new Exception("Tried to track progress on a mod that is already being tracked! ModID: " + modID);
+            //Only actively track this asset bundle if it is immediately being loaded
+            if (isLoadedImmediate)
+            {
+                if (!trackedLoaders.ContainsKey(bundleID)) trackedLoaders.Add(bundleID, 0);
+                else throw new Exception("Tried to track progress on a mod that is already being tracked! BundleID: " + bundleID);
+            }
 
-            OtherLogger.Log($"Tracking modded bundle ({modID}), Load Order ({loadOrderType})", OtherLogger.LogType.Loading);
+            OtherLogger.Log($"Tracking modded bundle ({bundleID}), Load Order ({loadOrderType})", OtherLogger.LogType.Loading);
 
-            orderedLoadingLists.Keys.ToList().ForEach(o => OtherLogger.Log($"Current loading list entry keys ({o})", OtherLogger.LogType.Loading));
-
-            
             //Add bundle to load order
-            string modPath = LoaderUtils.GetModPathFromUniqueID(modID);
-
-            OtherLogger.Log($"Is mod in load order ({modPath}) : {orderedLoadingLists.ContainsKey(modPath)}", OtherLogger.LogType.Loading);
+            string modPath = LoaderUtils.GetModPathFromUniqueID(bundleID);
             if (!orderedLoadingLists.ContainsKey(modPath))
             {
                 OtherLogger.Log("Adding new load order entry for mod", OtherLogger.LogType.Loading);
                 orderedLoadingLists.Add(modPath, new ModLoadOrderContainer());
             }
                
-            orderedLoadingLists[modPath].AddToLoadOrder(modID, loadOrderType);
-            
+            orderedLoadingLists[modPath].AddToLoadOrder(bundleID, loadOrderType);
         }
+
 
         /// <summary>
         /// Returns true if the given modID is allowed to load based on other assetbundle dependencies
         /// </summary>
         /// <param name="modID"></param>
         /// <returns></returns>
-        public static bool CanOrderedModLoad(string modID)
+        public static bool CanOrderedModLoad(string bundleID)
         {
-            string modPath = LoaderUtils.GetModPathFromUniqueID(modID);
+            string modPath = LoaderUtils.GetModPathFromUniqueID(bundleID);
 
-            if (!orderedLoadingLists.ContainsKey(modPath)) throw new Exception("Mod was not found in load order! ModID: " + modID);
+            if (!orderedLoadingLists.ContainsKey(modPath)) throw new Exception("Mod was not found in load order! BundleID: " + bundleID);
 
-            return orderedLoadingLists[modPath].CanBundleLoad(modID);
+            return (OtherLoader.MaxActiveLoaders <= 0 || NumActiveLoaders < OtherLoader.MaxActiveLoaders) && orderedLoadingLists[modPath].CanBundleLoad(bundleID);
         }
 
-        public static void UpdateProgress(string modID, float progress)
+        public static void UpdateProgress(string bundleID, float progress)
         {
-            if (trackedLoaders.ContainsKey(modID)) trackedLoaders[modID] = progress;
+            if (trackedLoaders.ContainsKey(bundleID)) trackedLoaders[bundleID] = progress;
 
             ProgressUpdated?.Invoke();
+        }
+
+
+        public static List<BundleLoadStatus> GetBundleDependencies(string bundleID)
+        {
+            string modPath = LoaderUtils.GetModPathFromUniqueID(bundleID);
+            return orderedLoadingLists[modPath].GetBundleDependencies(bundleID);
         }
 
 
@@ -145,9 +151,9 @@ namespace OtherLoader
 
             public Dictionary<string, BundleLoadStatus> bundleStatusDic = new Dictionary<string, BundleLoadStatus>();
 
-            public void AddToLoadOrder(string modID, LoadOrderType loadOrderType)
+            public void AddToLoadOrder(string bundleID, LoadOrderType loadOrderType)
             {
-                BundleLoadStatus loadStatus = new BundleLoadStatus(modID, false, loadOrderType);
+                BundleLoadStatus loadStatus = new BundleLoadStatus(bundleID, false, loadOrderType);
 
                 //With this new bundle, we should decide if it is able to start being loaded immediately
 
@@ -158,9 +164,9 @@ namespace OtherLoader
                     //When adding load first bundles, there must never be unordered or load last bundles already added
                     if(loadUnordered.Count != 0 || loadLast.Count != 0)
                     {
-                        OtherLogger.LogError($"Mod is set to load first, but it looks like unordered or load last mods are already loading! ModID ({modID})");
-                        loadUnordered.ForEach(o => OtherLogger.LogError($"Load Unordered ModID ({o.ModID})"));
-                        loadLast.ForEach(o => OtherLogger.LogError($"Load Last ModID ({o.ModID})"));
+                        OtherLogger.LogError($"Mod is set to load first, but it looks like unordered or load last mods are already loading! BundleID ({bundleID})");
+                        loadUnordered.ForEach(o => OtherLogger.LogError($"Load Unordered BundleID ({o.BundleID})"));
+                        loadLast.ForEach(o => OtherLogger.LogError($"Load Last BundleID ({o.BundleID})"));
                     }
                 }
 
@@ -171,8 +177,8 @@ namespace OtherLoader
                     //When adding load unordered bundles, there must never be load last bundles already added
                     if (loadLast.Count != 0)
                     {
-                        OtherLogger.LogError($"Mod is set to load unordered, but it looks like load last mods are already loading! ModID ({modID})");
-                        loadLast.ForEach(o => OtherLogger.LogError($"Load Last ModID ({o.ModID})"));
+                        OtherLogger.LogError($"Mod is set to load unordered, but it looks like load last mods are already loading! BundleID ({bundleID})");
+                        loadLast.ForEach(o => OtherLogger.LogError($"Load Last BundleID ({o.BundleID})"));
                     }
                 }
 
@@ -186,26 +192,26 @@ namespace OtherLoader
                 else if (loadOrderType == LoadOrderType.LoadLast) loadLast.Add(loadStatus);
                 else if (loadOrderType == LoadOrderType.LoadUnordered) loadUnordered.Add(loadStatus);
 
-                bundleStatusDic.Add(modID, loadStatus);
+                bundleStatusDic.Add(bundleID, loadStatus);
             }
 
-            public bool CanBundleLoad(string modID)
+            public bool CanBundleLoad(string bundleID)
             {
-                BundleLoadStatus loadStatus = bundleStatusDic[modID];
+                BundleLoadStatus loadStatus = bundleStatusDic[bundleID];
 
                 if (loadStatus.IsLoaded)
                 {
-                    OtherLogger.LogError($"Mod is already loaded, but something is still asking to load it! ModID ({modID})");
+                    OtherLogger.LogError($"Mod is already loaded, but something is still asking to load it! BundleID ({bundleID})");
                     return false;
                 }
 
                 return loadStatus.CanLoad;
             }
 
-            public void MarkBundleAsLoaded(string modID)
+            public void MarkBundleAsLoaded(string bundleID)
             {
                 //First, mark bundle as loaded
-                BundleLoadStatus bundleStatus = bundleStatusDic[modID];
+                BundleLoadStatus bundleStatus = bundleStatusDic[bundleID];
                 bundleStatus.IsLoaded = true;
 
                 //Next, mark one of the bundles that aren't yet loaded as able to load
@@ -253,8 +259,70 @@ namespace OtherLoader
                         nextBundle.CanLoad = true;
                     }
                 }
-
             }
+
+
+            public List<BundleLoadStatus> GetBundleDependencies(string bundleID)
+            {
+                List<BundleLoadStatus> depList = new List<BundleLoadStatus>();
+                BundleLoadStatus bundleStatus = bundleStatusDic[bundleID];
+
+                if(bundleStatus.LoadOrderType == LoadOrderType.LoadFirst)
+                {
+                    foreach(BundleLoadStatus dep in loadFirst)
+                    {
+                        if (dep.BundleID == bundleID) break;
+
+                        if (!dep.IsLoaded)
+                        {
+                            depList.Add(dep);
+                        }
+                    }
+                }
+
+                else if (bundleStatus.LoadOrderType == LoadOrderType.LoadUnordered)
+                {
+                    foreach (BundleLoadStatus dep in loadFirst)
+                    {
+                        if (!dep.IsLoaded)
+                        {
+                            depList.Add(dep);
+                        }
+                    }
+                }
+
+                else if (bundleStatus.LoadOrderType == LoadOrderType.LoadLast)
+                {
+                    foreach (BundleLoadStatus dep in loadFirst)
+                    {
+                        if (!dep.IsLoaded)
+                        {
+                            depList.Add(dep);
+                        }
+                    }
+
+                    foreach (BundleLoadStatus dep in loadUnordered)
+                    {
+                        if (!dep.IsLoaded)
+                        {
+                            depList.Add(dep);
+                        }
+                    }
+
+                    foreach (BundleLoadStatus dep in loadLast)
+                    {
+                        if (dep.BundleID == bundleID) break;
+
+                        if (!dep.IsLoaded)
+                        {
+                            depList.Add(dep);
+                        }
+                    }
+                }
+
+                return depList;
+            }
+
         }
 
     }
