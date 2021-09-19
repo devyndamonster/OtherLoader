@@ -14,19 +14,29 @@ namespace OtherLoader
         LoadUnordered
     }
 
-    public class BundleLoadStatus
+
+    public enum BundleStatus
+    {
+        Waiting,
+        CanLoad,
+        Loading,
+        Loaded,
+        Unloaded
+    }
+
+
+    public class BundleInfo
     {
         public string BundleID;
-        public bool IsLoaded;
-        public bool CanLoad;
+        public BundleStatus Status;
         public LoadOrderType LoadOrderType;
 
-        public BundleLoadStatus(string BundleID, bool IsLoaded, LoadOrderType LoadOrderType)
+
+        public BundleInfo(string BundleID, LoadOrderType LoadOrderType)
         {
             this.BundleID = BundleID;
-            this.IsLoaded = IsLoaded;
-            this.CanLoad = false;
             this.LoadOrderType = LoadOrderType;
+            Status = BundleStatus.Waiting;
         }
     }
 
@@ -61,14 +71,14 @@ namespace OtherLoader
             if (!activeLoaders.Contains(bundleID)) activeLoaders.Add(bundleID);
         }
 
-        public static void RemoveActiveLoader(string bundleID)
+        public static void RemoveActiveLoader(string bundleID, bool permanentlyLoaded)
         {
             if (activeLoaders.Contains(bundleID))
             {
                 activeLoaders.Remove(bundleID);
 
                 string modPath = LoaderUtils.GetModPathFromUniqueID(bundleID);
-                orderedLoadingLists[modPath].MarkBundleAsLoaded(bundleID);
+                orderedLoadingLists[modPath].MarkBundleAsLoaded(bundleID, permanentlyLoaded);
                 
                 if (GetLoaderProgress() >= 1)
                 {
@@ -123,7 +133,7 @@ namespace OtherLoader
         }
 
 
-        public static List<BundleLoadStatus> GetBundleDependencies(string bundleID)
+        public static List<BundleInfo> GetBundleDependencies(string bundleID)
         {
             string modPath = LoaderUtils.GetModPathFromUniqueID(bundleID);
             return orderedLoadingLists[modPath].GetBundleDependencies(bundleID);
@@ -137,29 +147,29 @@ namespace OtherLoader
             /// <summary>
             /// A dictionary of asset bundles designated to load first. The key is the UniqueAssetID, and the value is wether the bundle is already loaded
             /// </summary>
-            public List<BundleLoadStatus> loadFirst = new List<BundleLoadStatus>();
+            public List<BundleInfo> loadFirst = new List<BundleInfo>();
 
             /// <summary>
             /// A dictionary of asset bundles designated to load unordered. The key is the UniqueAssetID, and the value is wether the bundle is already loaded
             /// </summary>
-            public List<BundleLoadStatus> loadUnordered = new List<BundleLoadStatus>();
+            public List<BundleInfo> loadUnordered = new List<BundleInfo>();
 
             /// <summary>
             /// A dictionary of asset bundles designated to load last. The key is the UniqueAssetID, and the value is wether the bundle is already loaded
             /// </summary>
-            public List<BundleLoadStatus> loadLast = new List<BundleLoadStatus>();
+            public List<BundleInfo> loadLast = new List<BundleInfo>();
 
-            public Dictionary<string, BundleLoadStatus> bundleStatusDic = new Dictionary<string, BundleLoadStatus>();
+            public Dictionary<string, BundleInfo> bundleInfoDic = new Dictionary<string, BundleInfo>();
 
             public void AddToLoadOrder(string bundleID, LoadOrderType loadOrderType)
             {
-                BundleLoadStatus loadStatus = new BundleLoadStatus(bundleID, false, loadOrderType);
+                BundleInfo bundleInfo = new BundleInfo(bundleID, loadOrderType);
 
                 //With this new bundle, we should decide if it is able to start being loaded immediately
 
                 if (loadOrderType == LoadOrderType.LoadFirst)
                 {
-                    if (loadFirst.Count == 0) loadStatus.CanLoad = true;
+                    if (loadFirst.Count == 0) bundleInfo.Status = BundleStatus.CanLoad;
 
                     //When adding load first bundles, there must never be unordered or load last bundles already added
                     if(loadUnordered.Count != 0 || loadLast.Count != 0)
@@ -172,7 +182,7 @@ namespace OtherLoader
 
                 if(loadOrderType == LoadOrderType.LoadUnordered)
                 {
-                    if (loadFirst.Count == 0) loadStatus.CanLoad = true;
+                    if (loadFirst.Count == 0) bundleInfo.Status = BundleStatus.CanLoad;
 
                     //When adding load unordered bundles, there must never be load last bundles already added
                     if (loadLast.Count != 0)
@@ -184,96 +194,107 @@ namespace OtherLoader
 
                 if(loadOrderType == LoadOrderType.LoadLast)
                 {
-                    if (loadFirst.Count == 0 && loadUnordered.Count == 0 && loadLast.Count == 0) loadStatus.CanLoad = true;
+                    if (loadFirst.Count == 0 && loadUnordered.Count == 0 && loadLast.Count == 0) bundleInfo.Status = BundleStatus.CanLoad;
                 }
 
 
-                if (loadOrderType == LoadOrderType.LoadFirst) loadFirst.Add(loadStatus);
-                else if (loadOrderType == LoadOrderType.LoadLast) loadLast.Add(loadStatus);
-                else if (loadOrderType == LoadOrderType.LoadUnordered) loadUnordered.Add(loadStatus);
+                if (loadOrderType == LoadOrderType.LoadFirst) loadFirst.Add(bundleInfo);
+                else if (loadOrderType == LoadOrderType.LoadLast) loadLast.Add(bundleInfo);
+                else if (loadOrderType == LoadOrderType.LoadUnordered) loadUnordered.Add(bundleInfo);
 
-                bundleStatusDic.Add(bundleID, loadStatus);
+                bundleInfoDic.Add(bundleID, bundleInfo);
             }
 
             public bool CanBundleLoad(string bundleID)
             {
-                BundleLoadStatus loadStatus = bundleStatusDic[bundleID];
+                BundleInfo loadStatus = bundleInfoDic[bundleID];
 
-                if (loadStatus.IsLoaded)
+                if (loadStatus.Status == BundleStatus.Loaded || loadStatus.Status == BundleStatus.Loading)
                 {
-                    OtherLogger.LogError($"Mod is already loaded, but something is still asking to load it! BundleID ({bundleID})");
+                    OtherLogger.LogError($"Mod is already loading or loaded, but something is still asking to load it! BundleID ({bundleID})");
                     return false;
                 }
 
-                return loadStatus.CanLoad;
+                return loadStatus.Status == BundleStatus.CanLoad;
             }
 
-            public void MarkBundleAsLoaded(string bundleID)
+            public void MarkBundleAsLoaded(string bundleID, bool permanentlyLoaded)
             {
                 //First, mark bundle as loaded
-                BundleLoadStatus bundleStatus = bundleStatusDic[bundleID];
-                bundleStatus.IsLoaded = true;
+                BundleInfo bundleInfo = bundleInfoDic[bundleID];
+
+                if (permanentlyLoaded)
+                {
+                    bundleInfo.Status = BundleStatus.Loaded;
+                }
+                else
+                {
+                    bundleInfo.Status = BundleStatus.Unloaded;
+                }
+                
 
                 //Next, mark one of the bundles that aren't yet loaded as able to load
-                if(bundleStatus.LoadOrderType == LoadOrderType.LoadFirst)
+                if(bundleInfo.LoadOrderType == LoadOrderType.LoadFirst)
                 {
-                    if(loadFirst.All(o => o.IsLoaded == true))
+                    BundleInfo nextBundle = loadFirst.FirstOrDefault(o => o.Status == BundleStatus.Waiting);
+
+                    //If there is no next bundle to load, it will be null, and all bundles are loaded
+                    if (nextBundle != null)
                     {
-                        if(loadUnordered.Count > 0)
-                        {
-                            loadUnordered.ForEach(o => o.CanLoad = true);
-                        }
-                        else if(loadLast.Count > 0)
-                        {
-                            loadLast[0].CanLoad = true;
-                        }
+                        nextBundle.Status = BundleStatus.CanLoad;
                     }
 
                     else
                     {
-                        //It is assumed that since load first is sequential, there will always be a next bundle that hasn't started loading if they are not all loaded yet
-                        loadFirst.First(o => o.CanLoad == false).CanLoad = true;
+                        if (loadUnordered.Count > 0)
+                        {
+                            loadUnordered.ForEach(o => o.Status = BundleStatus.CanLoad);
+                        }
+                        else if (loadLast.Count > 0)
+                        {
+                            loadLast[0].Status = BundleStatus.CanLoad;
+                        }
                     }
                 }
 
-                else if(bundleStatus.LoadOrderType == LoadOrderType.LoadUnordered)
+                else if(bundleInfo.LoadOrderType == LoadOrderType.LoadUnordered)
                 {
-                    if(loadUnordered.All(o => o.IsLoaded))
+                    if(loadUnordered.All(o => o.Status == BundleStatus.Loaded || o.Status == BundleStatus.Unloaded))
                     {
                         if(loadLast.Count != 0)
                         {
-                            loadLast[0].CanLoad = true;
+                            loadLast[0].Status = BundleStatus.CanLoad;
                         }
                     }
 
                     //If not all of the unordered bundles have loaded yet, it is assumed that they are still currently loading, so we don't have to set them to load
                 }
 
-                else if(bundleStatus.LoadOrderType == LoadOrderType.LoadLast)
+                else if(bundleInfo.LoadOrderType == LoadOrderType.LoadLast)
                 {
-                    BundleLoadStatus nextBundle = loadLast.FirstOrDefault(o => o.CanLoad == false);
+                    BundleInfo nextBundle = loadLast.FirstOrDefault(o => o.Status == BundleStatus.Waiting);
 
                     //If there is no next bundle to load, it will be null, and all bundles are loaded
                     if(nextBundle != null)
                     {
-                        nextBundle.CanLoad = true;
+                        nextBundle.Status = BundleStatus.CanLoad;
                     }
                 }
             }
 
 
-            public List<BundleLoadStatus> GetBundleDependencies(string bundleID)
+            public List<BundleInfo> GetBundleDependencies(string bundleID)
             {
-                List<BundleLoadStatus> depList = new List<BundleLoadStatus>();
-                BundleLoadStatus bundleStatus = bundleStatusDic[bundleID];
+                List<BundleInfo> depList = new List<BundleInfo>();
+                BundleInfo bundleStatus = bundleInfoDic[bundleID];
 
                 if(bundleStatus.LoadOrderType == LoadOrderType.LoadFirst)
                 {
-                    foreach(BundleLoadStatus dep in loadFirst)
+                    foreach(BundleInfo dep in loadFirst)
                     {
                         if (dep.BundleID == bundleID) break;
 
-                        if (!dep.IsLoaded)
+                        if (dep.Status == BundleStatus.Unloaded)
                         {
                             depList.Add(dep);
                         }
@@ -282,9 +303,9 @@ namespace OtherLoader
 
                 else if (bundleStatus.LoadOrderType == LoadOrderType.LoadUnordered)
                 {
-                    foreach (BundleLoadStatus dep in loadFirst)
+                    foreach (BundleInfo dep in loadFirst)
                     {
-                        if (!dep.IsLoaded)
+                        if (dep.Status == BundleStatus.Unloaded)
                         {
                             depList.Add(dep);
                         }
@@ -293,27 +314,27 @@ namespace OtherLoader
 
                 else if (bundleStatus.LoadOrderType == LoadOrderType.LoadLast)
                 {
-                    foreach (BundleLoadStatus dep in loadFirst)
+                    foreach (BundleInfo dep in loadFirst)
                     {
-                        if (!dep.IsLoaded)
+                        if (dep.Status == BundleStatus.Unloaded)
                         {
                             depList.Add(dep);
                         }
                     }
 
-                    foreach (BundleLoadStatus dep in loadUnordered)
+                    foreach (BundleInfo dep in loadUnordered)
                     {
-                        if (!dep.IsLoaded)
+                        if (dep.Status == BundleStatus.Unloaded)
                         {
                             depList.Add(dep);
                         }
                     }
 
-                    foreach (BundleLoadStatus dep in loadLast)
+                    foreach (BundleInfo dep in loadLast)
                     {
                         if (dep.BundleID == bundleID) break;
 
-                        if (!dep.IsLoaded)
+                        if (dep.Status == BundleStatus.Unloaded)
                         {
                             depList.Add(dep);
                         }

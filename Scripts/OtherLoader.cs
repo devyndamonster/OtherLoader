@@ -120,7 +120,7 @@ namespace OtherLoader
                 {
                     OtherLogger.Log("Tried to load asset bundle, and it's not yet loaded : " + bundle, OtherLogger.LogType.Loading);
                     OtherLogger.Log("Dependencies:", OtherLogger.LogType.Loading);
-                    LoaderStatus.GetBundleDependencies(bundle).ForEach(o => OtherLogger.Log(o.ModID, OtherLogger.LogType.Loading));
+                    LoaderStatus.GetBundleDependencies(bundle).ForEach(o => OtherLogger.Log(o.BundleID, OtherLogger.LogType.Loading));
 
                     __result = LoaderUtils.LoadAssetBundle(ManagedBundles[bundle]);
                     AnvilManager.m_bundles.Add(bundle, __result);

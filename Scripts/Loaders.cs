@@ -58,7 +58,7 @@ namespace OtherLoader
                 OtherLogger.LogError("Failed to load mod (" + file + ")");
                 OtherLogger.LogError(e.ToString());
                 LoaderStatus.UpdateProgress(bundleID, 1);
-                LoaderStatus.RemoveActiveLoader(bundleID);
+                LoaderStatus.RemoveActiveLoader(bundleID, true);
             });
         }
 
@@ -116,7 +116,7 @@ namespace OtherLoader
                         OtherLogger.LogError("Failed to load mod (" + bundleID + ")");
                         OtherLogger.LogError(e.ToString());
                         LoaderStatus.UpdateProgress(bundleID, 1);
-                        LoaderStatus.RemoveActiveLoader(bundleID);
+                        LoaderStatus.RemoveActiveLoader(bundleID, true);
                     });
 
                     starter(routine);
@@ -153,7 +153,7 @@ namespace OtherLoader
                 OtherLogger.LogError("Failed to load mod (" + bundleID + ")");
                 OtherLogger.LogError(e.ToString());
                 LoaderStatus.UpdateProgress(bundleID, 1);
-                LoaderStatus.RemoveActiveLoader(bundleID);
+                LoaderStatus.RemoveActiveLoader(bundleID, true);
             });
 
             if (allowUnload && OtherLoader.OptimizeMemory.Value)
@@ -168,7 +168,7 @@ namespace OtherLoader
 
             OtherLoader.ManagedBundles.Add(bundleID, path);
             LoaderStatus.UpdateProgress(bundleID, 1);
-            LoaderStatus.RemoveActiveLoader(bundleID);
+            LoaderStatus.RemoveActiveLoader(bundleID, !OtherLoader.OptimizeMemory.Value);
         }
 
 
