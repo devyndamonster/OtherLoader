@@ -70,7 +70,9 @@ namespace OtherLoader
             //In order to get this bundle to load later, we want to replace the file path for the already loaded FVRObject
             string bundleID = file.FullName.Replace(file.Name, "") + " : " + file.Name.Replace("late_", "");
             OtherLoader.ManagedBundles[bundleID] = file.FullName;
-            LoaderStatus.TrackLoader(bundleID, loadOrder, false);
+            LoaderStatus.TrackLoader(bundleID, loadOrder);
+
+            OtherLogger.Log("Outside Tracked", OtherLogger.LogType.General);
 
             AnvilCallbackBase anvilCallbackBase;
             if (AnvilManager.m_bundles.TryGetValue(bundleID, out anvilCallbackBase))
@@ -128,7 +130,7 @@ namespace OtherLoader
         private IEnumerator LoadAssetsFromPathAsync(string path, string bundleID, LoadOrderType loadOrder, bool allowUnload)
         {
             //Start tracking this bundle and then wait a frame for everything else to be tracked
-            LoaderStatus.TrackLoader(bundleID, loadOrder, true);
+            LoaderStatus.TrackLoader(bundleID, loadOrder);
             yield return null;
 
             //If there are many active loaders at once, we should wait our turn

@@ -94,16 +94,10 @@ namespace OtherLoader
         }
 
 
-        public static void TrackLoader(string bundleID, LoadOrderType loadOrderType, bool isLoadedImmediate)
+        public static void TrackLoader(string bundleID, LoadOrderType loadOrderType)
         {
             //Only actively track this asset bundle if it is immediately being loaded
-            if (isLoadedImmediate)
-            {
-                if (!trackedLoaders.ContainsKey(bundleID)) trackedLoaders.Add(bundleID, 0);
-                else throw new Exception("Tried to track progress on a mod that is already being tracked! BundleID: " + bundleID);
-            }
-
-            OtherLogger.Log($"Tracking modded bundle ({bundleID}), Load Order ({loadOrderType})", OtherLogger.LogType.Loading);
+            if (!trackedLoaders.ContainsKey(bundleID)) trackedLoaders.Add(bundleID, 0);
 
             //Add bundle to load order
             string modPath = LoaderUtils.GetModPathFromUniqueID(bundleID);
@@ -112,8 +106,10 @@ namespace OtherLoader
                 OtherLogger.Log("Adding new load order entry for mod", OtherLogger.LogType.Loading);
                 orderedLoadingLists.Add(modPath, new ModLoadOrderContainer());
             }
-               
+
             orderedLoadingLists[modPath].AddToLoadOrder(bundleID, loadOrderType);
+
+            OtherLogger.Log($"Tracking modded bundle ({bundleID}), Load Order ({loadOrderType})", OtherLogger.LogType.Loading);
         }
 
 
@@ -203,12 +199,20 @@ namespace OtherLoader
                     if (loadFirst.Count == 0 && loadUnordered.Count == 0 && loadLast.Count == 0) bundleInfo.Status = BundleStatus.CanLoad;
                 }
 
+                //If this is replacing an already loaded bundle (load late), remove the old instances
+                if (bundleInfoDic.ContainsKey(bundleID))
+                {
+                    BundleInfo oldInfo = bundleInfoDic[bundleID];
+                    bundleInfoDic.Remove(bundleID);
+                    loadFirst.Remove(oldInfo);
+                    loadUnordered.Remove(oldInfo);
+                    loadLast.Remove(oldInfo);
+                }
 
+                bundleInfoDic.Add(bundleID, bundleInfo);
                 if (loadOrderType == LoadOrderType.LoadFirst) loadFirst.Add(bundleInfo);
                 else if (loadOrderType == LoadOrderType.LoadLast) loadLast.Add(bundleInfo);
                 else if (loadOrderType == LoadOrderType.LoadUnordered) loadUnordered.Add(bundleInfo);
-
-                bundleInfoDic.Add(bundleID, bundleInfo);
             }
 
             public bool CanBundleLoad(string bundleID)

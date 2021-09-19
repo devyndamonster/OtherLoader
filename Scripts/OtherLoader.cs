@@ -104,6 +104,16 @@ namespace OtherLoader
         [HarmonyPrefix]
         private static bool LoadModdedBundlesPatch(string bundle, ref AnvilCallback<AssetBundle> __result)
         {
+            if (AnvilManager.m_bundles.m_lookup.ContainsKey(bundle))
+            {
+                OtherLogger.Log("Bundle is loaded! : " + bundle, OtherLogger.LogType.Loading);
+            }
+            else
+            {
+                OtherLogger.Log("Bundle not loaded! : " + bundle, OtherLogger.LogType.Loading);
+            }
+
+
             if (ManagedBundles.ContainsKey(bundle))
             {
                 //If this is a modded bundle, we should first check if the bundle is already loaded
