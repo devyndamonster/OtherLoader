@@ -87,11 +87,16 @@ namespace OtherLoader
         public override IEnumerator OnRuntime(IStageContext<IEnumerator> ctx)
         {
             ItemLoader loader = new ItemLoader();
+
+            //On Demand Loaders
             ctx.Loaders.Add("item_data", loader.StartAssetDataLoad);
+            ctx.Loaders.Add("item_first_late", loader.RegisterAssetLoadFirstLate);
+            ctx.Loaders.Add("item_unordered_late", loader.RegisterAssetLoadUnorderedLate);
+            ctx.Loaders.Add("item_last_late", loader.RegisterAssetLoadLastLate);
+
             ctx.Loaders.Add("item", loader.StartAssetLoadFirst);
             ctx.Loaders.Add("item_unordered", loader.StartAssetLoadUnordered);
             ctx.Loaders.Add("item_last", loader.StartAssetLoadLast);
-            ctx.Loaders.Add("item_late", loader.RegisterAssetLoadFirstLate);
             
             loader.LoadLegacyAssets(StartCoroutine);
 
@@ -104,6 +109,7 @@ namespace OtherLoader
         [HarmonyPrefix]
         private static bool LoadModdedBundlesPatch(string bundle, ref AnvilCallback<AssetBundle> __result)
         {
+            /*
             if (AnvilManager.m_bundles.m_lookup.ContainsKey(bundle))
             {
                 OtherLogger.Log("Bundle is loaded! : " + bundle, OtherLogger.LogType.Loading);
@@ -112,7 +118,7 @@ namespace OtherLoader
             {
                 OtherLogger.Log("Bundle not loaded! : " + bundle, OtherLogger.LogType.Loading);
             }
-
+            */
 
             if (ManagedBundles.ContainsKey(bundle))
             {
@@ -140,13 +146,13 @@ namespace OtherLoader
 
                         //Start with the last dependency, and loop through from second to last dep up to the first dep
                         //The first dep in the list is the dependency for all other dependencies, so it is the deepest
-                        AnvilCallback<AssetBundle> dependency = LoaderUtils.LoadAssetBundle(dependencies.Last().GetBundlePath());
+                        AnvilCallback<AssetBundle> dependency = LoaderUtils.LoadAssetBundle(ManagedBundles[dependencies.Last().BundleID]);
                         mainCallback.m_dependancy = dependency;
                         AnvilManager.m_bundles.Add(dependencies.Last().BundleID, dependency);
 
                         for (int i = dependencies.Count - 2; i >= 0; i--)
                         {
-                            dependency.m_dependancy = LoaderUtils.LoadAssetBundle(dependencies[i].GetBundlePath());
+                            dependency.m_dependancy = LoaderUtils.LoadAssetBundle(ManagedBundles[dependencies[i].BundleID]);
                             dependency = dependency.m_dependancy;
                             AnvilManager.m_bundles.Add(dependencies[i].BundleID, dependency);
                         }

@@ -22,6 +22,8 @@ namespace OtherLoader
         // [Mod Path] : [Bundle Name]
         // Combining these two gives you the path to the asset bundle
 
+
+        //Immediate Loaders
         public IEnumerator StartAssetLoadUnordered(FileSystemInfo handle)
         {
             return StartAssetLoad(handle, LoadOrderType.LoadUnordered, true);
@@ -37,6 +39,8 @@ namespace OtherLoader
             return StartAssetLoad(handle, LoadOrderType.LoadLast, true);
         }
 
+
+        //On-Demand Loaders
         public IEnumerator StartAssetDataLoad(FileSystemInfo handle)
         {
             return StartAssetLoad(handle, LoadOrderType.LoadFirst, false);
@@ -44,8 +48,20 @@ namespace OtherLoader
 
         public IEnumerator RegisterAssetLoadFirstLate(FileSystemInfo handle)
         {
+            return RegisterAssetLoadLate(handle, LoadOrderType.LoadFirst);
+        }
+
+        public IEnumerator RegisterAssetLoadUnorderedLate(FileSystemInfo handle)
+        {
+            return RegisterAssetLoadLate(handle, LoadOrderType.LoadUnordered);
+        }
+
+        public IEnumerator RegisterAssetLoadLastLate(FileSystemInfo handle)
+        {
             return RegisterAssetLoadLate(handle, LoadOrderType.LoadLast);
         }
+
+
 
         public IEnumerator StartAssetLoad(FileSystemInfo handle, LoadOrderType loadOrder, bool allowUnload)
         {
@@ -80,7 +96,8 @@ namespace OtherLoader
                 AnvilManager.m_bundles.m_lookup.Remove(bundleID);
                 AnvilManager.m_bundles.m_loading.Remove(anvilCallbackBase);
 
-                OtherLogger.Log("Registered asset bundle to load later (" + bundleID + ")", OtherLogger.LogType.General);
+                OtherLogger.Log("Registered asset bundle to load later (" + file.FullName + ")", OtherLogger.LogType.Loading);
+                OtherLogger.Log("This bundle will replace the data bundle (" + bundleID + ")", OtherLogger.LogType.Loading);
             }
             else
             {

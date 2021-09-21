@@ -14,6 +14,8 @@ namespace OtherLoader
 
         public static AnvilCallback<AssetBundle> LoadAssetBundle(string path)
         {
+            OtherLogger.Log("Created request for bundle load: " + path, OtherLogger.LogType.Loading);
+
             AsyncOperation request = AssetBundle.LoadFromFileAsync(path);
 
             AnvilCallbackBase anvilCallbackBase = new AnvilCallback<AssetBundle>(request, null);
