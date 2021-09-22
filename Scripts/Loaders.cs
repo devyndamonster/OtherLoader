@@ -39,7 +39,6 @@ namespace OtherLoader
             return StartAssetLoad(handle, LoadOrderType.LoadLast, true);
         }
 
-
         //On-Demand Loaders
         public IEnumerator StartAssetDataLoad(FileSystemInfo handle)
         {
@@ -87,8 +86,6 @@ namespace OtherLoader
             string bundleID = file.FullName.Replace(file.Name, "") + " : " + file.Name.Replace("late_", "");
             OtherLoader.ManagedBundles[bundleID] = file.FullName;
             LoaderStatus.TrackLoader(bundleID, loadOrder);
-
-            OtherLogger.Log("Outside Tracked", OtherLogger.LogType.General);
 
             AnvilCallbackBase anvilCallbackBase;
             if (AnvilManager.m_bundles.TryGetValue(bundleID, out anvilCallbackBase))

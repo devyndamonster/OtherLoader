@@ -88,12 +88,13 @@ namespace OtherLoader
         {
             ItemLoader loader = new ItemLoader();
 
-            //On Demand Loaders
+            //On-Demand Loaders
             ctx.Loaders.Add("item_data", loader.StartAssetDataLoad);
             ctx.Loaders.Add("item_first_late", loader.RegisterAssetLoadFirstLate);
             ctx.Loaders.Add("item_unordered_late", loader.RegisterAssetLoadUnorderedLate);
             ctx.Loaders.Add("item_last_late", loader.RegisterAssetLoadLastLate);
 
+            //Immediate Loaders
             ctx.Loaders.Add("item", loader.StartAssetLoadFirst);
             ctx.Loaders.Add("item_unordered", loader.StartAssetLoadUnordered);
             ctx.Loaders.Add("item_last", loader.StartAssetLoadLast);
@@ -109,17 +110,6 @@ namespace OtherLoader
         [HarmonyPrefix]
         private static bool LoadModdedBundlesPatch(string bundle, ref AnvilCallback<AssetBundle> __result)
         {
-            /*
-            if (AnvilManager.m_bundles.m_lookup.ContainsKey(bundle))
-            {
-                OtherLogger.Log("Bundle is loaded! : " + bundle, OtherLogger.LogType.Loading);
-            }
-            else
-            {
-                OtherLogger.Log("Bundle not loaded! : " + bundle, OtherLogger.LogType.Loading);
-            }
-            */
-
             if (ManagedBundles.ContainsKey(bundle))
             {
                 //If this is a modded bundle, we should first check if the bundle is already loaded
@@ -142,7 +132,7 @@ namespace OtherLoader
                     if (dependencies.Count > 0)
                     {
                         OtherLogger.Log("Dependencies:", OtherLogger.LogType.Loading);
-                        dependencies.ForEach(o => OtherLogger.Log(o.GetBundlePath(), OtherLogger.LogType.Loading));
+                        dependencies.ForEach(o => OtherLogger.Log(ManagedBundles[o.BundleID], OtherLogger.LogType.Loading));
 
                         //Start with the last dependency, and loop through from second to last dep up to the first dep
                         //The first dep in the list is the dependency for all other dependencies, so it is the deepest
