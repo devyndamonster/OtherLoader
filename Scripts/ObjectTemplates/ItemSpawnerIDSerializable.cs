@@ -1,5 +1,6 @@
-﻿using Deli.Newtonsoft.Json;
+﻿
 using FistVR;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +16,6 @@ namespace OtherLoader
         public string DisplayName;
         public string SubHeading;
         public string Description;
-        public string InfographicName;
         public ItemSpawnerID.EItemCategory Category;
         public ItemSpawnerID.ESubCategory SubCategory;
         public string ItemID;
@@ -30,10 +30,11 @@ namespace OtherLoader
         [JsonIgnore]
         public Sprite Sprite;
 
+
+        public ItemSpawnerIDSerializable() { }
+
         public ItemSpawnerIDSerializable(ItemSpawnerID ID)
         {
-            if (ID == null) return;
-
             IsDisplayedInMainEntry = ID.IsDisplayedInMainEntry;
             DisplayName = ID.DisplayName;
             SubHeading = ID.SubHeading;
@@ -58,10 +59,9 @@ namespace OtherLoader
 
             if(ID.SecondObject != null) SecondaryID = ID.SecondObject.ItemID ;
 
-            if (ID.Infographic != null && ID.Infographic.Poster != null) InfographicName = ID.Infographic.Poster.name;
         }
 
-        public ItemSpawnerID GetItemSpawnerID(string path)
+        public ItemSpawnerID GetItemSpawnerID()
         {
             ItemSpawnerID id = new ItemSpawnerID();
 
@@ -84,8 +84,9 @@ namespace OtherLoader
             if (IM.OD.ContainsKey(SecondaryID)) id.SecondObject = IM.OD[SecondaryID];
             else if (!string.IsNullOrEmpty(SecondaryID)) OtherLogger.LogError("FVRObject not found in object dictionary when building ItemSpawnerID from serialized data. SecondObjectID: " + SecondaryID);
 
-            if (Secondaries != null) id.Secondaries = Secondaries.Select(o => o.GetItemSpawnerID(path)).ToArray();
+            if (Secondaries != null) id.Secondaries = Secondaries.Select(o => o.GetItemSpawnerID()).ToArray();
 
+            /*
             string iconPath = Path.Combine(path, CacheManager.ICON_PREFIX + ItemID + ".png");
             if (File.Exists(iconPath))
             {
@@ -98,6 +99,7 @@ namespace OtherLoader
                 id.Infographic = new ItemSpawnerControlInfographic();
                 id.Infographic.Poster = LoaderUtils.LoadTexture(iconPath);
             }
+            */
 
             return id;
         }
