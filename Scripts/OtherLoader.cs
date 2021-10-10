@@ -82,6 +82,10 @@ namespace OtherLoader
 
         public override void OnSetup(IStageContext<Empty> ctx)
         {
+            ItemLoader loader = new ItemLoader();
+
+            //Setup Loaders
+            ctx.Loaders.Add("assembly", loader.LoadAssembly);
         }
 
         public override IEnumerator OnRuntime(IStageContext<IEnumerator> ctx)

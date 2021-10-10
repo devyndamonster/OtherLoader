@@ -12,6 +12,7 @@ using UnityEngine;
 using Valve.VR.InteractionSystem;
 using Stratum.Extensions;
 using Stratum;
+using System.Reflection;
 
 namespace OtherLoader
 {
@@ -22,6 +23,13 @@ namespace OtherLoader
         // [Mod Path] : [Bundle Name]
         // Combining these two gives you the path to the asset bundle
 
+
+        public Empty LoadAssembly(FileSystemInfo handle)
+        {
+            OtherLogger.Log("Loading Assembly: " + handle.FullName, OtherLogger.LogType.Loading);
+            Assembly.LoadFile(handle.FullName);
+            return new Empty();
+        }
 
         //Immediate Loaders
         public IEnumerator StartAssetLoadUnordered(FileSystemInfo handle)
@@ -164,7 +172,7 @@ namespace OtherLoader
 
             LoaderStatus.UpdateProgress(bundleID, 0.9f);
 
-            yield return ApplyLoadedAssetBundle(bundle, bundleID).TryCatch(e =>
+            yield return ApplyLoadedAssetBundleAsync(bundle, bundleID).TryCatch(e =>
             {
                 OtherLogger.LogError("Failed to load mod (" + bundleID + ")");
                 OtherLogger.LogError(e.ToString());
@@ -189,7 +197,8 @@ namespace OtherLoader
 
 
 
-        private IEnumerator ApplyLoadedAssetBundle(AnvilCallback<AssetBundle> bundle, string bundleID)
+
+        private IEnumerator ApplyLoadedAssetBundleAsync(AnvilCallback<AssetBundle> bundle, string bundleID)
         {
             //Load the mechanical accuracy entries
             AssetBundleRequest accuracyCharts = bundle.Result.LoadAllAssetsAsync<FVRFireArmMechanicalAccuracyChart>();
@@ -247,7 +256,8 @@ namespace OtherLoader
 
             OtherLogger.Log("Completed loading of asset bundle (" + bundleID + ")", OtherLogger.LogType.General);
         }
-        
+
+
         private void LoadHandlingGrabSetEntries(UnityEngine.Object[] allAssets)
         { //nothing fancy; just dumps them into the lists above and logs it
             foreach (HandlingGrabSet grabSet in allAssets)
