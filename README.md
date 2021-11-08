@@ -1,3 +1,5 @@
+[![Exampled Video](https://az743702.vo.msecnd.net/cdn/kofi3.png?v=0)](https://ko-fi.com/devyn_myers)
+  
 # OtherLoader
 #### A whole new loader!
 
