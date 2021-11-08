@@ -101,8 +101,8 @@ namespace OtherLoader
                 AnvilManager.m_bundles.m_lookup.Remove(bundleID);
                 AnvilManager.m_bundles.m_loading.Remove(anvilCallbackBase);
 
-                OtherLogger.Log("Registered asset bundle to load later (" + file.FullName + ")", OtherLogger.LogType.Loading);
-                OtherLogger.Log("This bundle will replace the data bundle (" + bundleID + ")", OtherLogger.LogType.Loading);
+                OtherLogger.Log("Registered asset bundle to load later (" + file.FullName + ")", OtherLogger.LogType.General);
+                OtherLogger.Log("This bundle will replace the data bundle (" + bundleID + ")", OtherLogger.LogType.General);
             }
             else
             {
@@ -165,6 +165,7 @@ namespace OtherLoader
 
             //First, we want to load the asset bundle itself
             OtherLogger.Log("Beginning async loading of asset bundle (" + bundleID + ")", OtherLogger.LogType.General);
+            float time = Time.time;
             LoaderStatus.UpdateProgress(bundleID, UnityEngine.Random.Range(.1f, .3f));
 
             AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundle(path);
@@ -179,6 +180,8 @@ namespace OtherLoader
                 LoaderStatus.UpdateProgress(bundleID, 1);
                 LoaderStatus.RemoveActiveLoader(bundleID, true);
             });
+
+            OtherLogger.Log("Completed loading of asset bundle (" + bundleID + ") in " + (Time.time - time).ToString("0.000") + " seconds", OtherLogger.LogType.General);
 
             if (allowUnload && OtherLoader.OptimizeMemory.Value)
             {
@@ -251,10 +254,6 @@ namespace OtherLoader
             yield return Quickbelts;
             LoadQuickbeltEntries(Quickbelts.allAssets);
 
-            //CacheManager.DeleteCachedMod(uniqueAssetID);
-            //yield return AnvilManager.Instance.StartCoroutine(CacheManager.CacheMod(uniqueAssetID, 0, spawnerIDs.allAssets, fvrObjects.allAssets, bulletData.allAssets, spawnerCats.allAssets));
-
-            OtherLogger.Log("Completed loading of asset bundle (" + bundleID + ")", OtherLogger.LogType.General);
         }
 
 
@@ -471,6 +470,7 @@ namespace OtherLoader
                 ManagerSingleton<IM>.Instance.odicTagFirearmAction.AddOrCreate(item.TagFirearmAction).Add(item);
                 ManagerSingleton<IM>.Instance.odicTagAttachmentMount.AddOrCreate(item.TagAttachmentMount).Add(item);
                 ManagerSingleton<IM>.Instance.odicTagAttachmentFeature.AddOrCreate(item.TagAttachmentFeature).Add(item);
+                item.IsModContent = true;
 
                 foreach (FVRObject.OTagFirearmFiringMode mode in item.TagFirearmFiringModes)
                 {
