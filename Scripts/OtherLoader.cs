@@ -29,6 +29,7 @@ namespace OtherLoader
         public static ConfigEntry<bool> OptimizeMemory;
         public static ConfigEntry<bool> EnableLogging;
         public static ConfigEntry<bool> LogLoading;
+        public static ConfigEntry<bool> AddUnloadButton;
 
         public static int MaxActiveLoaders = 0;
 
@@ -43,6 +44,11 @@ namespace OtherLoader
             Harmony.CreateAndPatchAll(typeof(QuickbeltPanelPatch));
 
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
+
+            if (AddUnloadButton.Value && CheckSodaliteInstalled())
+            {
+                AddUnloadWristMenuButton();
+            }
         }
 
         private void LoadConfigFile()
@@ -77,6 +83,13 @@ namespace OtherLoader
                 "Sets the number of mods that can be loading at once. Values less than 1 will result in all mods being loaded at the same time"
                 );
 
+            AddUnloadButton = Config.Bind(
+                "Debug",
+                "AddUnloadButton",
+                false,
+                "When true, and sodalite is installed, you'll have a wristmenu button that unloads all modded asset bundles for testing"
+                );
+
             MaxActiveLoaders = MaxActiveLoadersConfig.Value;
         }
 
@@ -107,6 +120,57 @@ namespace OtherLoader
 
             yield break;
         }
+
+
+        private void AddUnloadWristMenuButton()
+        {
+            Sodalite.Api.WristMenuAPI.Buttons.Add(new Sodalite.Api.WristMenuButton("Unload Bundles", UnloadAllModdedBundlesButton));
+        }
+
+
+        private bool CheckSodaliteInstalled()
+        {
+            try
+            {
+                PokeSodalite();
+                return true;
+            }
+            catch
+            {
+                OtherLogger.LogError("Sodalite not installed! Cannot add wrist menu button!");
+                return false;
+            }
+        }
+
+        private void PokeSodalite()
+        {
+            OtherLogger.Log("Is Sodalite Installed? " + Sodalite.SodaliteConstants.Name.Equals(Sodalite.SodaliteConstants.Name), OtherLogger.LogType.General);
+        }
+
+
+        private void UnloadAllModdedBundlesButton(object sender, Sodalite.ButtonClickEventArgs args){
+            UnloadAllModdedBundles();
+        }
+
+
+        private void UnloadAllModdedBundles()
+        {
+            foreach(string bundleID in ManagedBundles.Keys)
+            {
+                OtherLogger.Log("Unloading bundle: " + bundleID, OtherLogger.LogType.General);
+
+                //Get the bundle container
+                AnvilCallback<AssetBundle> bundleCallback = (AnvilCallback<AssetBundle>)AnvilManager.m_bundles.m_lookup[bundleID];
+
+                //Remove Instances of this bundle from the anvil manager
+                AnvilManager.m_bundles.m_loading.Remove(AnvilManager.m_bundles.m_lookup[bundleID]);
+                AnvilManager.m_bundles.m_lookup.Remove(bundleID);
+
+                //Unload the bundle
+                bundleCallback.Result.Unload(false);
+            }
+        }
+
 
 
 

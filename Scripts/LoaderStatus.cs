@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace OtherLoader
 {
@@ -56,6 +57,8 @@ namespace OtherLoader
         public static int NumActiveLoaders { get => activeLoaders.Count; }
         public static List<string> LoadingItems { get => new List<string>(activeLoaders); }
 
+        public static float LoadStartTime;
+
         public static event StatusUpdate ProgressUpdated;
 
         public static float GetLoaderProgress()
@@ -88,7 +91,7 @@ namespace OtherLoader
                 
                 if (GetLoaderProgress() >= 1)
                 {
-                    OtherLogger.Log("All Items Loaded!", OtherLogger.LogType.General);
+                    OtherLogger.Log("All Items Loaded! Total Load Time : " + (Time.time - LoadStartTime).ToString("0.000") + " seconds", OtherLogger.LogType.General);
                 }
             }
         }
@@ -96,6 +99,8 @@ namespace OtherLoader
 
         public static void TrackLoader(string bundleID, LoadOrderType loadOrderType)
         {
+            if (trackedLoaders.Count == 0) LoadStartTime = Time.time;
+
             //Only actively track this asset bundle if it is immediately being loaded
             if (!trackedLoaders.ContainsKey(bundleID)) trackedLoaders.Add(bundleID, 0);
 
