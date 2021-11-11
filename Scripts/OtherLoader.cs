@@ -18,6 +18,7 @@ namespace OtherLoader
 {
     [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.1.1")]
     [BepInDependency(StratumRoot.GUID, StratumRoot.Version)]
+    [BepInDependency("nrgill28.Sodalite", BepInDependency.DependencyFlags.SoftDependency)]
     public class OtherLoader : StratumPlugin
     {
         public static string MainLegacyDirectory { get; } = Application.dataPath.Replace("/h3vr_Data", "/LegacyVirtualObjects");
@@ -157,6 +158,8 @@ namespace OtherLoader
         {
             foreach(string bundleID in ManagedBundles.Keys)
             {
+                if (!AnvilManager.m_bundles.m_lookup.ContainsKey(bundleID)) continue;
+
                 OtherLogger.Log("Unloading bundle: " + bundleID, OtherLogger.LogType.General);
 
                 //Get the bundle container
