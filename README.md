@@ -8,7 +8,7 @@ OtherLoader is an asset loader for H3VR, which functions similarly to other load
 #### Why should you use OtherLoader?
 - It supports custom ammo
 - It supports custom item spawner categories
-- It allows modded items to use Deli's dependany system
+- It allows modded items to use BepInEx's dependany system
 - It doesn't spam the console like LSIIC
 
 ## Manual Installation
