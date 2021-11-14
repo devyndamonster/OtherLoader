@@ -8,8 +8,8 @@ OtherLoader is an asset loader for H3VR, which functions similarly to other load
 #### Why should you use OtherLoader?
 - It supports custom ammo
 - It supports custom item spawner categories
-- It allows modded items to use Deli's dependany system
-- It doesn't spam the console like LSIIC
+- It allows modded items to use BepInEx's dependany system
+- It is more configurable
 
 ## Manual Installation
 1. Install [Stratum](https://h3vr.thunderstore.io/package/Stratum/Stratum/)
