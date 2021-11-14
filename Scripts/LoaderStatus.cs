@@ -131,7 +131,7 @@ namespace OtherLoader
             if (trackedLoaders.Count == 0)
             {
                 LoadStartTime = Time.time;
-                AnvilManager.Instance.StartCoroutine(LoadTimeCoroutine());
+                OtherLoader.coroutineStarter(LoadTimeCoroutine());
             }
 
             //Update the time when something is tracked

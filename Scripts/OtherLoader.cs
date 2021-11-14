@@ -34,6 +34,8 @@ namespace OtherLoader
 
         public static int MaxActiveLoaders = 0;
 
+        public static CoroutineStarter coroutineStarter;
+
         private void Awake()
         {
             LoadConfigFile();
@@ -105,6 +107,7 @@ namespace OtherLoader
         public override IEnumerator OnRuntime(IStageContext<IEnumerator> ctx)
         {
             ItemLoader loader = new ItemLoader();
+            coroutineStarter = StartCoroutine;
 
             //On-Demand Loaders
             ctx.Loaders.Add("item_data", loader.StartAssetDataLoad);
@@ -117,7 +120,7 @@ namespace OtherLoader
             ctx.Loaders.Add("item_unordered", loader.StartAssetLoadUnordered);
             ctx.Loaders.Add("item_last", loader.StartAssetLoadLast);
             
-            loader.LoadLegacyAssets(StartCoroutine);
+            loader.LoadLegacyAssets(coroutineStarter);
 
             yield break;
         }
