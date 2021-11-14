@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -61,24 +62,53 @@ namespace OtherLoader
 
         public static event StatusUpdate ProgressUpdated;
 
+        public static float timeSinceLastLoadEvent;
+        public static float loadTimeBuffer = 2;
+
         public static float GetLoaderProgress()
         {
-            if (trackedLoaders.Count == 0) return 1;
+            //If our otherloader_assets bundle has not yet loaded, then we return 0
+            if (trackedLoaders.Count == 0) return 0;
 
-            float totalProgress = 0;
-
+            //Sum all of the progress for the tracked bundles
+            float summedProgress = 0;
             foreach (float prog in trackedLoaders.Values)
             {
-                totalProgress += prog;
+                summedProgress += prog;
             }
 
-            return totalProgress / trackedLoaders.Count;
+            //If the load time has passed, we can return the actual progress of all bundles
+            if (Time.time - timeSinceLastLoadEvent > loadTimeBuffer)
+            {
+                return summedProgress / trackedLoaders.Count;
+            }
+
+            //Otherwise, we don't allow it to return 1
+            else
+            {
+                return Mathf.Min(summedProgress / trackedLoaders.Count, 0.99f);
+            }
         }
+
+
+        public static IEnumerator LoadTimeCoroutine()
+        {
+            timeSinceLastLoadEvent = Time.time;
+
+            while(GetLoaderProgress() < 1)
+            {
+                yield return null;
+            }
+
+            OtherLogger.Log("All Items Loaded! Total Load Time : " + (Time.time - LoadStartTime).ToString("0.000") + " seconds", OtherLogger.LogType.General);
+        }
+
 
         public static void AddActiveLoader(string bundleID)
         {
             if (!activeLoaders.Contains(bundleID)) activeLoaders.Add(bundleID);
         }
+
 
         public static void RemoveActiveLoader(string bundleID, bool permanentlyLoaded)
         {
@@ -88,18 +118,24 @@ namespace OtherLoader
 
                 string modPath = LoaderUtils.GetModPathFromUniqueID(bundleID);
                 orderedLoadingLists[modPath].MarkBundleAsLoaded(bundleID, permanentlyLoaded);
-                
-                if (GetLoaderProgress() >= 1)
-                {
-                    OtherLogger.Log("All Items Loaded! Total Load Time : " + (Time.time - LoadStartTime).ToString("0.000") + " seconds", OtherLogger.LogType.General);
-                }
+
+                //Update the time when the loader is removed
+                timeSinceLastLoadEvent = Time.time;
             }
         }
 
 
         public static void TrackLoader(string bundleID, LoadOrderType loadOrderType)
         {
-            if (trackedLoaders.Count == 0) LoadStartTime = Time.time;
+            //If this is the first bundle to be tracked, perform some initial stuff
+            if (trackedLoaders.Count == 0)
+            {
+                LoadStartTime = Time.time;
+                AnvilManager.Instance.StartCoroutine(LoadTimeCoroutine());
+            }
+
+            //Update the time when something is tracked
+            timeSinceLastLoadEvent = Time.time;
 
             //Only actively track this asset bundle if it is immediately being loaded
             if (!trackedLoaders.ContainsKey(bundleID)) trackedLoaders.Add(bundleID, 0);
