@@ -212,7 +212,7 @@ namespace OtherLoader
 
                 if (loadOrderType == LoadOrderType.LoadFirst)
                 {
-                    if (loadFirst.Count == 0) bundleInfo.Status = BundleStatus.CanLoad;
+                    if (loadFirst.Count == 0 || loadFirst.All(o => o.Status == BundleStatus.Loaded)) bundleInfo.Status = BundleStatus.CanLoad;
 
                     //When adding load first bundles, there must never be unordered or load last bundles already added
                     if(loadUnordered.Count != 0 || loadLast.Count != 0)
@@ -225,7 +225,7 @@ namespace OtherLoader
 
                 if(loadOrderType == LoadOrderType.LoadUnordered)
                 {
-                    if (loadFirst.Count == 0) bundleInfo.Status = BundleStatus.CanLoad;
+                    if (loadFirst.Count == 0 || loadFirst.All(o => o.Status == BundleStatus.Loaded)) bundleInfo.Status = BundleStatus.CanLoad;
 
                     //When adding load unordered bundles, there must never be load last bundles already added
                     if (loadLast.Count != 0)
@@ -237,7 +237,8 @@ namespace OtherLoader
 
                 if(loadOrderType == LoadOrderType.LoadLast)
                 {
-                    if (loadFirst.Count == 0 && loadUnordered.Count == 0 && loadLast.Count == 0) bundleInfo.Status = BundleStatus.CanLoad;
+                    if ((loadFirst.Count == 0 && loadUnordered.Count == 0 && loadLast.Count == 0) ||
+                        (loadFirst.All(o => o.Status == BundleStatus.Loaded) && loadUnordered.All(o => o.Status == BundleStatus.Loaded) && loadLast.All(o => o.Status == BundleStatus.Loaded))) bundleInfo.Status = BundleStatus.CanLoad;
                 }
 
                 //If this is replacing an already loaded bundle (load late), remove the old instances

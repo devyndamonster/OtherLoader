@@ -109,7 +109,7 @@ namespace OtherLoader
                 else
                 {
                     OtherLogger.Log("Registered asset bundle to load later (" + file.Name + ")", OtherLogger.LogType.General);
-                    OtherLogger.Log("This bundle will replace the data bundle (" + bundleID.Split(':').Last().Trim() + ")", OtherLogger.LogType.Loading);
+                    OtherLogger.Log("This bundle will replace the data bundle (" + LoaderUtils.GetBundleNameFromUniqueID(bundleID) + ")", OtherLogger.LogType.Loading);
                 }
             }
             else
@@ -169,14 +169,13 @@ namespace OtherLoader
                 yield return null;
             }
 
-
             //Begin the loading process
             LoaderStatus.AddActiveLoader(bundleID);
 
             if (OtherLoader.LogLoading.Value)
                 OtherLogger.Log("Beginning async loading of asset bundle (" + bundleID + ")", OtherLogger.LogType.General);
             else
-                OtherLogger.Log("Beginning async loading of asset bundle (" + bundleID.Split(':').Last().Trim() + ")", OtherLogger.LogType.General);
+                OtherLogger.Log("Beginning async loading of asset bundle (" + LoaderUtils.GetBundleNameFromUniqueID(bundleID) + ")", OtherLogger.LogType.General);
 
 
             //Load the bundle and apply it's contents
@@ -201,7 +200,7 @@ namespace OtherLoader
             if (OtherLoader.LogLoading.Value)
                 OtherLogger.Log("Completed loading of asset bundle (" + bundleID + ") in " + (Time.time - time).ToString("0.000") + " seconds", OtherLogger.LogType.General);
             else
-                OtherLogger.Log("Completed loading of asset bundle (" + bundleID.Split(':').Last().Trim() + ") in " + (Time.time - time).ToString("0.000") + " seconds", OtherLogger.LogType.General);
+                OtherLogger.Log("Completed loading of asset bundle (" + LoaderUtils.GetBundleNameFromUniqueID(bundleID) + ") in " + (Time.time - time).ToString("0.000") + " seconds", OtherLogger.LogType.General);
 
 
 
