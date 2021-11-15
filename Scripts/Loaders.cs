@@ -101,8 +101,16 @@ namespace OtherLoader
                 AnvilManager.m_bundles.m_lookup.Remove(bundleID);
                 AnvilManager.m_bundles.m_loading.Remove(anvilCallbackBase);
 
-                OtherLogger.Log("Registered asset bundle to load later (" + file.FullName + ")", OtherLogger.LogType.General);
-                OtherLogger.Log("This bundle will replace the data bundle (" + bundleID + ")", OtherLogger.LogType.General);
+                if (OtherLoader.LogLoading.Value)
+                {
+                    OtherLogger.Log("Registered asset bundle to load later (" + file.FullName + ")", OtherLogger.LogType.General);
+                    OtherLogger.Log("This bundle will replace the data bundle (" + bundleID + ")", OtherLogger.LogType.Loading);
+                }
+                else
+                {
+                    OtherLogger.Log("Registered asset bundle to load later (" + file.Name + ")", OtherLogger.LogType.General);
+                    OtherLogger.Log("This bundle will replace the data bundle (" + bundleID.Split(':').Last().Trim() + ")", OtherLogger.LogType.Loading);
+                }
             }
             else
             {
@@ -161,10 +169,17 @@ namespace OtherLoader
                 yield return null;
             }
 
+
+            //Begin the loading process
             LoaderStatus.AddActiveLoader(bundleID);
 
-            //First, we want to load the asset bundle itself
-            OtherLogger.Log("Beginning async loading of asset bundle (" + bundleID + ")", OtherLogger.LogType.General);
+            if (OtherLoader.LogLoading.Value)
+                OtherLogger.Log("Beginning async loading of asset bundle (" + bundleID + ")", OtherLogger.LogType.General);
+            else
+                OtherLogger.Log("Beginning async loading of asset bundle (" + bundleID.Split(':').Last().Trim() + ")", OtherLogger.LogType.General);
+
+
+            //Load the bundle and apply it's contents
             float time = Time.time;
             LoaderStatus.UpdateProgress(bundleID, UnityEngine.Random.Range(.1f, .3f));
 
@@ -181,7 +196,14 @@ namespace OtherLoader
                 LoaderStatus.RemoveActiveLoader(bundleID, true);
             });
 
-            OtherLogger.Log("Completed loading of asset bundle (" + bundleID + ") in " + (Time.time - time).ToString("0.000") + " seconds", OtherLogger.LogType.General);
+            
+            //Log that the bundle is loaded
+            if (OtherLoader.LogLoading.Value)
+                OtherLogger.Log("Completed loading of asset bundle (" + bundleID + ") in " + (Time.time - time).ToString("0.000") + " seconds", OtherLogger.LogType.General);
+            else
+                OtherLogger.Log("Completed loading of asset bundle (" + bundleID.Split(':').Last().Trim() + ") in " + (Time.time - time).ToString("0.000") + " seconds", OtherLogger.LogType.General);
+
+
 
             if (allowUnload && OtherLoader.OptimizeMemory.Value)
             {
