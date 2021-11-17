@@ -16,6 +16,13 @@ namespace OtherLoader
         [HarmonyPrefix]
         private static bool StartPatch(ItemSpawnerUI __instance)
         {
+            //Make sure previous data objects on this spawner are destroyed
+            ItemSpawnerDataObject dupObject = __instance.gameObject.GetComponent<ItemSpawnerDataObject>();
+            if(dupObject != null)
+            {
+                UnityEngine.Object.Destroy(dupObject);
+            }
+
             __instance.gameObject.AddComponent<ItemSpawnerDataObject>();
 
             return true;
@@ -419,6 +426,7 @@ namespace OtherLoader
 
     public class ItemSpawnerDataObject : MonoBehaviour
     {
+        public GameObject loadingCanvas;
         public Text loadingText;
 
         public int currHomePage = 0;
@@ -440,6 +448,7 @@ namespace OtherLoader
         private void OnDestroy()
         {
             LoaderStatus.ProgressUpdated -= UpdateText;
+            Destroy(loadingCanvas);
         }
 
         private void UpdateText(float progress)
@@ -458,18 +467,18 @@ namespace OtherLoader
 
         private void CreateLoadingText()
         {
-            GameObject canvas = new GameObject("LoadingTextCanvas");
-            canvas.transform.SetParent(transform);
-            canvas.transform.rotation = transform.rotation;
-            canvas.transform.localPosition = Vector3.zero;
+            loadingCanvas = new GameObject("LoadingTextCanvas");
+            loadingCanvas.transform.SetParent(transform);
+            loadingCanvas.transform.rotation = transform.rotation;
+            loadingCanvas.transform.localPosition = Vector3.zero;
 
-            Canvas canvasComp = canvas.AddComponent<Canvas>();
+            Canvas canvasComp = loadingCanvas.AddComponent<Canvas>();
             RectTransform rect = canvasComp.GetComponent<RectTransform>();
             canvasComp.renderMode = RenderMode.WorldSpace;
             rect.sizeDelta = new Vector2(1, 1);
 
             GameObject text = new GameObject("LoadingText");
-            text.transform.SetParent(canvas.transform);
+            text.transform.SetParent(loadingCanvas.transform);
             text.transform.rotation = transform.parent.rotation;
             text.transform.localPosition = Vector3.zero + Vector3.up * 0.4f + Vector3.left * 0.25f;
 
