@@ -442,10 +442,8 @@ namespace OtherLoader
             LoaderStatus.ProgressUpdated -= UpdateText;
         }
 
-        private void UpdateText()
+        private void UpdateText(float progress)
         {
-            float progress = LoaderStatus.GetLoaderProgress();
-
             if(progress < 1)
             {
                 loadingText.gameObject.SetActive(true);
@@ -460,7 +458,7 @@ namespace OtherLoader
 
         private void CreateLoadingText()
         {
-            GameObject canvas = new GameObject("Canvas");
+            GameObject canvas = new GameObject("LoadingTextCanvas");
             canvas.transform.SetParent(transform);
             canvas.transform.rotation = transform.rotation;
             canvas.transform.localPosition = Vector3.zero;
@@ -470,7 +468,7 @@ namespace OtherLoader
             canvasComp.renderMode = RenderMode.WorldSpace;
             rect.sizeDelta = new Vector2(1, 1);
 
-            GameObject text = new GameObject("Text");
+            GameObject text = new GameObject("LoadingText");
             text.transform.SetParent(canvas.transform);
             text.transform.rotation = transform.parent.rotation;
             text.transform.localPosition = Vector3.zero + Vector3.up * 0.4f + Vector3.left * 0.25f;

@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace OtherLoader
 {
-    public delegate void StatusUpdate();
+    public delegate void StatusUpdate(float progress);
 
     public enum LoadOrderType
     {
@@ -95,9 +95,13 @@ namespace OtherLoader
         {
             timeSinceLastLoadEvent = Time.time;
 
-            while(GetLoaderProgress() < 1)
+            float progress = GetLoaderProgress();
+            while (progress < 1)
             {
                 yield return null;
+
+                ProgressUpdated?.Invoke(progress);
+                progress = GetLoaderProgress();
             }
 
             OtherLogger.Log("All Items Loaded! Total Load Time : " + (Time.time - LoadStartTime).ToString("0.000") + " seconds", OtherLogger.LogType.General);
@@ -171,8 +175,6 @@ namespace OtherLoader
         public static void UpdateProgress(string bundleID, float progress)
         {
             if (trackedLoaders.ContainsKey(bundleID)) trackedLoaders[bundleID] = progress;
-
-            ProgressUpdated?.Invoke();
         }
 
 
