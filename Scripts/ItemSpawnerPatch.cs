@@ -20,7 +20,16 @@ namespace OtherLoader
             ItemSpawnerDataObject dupObject = __instance.gameObject.GetComponent<ItemSpawnerDataObject>();
             if(dupObject != null)
             {
+                OtherLogger.Log("Destroying duplicated ItemSpawnerDataObject", OtherLogger.LogType.General);
                 UnityEngine.Object.Destroy(dupObject);
+            }
+            
+            //Somehow, an extra canvas is created when loaded by Atlas, so we must clear all previous canvases as well
+            Transform dupCanvas = __instance.transform.Find("LoadingTextCanvas");
+            if(dupCanvas != null)
+            {
+                OtherLogger.Log("Destroying duplicated progress canvas", OtherLogger.LogType.General);
+                UnityEngine.Object.Destroy(dupCanvas.gameObject);
             }
 
             __instance.gameObject.AddComponent<ItemSpawnerDataObject>();
