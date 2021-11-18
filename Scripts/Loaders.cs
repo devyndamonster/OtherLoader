@@ -450,6 +450,9 @@ namespace OtherLoader
             {
                 OtherLogger.Log("Adding Itemspawner ID! Category: " + id.Category + ", SubCategory: " + id.SubCategory, OtherLogger.LogType.Loading);
 
+                //FVRO happens before IDs so unlock cost is already calced
+                if (id.UnlockCost == 0) id.UnlockCost = id.MainObject.CreditCost;
+                
                 if (IM.CD.ContainsKey(id.Category) && IM.SCD.ContainsKey(id.SubCategory)) {
                     IM.CD[id.Category].Add(id);
                     IM.SCD[id.SubCategory].Add(id);
@@ -478,12 +481,14 @@ namespace OtherLoader
 
                 if (IM.OD.ContainsKey(item.ItemID))
                 {
-                    OtherLogger.LogError("The ItemID of FVRObject is already used! Item will not be loaded! ItemID: " + item.ItemID);
+                    OtherLogger.LogError("The ItemID of FVRObject is already used! Item will not be loaded! ItemID: " +
+                                         item.ItemID);
                     continue;
                 }
-
                 item.m_anvilPrefab.Bundle = bundleID;
 
+                if(item.CreditCost == 0) item.CalcCreditCost(); //calculate credit cost if not set
+                
                 IM.OD.Add(item.ItemID, item);
                 ManagerSingleton<IM>.Instance.odicTagCategory.AddOrCreate(item.Category).Add(item);
                 ManagerSingleton<IM>.Instance.odicTagFirearmEra.AddOrCreate(item.TagEra).Add(item);
