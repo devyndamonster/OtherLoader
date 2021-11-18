@@ -343,8 +343,7 @@ namespace OtherLoader
                     if (QBnameSplit[QBnameSplit.Length - 2] == "QuickBelt")
                     {
                         OtherLogger.Log("Adding QuickBelt " + quickbelt.name, OtherLogger.LogType.Loading);
-                        Array.Resize(ref GM.Instance.QuickbeltConfigurations,
-                            GM.Instance.QuickbeltConfigurations.Length + 1);
+                        Array.Resize(ref GM.Instance.QuickbeltConfigurations, GM.Instance.QuickbeltConfigurations.Length + 1);
                         GM.Instance.QuickbeltConfigurations[GM.Instance.QuickbeltConfigurations.Length - 1] = quickbelt;
                     }
                 }
@@ -451,7 +450,7 @@ namespace OtherLoader
                 OtherLogger.Log("Adding Itemspawner ID! Category: " + id.Category + ", SubCategory: " + id.SubCategory, OtherLogger.LogType.Loading);
 
                 //FVRO happens before IDs so unlock cost is already calced
-                if (id.UnlockCost == 0) id.UnlockCost = id.MainObject.CreditCost;
+                if (id.UnlockCost == 0 && id.MainObject != null) id.UnlockCost = id.MainObject.CreditCost;
                 
                 if (IM.CD.ContainsKey(id.Category) && IM.SCD.ContainsKey(id.SubCategory)) {
                     IM.CD[id.Category].Add(id);
