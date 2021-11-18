@@ -16,7 +16,7 @@ using Anvil;
 
 namespace OtherLoader
 {
-    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.1.2")]
+    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.1.3")]
     [BepInDependency(StratumRoot.GUID, StratumRoot.Version)]
     [BepInDependency("nrgill28.Sodalite", BepInDependency.DependencyFlags.SoftDependency)]
     public class OtherLoader : StratumPlugin
