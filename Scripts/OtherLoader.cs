@@ -18,7 +18,7 @@ namespace OtherLoader
 {
     [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.1.3")]
     [BepInDependency(StratumRoot.GUID, StratumRoot.Version)]
-    [BepInDependency("nrgill28.Sodalite", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency(Sodalite.SodaliteConstants.Guid, Sodalite.SodaliteConstants.Version)]
     public class OtherLoader : StratumPlugin
     {
         public static string MainLegacyDirectory { get; } = Application.dataPath.Replace("/h3vr_Data", "/LegacyVirtualObjects");
@@ -48,7 +48,7 @@ namespace OtherLoader
 
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
 
-            if (AddUnloadButton.Value && CheckSodaliteInstalled())
+            if (AddUnloadButton.Value)
             {
                 AddUnloadWristMenuButton();
             }
@@ -129,26 +129,6 @@ namespace OtherLoader
         private void AddUnloadWristMenuButton()
         {
             Sodalite.Api.WristMenuAPI.Buttons.Add(new Sodalite.Api.WristMenuButton("Unload Bundles", UnloadAllModdedBundlesButton));
-        }
-
-
-        private bool CheckSodaliteInstalled()
-        {
-            try
-            {
-                PokeSodalite();
-                return true;
-            }
-            catch
-            {
-                OtherLogger.LogError("Sodalite not installed! Cannot add wrist menu button!");
-                return false;
-            }
-        }
-
-        private void PokeSodalite()
-        {
-            OtherLogger.Log("Is Sodalite Installed? " + Sodalite.SodaliteConstants.Name.Equals(Sodalite.SodaliteConstants.Name), OtherLogger.LogType.General);
         }
 
 
