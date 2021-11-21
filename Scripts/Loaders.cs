@@ -174,8 +174,8 @@ namespace OtherLoader
 
             if (OtherLoader.LogLoading.Value)
                 OtherLogger.Log("Beginning async loading of asset bundle (" + bundleID + ")", OtherLogger.LogType.General);
-            else
-                OtherLogger.Log("Beginning async loading of asset bundle (" + LoaderUtils.GetBundleNameFromUniqueID(bundleID) + ")", OtherLogger.LogType.General);
+            //else
+                //OtherLogger.Log("Beginning async loading of asset bundle (" + LoaderUtils.GetBundleNameFromUniqueID(bundleID) + ")", OtherLogger.LogType.General);
 
 
             //Load the bundle and apply it's contents
@@ -198,9 +198,9 @@ namespace OtherLoader
             
             //Log that the bundle is loaded
             if (OtherLoader.LogLoading.Value)
-                OtherLogger.Log("Completed loading of asset bundle (" + bundleID + ") in " + (Time.time - time).ToString("0.000") + " seconds", OtherLogger.LogType.General);
+                OtherLogger.Log($"[{(Time.time - time).ToString("0.000")} s] Completed loading bundle ({bundleID})", OtherLogger.LogType.General);
             else
-                OtherLogger.Log("Completed loading of asset bundle (" + LoaderUtils.GetBundleNameFromUniqueID(bundleID) + ") in " + (Time.time - time).ToString("0.000") + " seconds", OtherLogger.LogType.General);
+                OtherLogger.Log($"[{(Time.time - time).ToString("0.000")} s] Completed loading bundle ({LoaderUtils.GetBundleNameFromUniqueID(bundleID)})", OtherLogger.LogType.General);
 
 
 
@@ -325,8 +325,7 @@ namespace OtherLoader
                 Array.Resize(ref ManagerSingleton<SM>.Instance.AudioImpactSets, ManagerSingleton<SM>.Instance.AudioImpactSets.Length + 1);
                 ManagerSingleton<SM>.Instance.AudioImpactSets[ManagerSingleton<SM>.Instance.AudioImpactSets.Length - 1] = AIS;
                 //clears impactdic
-                ManagerSingleton<SM>.Instance.m_impactDic =
-                    new Dictionary<ImpactType, Dictionary<MatSoundType, Dictionary<AudioImpactIntensity, AudioEvent>>>();
+                ManagerSingleton<SM>.Instance.m_impactDic = new Dictionary<ImpactType, Dictionary<MatSoundType, Dictionary<AudioImpactIntensity, AudioEvent>>>();
                 //remakes impactdic
                 ManagerSingleton<SM>.Instance.generateImpactDictionary(); //TODO: this is an inefficient method. pls dont remake
                 //the dictionary every time a new one is added! oh well. it works
@@ -451,7 +450,9 @@ namespace OtherLoader
 
                 //FVRO happens before IDs so unlock cost is already calced
                 if (id.UnlockCost == 0 && id.MainObject != null) id.UnlockCost = id.MainObject.CreditCost;
-                
+
+
+                //Add ID to the old itemspawner
                 if (IM.CD.ContainsKey(id.Category) && IM.SCD.ContainsKey(id.SubCategory)) {
                     IM.CD[id.Category].Add(id);
                     IM.SCD[id.SubCategory].Add(id);
@@ -480,8 +481,7 @@ namespace OtherLoader
 
                 if (IM.OD.ContainsKey(item.ItemID))
                 {
-                    OtherLogger.LogError("The ItemID of FVRObject is already used! Item will not be loaded! ItemID: " +
-                                         item.ItemID);
+                    OtherLogger.LogError("The ItemID of FVRObject is already used! Item will not be loaded! ItemID: " + item.ItemID);
                     continue;
                 }
                 item.m_anvilPrefab.Bundle = bundleID;
@@ -511,6 +511,7 @@ namespace OtherLoader
                 }
             }
         }
+
 
 
         private void LoadBulletData(UnityEngine.Object[] allAssets)

@@ -54,6 +54,11 @@ namespace OtherLoader
             }
         }
 
+        private void Start()
+        {
+            GM.SetRunningModded();
+        }
+
         private void LoadConfigFile()
         {
             
