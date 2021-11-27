@@ -451,6 +451,7 @@ namespace OtherLoader
                 //FVRO happens before IDs so unlock cost is already calced
                 if (id.UnlockCost == 0 && id.MainObject != null) id.UnlockCost = id.MainObject.CreditCost;
 
+                if (id.MainObject != null) IM.RegisterItemIntoMetaTagSystem(id);
 
                 //Add ID to the old itemspawner
                 if (IM.CD.ContainsKey(id.Category) && IM.SCD.ContainsKey(id.SubCategory)) {

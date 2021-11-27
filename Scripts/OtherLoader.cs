@@ -16,7 +16,7 @@ using Anvil;
 
 namespace OtherLoader
 {
-    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.1.3")]
+    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.1.6")]
     [BepInDependency(StratumRoot.GUID, StratumRoot.Version)]
     [BepInDependency(Sodalite.SodaliteConstants.Guid, Sodalite.SodaliteConstants.Version)]
     public class OtherLoader : StratumPlugin
@@ -44,6 +44,7 @@ namespace OtherLoader
 
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));
+            Harmony.CreateAndPatchAll(typeof(ItemSpawnerV2Patch));
             Harmony.CreateAndPatchAll(typeof(QuickbeltPanelPatch));
 
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
