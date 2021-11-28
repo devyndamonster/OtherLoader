@@ -1,9 +1,12 @@
 ﻿using FistVR;
 using HarmonyLib;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace OtherLoader
@@ -62,12 +65,45 @@ namespace OtherLoader
         }
 
 
+
+        [HarmonyPatch(typeof(ItemSpawnerV2), "RedrawSimpleCanvas")]
+        [HarmonyILManipulator]
+        private static void SortingPatch(ILContext ctx, MethodBase orig)
+        {
+            ILCursor c = new ILCursor(ctx);
+
+            c.GotoNext(
+                i => i.MatchLdfld(AccessTools.Field(typeof(ItemSpawnerV2), "WorkingItemIDs")),
+                i => i.MatchCallvirt(AccessTools.Method(typeof(List<string>), "Sort", Type.EmptyTypes))
+            );
+
+            //Remove the original call to sort the list
+            c.Index += 1;
+            c.Remove();
+
+            //Add the call to sort the list with this new sorting method
+            c.Emit(OpCodes.Call, ((Action<List<string>>)SortItems).Method);
+        }
+
+
+        private static void SortItems(List<string> workingIDs)
+        {
+            //First sort alphabetically
+            workingIDs.Sort();
+
+            //Then sort by wether the items are modded or not
+            List<string> newList = workingIDs.OrderBy(o => IM.OD.ContainsKey(o) && IM.OD[o].IsModContent).ToList();
+            workingIDs.Clear();
+            workingIDs.AddRange(newList);
+        }
+
+
         [HarmonyPatch(typeof(IM), "RegisterItemIntoMetaTagSystem")]
         [HarmonyPostfix]
         private static void MetaTagPatch(ItemSpawnerID ID)
         {
             //If this IDs items didn't get added, add it to the firearm page
-            if (ID.MainObject != null && IM.Instance.PageItemLists.ContainsKey(ItemSpawnerV2.PageMode.Firearms)){
+            if (IM.Instance.PageItemLists.ContainsKey(ItemSpawnerV2.PageMode.Firearms)){
                 if (!IM.Instance.PageItemLists[ItemSpawnerV2.PageMode.Firearms].Contains(ID.ItemID))
                 {
                     OtherLogger.Log("Adding misc item to meta tag system: " + ID.ItemID, OtherLogger.LogType.General);

@@ -448,10 +448,21 @@ namespace OtherLoader
             {
                 OtherLogger.Log("Adding Itemspawner ID! Category: " + id.Category + ", SubCategory: " + id.SubCategory, OtherLogger.LogType.Loading);
 
-                //FVRO happens before IDs so unlock cost is already calced
+                //Try to set the main object of this ID as a secondary if the main is null (so that it gets tagged properly)
+                if (id.MainObject == null && id.Secondaries.Length > 0)
+                {
+                    id.MainObject = id.Secondaries.Select(o => o.MainObject).FirstOrDefault(o => o != null);
+                    if (id.MainObject != null)
+                    {
+                        id.ItemID = id.MainObject.ItemID;
+                    }
+
+                    OtherLogger.Log("Tried to select a secondary item for main object. Is it still null?" + (id.MainObject != null), OtherLogger.LogType.General);
+                }
+
                 if (id.UnlockCost == 0 && id.MainObject != null) id.UnlockCost = id.MainObject.CreditCost;
 
-                if (id.MainObject != null) IM.RegisterItemIntoMetaTagSystem(id);
+                if (id.MainObject != null && id.IsDisplayedInMainEntry) IM.RegisterItemIntoMetaTagSystem(id);
 
                 //Add ID to the old itemspawner
                 if (IM.CD.ContainsKey(id.Category) && IM.SCD.ContainsKey(id.SubCategory)) {
