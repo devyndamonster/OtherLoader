@@ -137,20 +137,19 @@ namespace OtherLoader
 
         private static void CategoricalSetText(Text text, string value, TagType tagType)
         {
-            if(tagType == TagType.SubCategory)
+            if (tagType == TagType.Category && !Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), value))
             {
-                if (Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), value)){
-                    text.text = value;
-                }
-                else
-                {
-                    text.text = IM.CDefSubInfo[(ItemSpawnerID.ESubCategory)int.Parse(value)].DisplayName;
-                }
+                text.text = IM.CDefInfo[(ItemSpawnerID.EItemCategory)int.Parse(value)].DisplayName;
+                return;
             }
-            else
+
+            else if (tagType == TagType.SubCategory && !Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), value))
             {
-                text.text = value;
+                text.text = IM.CDefSubInfo[(ItemSpawnerID.ESubCategory)int.Parse(value)].DisplayName;
+                return;
             }
+
+            text.text = value;
         }
 
 
@@ -163,7 +162,7 @@ namespace OtherLoader
             if (IM.Instance.PageItemLists.ContainsKey(ItemSpawnerV2.PageMode.Firearms)){
                 if (!IM.Instance.PageItemLists[ItemSpawnerV2.PageMode.Firearms].Contains(ID.ItemID))
                 {
-                    OtherLogger.Log("Adding misc item to meta tag system: " + ID.ItemID, OtherLogger.LogType.General);
+                    OtherLogger.Log("Adding misc item to meta tag system: " + ID.ItemID, OtherLogger.LogType.Loading);
 
                     IM.AddMetaTag(ID.Category.ToString(), TagType.Category, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);
                     IM.AddMetaTag(ID.SubCategory.ToString(), TagType.SubCategory, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);

@@ -460,10 +460,16 @@ namespace OtherLoader
                     OtherLogger.Log("Tried to select a secondary item for main object. Is it still null?" + (id.MainObject != null), OtherLogger.LogType.General);
                 }
 
-                if (id.UnlockCost == 0 && id.MainObject != null) id.UnlockCost = id.MainObject.CreditCost;
 
-                if (id.MainObject != null && id.IsDisplayedInMainEntry) IM.RegisterItemIntoMetaTagSystem(id);
+                if(id.MainObject != null)
+                {
+                    if (id.UnlockCost == 0) id.UnlockCost = id.MainObject.CreditCost;
 
+                    IM.RegisterItemIntoMetaTagSystem(id);
+                    if (!id.IsDisplayedInMainEntry) HideItemFromCategories(id);
+                }
+
+                
                 //Add ID to the old itemspawner
                 if (IM.CD.ContainsKey(id.Category) && IM.SCD.ContainsKey(id.SubCategory)) {
                     IM.CD[id.Category].Add(id);
@@ -481,6 +487,16 @@ namespace OtherLoader
                 }
             }
         }
+
+
+        private void HideItemFromCategories(ItemSpawnerID ID)
+        {
+            foreach(List<string> pageItems in IM.Instance.PageItemLists.Values)
+            {
+                pageItems.Remove(ID.MainObject.ItemID);
+            }
+        }
+
 
 
         private void LoadFVRObjects(string bundleID, UnityEngine.Object[] allAssets)
