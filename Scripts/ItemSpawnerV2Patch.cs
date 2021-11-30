@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using UnityEngine.UI;
 
 namespace OtherLoader
 {
@@ -96,6 +97,62 @@ namespace OtherLoader
             workingIDs.Clear();
             workingIDs.AddRange(newList);
         }
+
+
+        
+
+        [HarmonyPatch(typeof(ItemSpawnerV2), "RedrawTagsCanvas")]
+        [HarmonyILManipulator]
+        private static void TagNamingPatch(ILContext ctx, MethodBase orig)
+        {
+            ILCursor c = new ILCursor(ctx);
+
+            c.GotoNext(
+                i => i.MatchLdarg(0),
+                i => i.MatchLdfld(AccessTools.Field(typeof(ItemSpawnerV2), "TXT_Tags")),
+                i => i.MatchLdloc(14),
+                i => i.MatchCallvirt(AccessTools.Method(typeof(List<Text>), "get_Item", new Type[] { typeof(int) })),
+                i => i.MatchLdloc(8),
+                i => i.MatchLdloc(13),
+                i => i.MatchCallvirt(AccessTools.Method(typeof(List<string>), "get_Item", new Type[] { typeof(int) })),
+                i => i.MatchCallvirt(AccessTools.Method(typeof(Text), "set_text", new Type[] { typeof(string) }))
+            );
+
+            //Insert the ldarg it expects 
+            c.Emit(OpCodes.Ldarg, 0);
+
+            //Now move the cursor so we can insert code between getting the string and setting the text
+            c.Index += 7;
+            c.Emit(OpCodes.Ldarg, 0);
+            c.Emit(OpCodes.Ldfld, AccessTools.Field(typeof(ItemSpawnerV2), "m_tagType"));
+
+            //Remove the call to set text
+            c.Remove();
+
+            //Now add our new call for setting the text
+            c.Emit(OpCodes.Call, ((Action<Text, string, TagType>)CategoricalSetText).Method);
+        }
+        
+
+
+        private static void CategoricalSetText(Text text, string value, TagType tagType)
+        {
+            if(tagType == TagType.SubCategory)
+            {
+                if (Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), value)){
+                    text.text = value;
+                }
+                else
+                {
+                    text.text = IM.CDefSubInfo[(ItemSpawnerID.ESubCategory)int.Parse(value)].DisplayName;
+                }
+            }
+            else
+            {
+                text.text = value;
+            }
+        }
+
 
 
         [HarmonyPatch(typeof(IM), "RegisterItemIntoMetaTagSystem")]
