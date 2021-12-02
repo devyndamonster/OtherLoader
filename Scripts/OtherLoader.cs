@@ -26,6 +26,8 @@ namespace OtherLoader
         // A dictionary of asset bundles managed by OtherLoader. The key is the UniqueAssetID, and the value is the path to that file
         public static Dictionary<string, string> ManagedBundles = new Dictionary<string, string>();
 
+        public static Dictionary<string, List<ItemSpawnerEntry>> SpawnerEntries = new Dictionary<string, List<ItemSpawnerEntry>>();
+
         private static ConfigEntry<int> MaxActiveLoadersConfig;
         public static ConfigEntry<bool> OptimizeMemory;
         public static ConfigEntry<bool> EnableLogging;
@@ -39,8 +41,6 @@ namespace OtherLoader
         private void Awake()
         {
             LoadConfigFile();
-
-            CacheManager.Init();
 
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));

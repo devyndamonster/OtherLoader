@@ -101,17 +101,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Scripts\ItemSpawnerV2Patch.cs" />
-    <Compile Include="Scripts\ObjectTemplates\ItemSpawnerCategorySerializable.cs" />
-    <Compile Include="Scripts\QuickbeltPanelPatch.cs" />
-    <Compile Include="Scripts\CacheManager.cs" />
+    <Compile Include="Scripts\ObjectTemplates\ItemSpawnerData.cs" />
+    <Compile Include="Scripts\ObjectTemplates\ItemSpawnerEntry.cs" />
+    <Compile Include="Scripts\Patches\ItemSpawnerV2Patch.cs" />
+    <Compile Include="Scripts\Patches\QuickbeltPanelPatch.cs" />
     <Compile Include="Scripts\Extensions.cs" />
-    <Compile Include="Scripts\ItemSpawnerPatch.cs" />
+    <Compile Include="Scripts\Patches\ItemSpawnerPatch.cs" />
     <Compile Include="Scripts\Loaders.cs" />
     <Compile Include="Scripts\LoaderStatus.cs" />
     <Compile Include="Scripts\LoaderUtils.cs" />
-    <Compile Include="Scripts\ObjectTemplates\FVRObjectSerializable.cs" />
-    <Compile Include="Scripts\ObjectTemplates\ItemSpawnerIDSerializable.cs" />
     <Compile Include="Scripts\OtherLoader.cs" />
     <Compile Include="Scripts\OtherLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

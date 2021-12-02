@@ -478,6 +478,19 @@ namespace OtherLoader
                     if (!ManagerSingleton<IM>.Instance.SpawnerIDDic.ContainsKey(id.ItemID))
                     {
                         ManagerSingleton<IM>.Instance.SpawnerIDDic[id.ItemID] = id;
+
+                        //Add this spawner ID to our entry tree structure
+                        //TODO this should be done without having to loop through potentially all spawner entries, I bet this could become expensive
+                        foreach (KeyValuePair<ItemSpawnerV2.PageMode,List<string>> pageItems in IM.Instance.PageItemLists)
+                        {
+                            if (pageItems.Value.Contains(id.ItemID))
+                            {
+                                OtherLogger.Log("Adding SpawnerID to spawner entry tree", OtherLogger.LogType.Loading);
+                                ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
+                                SpawnerEntry.PopulateEntry(pageItems.Key, id);
+                                break;
+                            }
+                        }
                     }
                 }
 

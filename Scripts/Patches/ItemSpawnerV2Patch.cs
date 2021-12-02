@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace OtherLoader
@@ -16,10 +17,19 @@ namespace OtherLoader
     {
 
         [HarmonyPatch(typeof(ItemSpawnerV2), "Awake")]
+        [HarmonyPrefix]
+        private static bool BeforeAwakePatch(ItemSpawnerV2 __instance)
+        {
+            __instance.gameObject.AddComponent<ItemSpawnerData>();
+            return true;
+        }
+
+
+        /*
+        [HarmonyPatch(typeof(ItemSpawnerV2), "Awake")]
         [HarmonyPostfix]
         private static void AwakePatch(ItemSpawnerV2 __instance)
         {
-
             if(LoaderStatus.GetLoaderProgress() >= 1)
             {
                 UpdateCatDefs(__instance);
@@ -31,6 +41,7 @@ namespace OtherLoader
             }
 
         }
+        */
 
         private static IEnumerator WaitUntilLoadComplete(ItemSpawnerV2 __instance)
         {
@@ -67,6 +78,126 @@ namespace OtherLoader
 
 
 
+        [HarmonyPatch(typeof(ItemSpawnerV2), "SetPageMode")]
+        [HarmonyPrefix]
+        private static bool PageModePatch(ItemSpawnerV2 __instance, int i)
+        {
+            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
+            data.CurrentPath = ((ItemSpawnerV2.PageMode)i).ToString();
+            data.CurrentPage = 0;
+
+            return true;
+        }
+
+
+
+        [HarmonyPatch(typeof(ItemSpawnerV2), "SimpleGoBack")]
+        [HarmonyPrefix]
+        private static bool GoBackPatch(ItemSpawnerV2 __instance)
+        {
+            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
+            if (!data.CurrentPath.Contains("/")) return false;
+
+            data.CurrentPath = data.CurrentPath.Substring(0, data.CurrentPath.LastIndexOf("/"));
+            data.CurrentPage = 0;
+
+            OtherLogger.Log("Going back to path: " + data.CurrentPath, OtherLogger.LogType.General);
+            __instance.RedrawSimpleCanvas();
+
+            return false;
+        }
+
+
+
+        [HarmonyPatch(typeof(ItemSpawnerV2), "SimpleSelectTile")]
+        [HarmonyPrefix]
+        private static bool SimpleButtonPatch(ItemSpawnerV2 __instance, int i)
+        {
+            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
+
+            //If the entry that was selected has child entries, we should display the child entries
+            if (OtherLoader.SpawnerEntries[data.VisibleEntries[i].EntryPath].Count > 0)
+            {
+                data.CurrentPath = data.VisibleEntries[i].EntryPath;
+                __instance.RedrawSimpleCanvas();
+            }
+
+            else
+            {
+                __instance.SetSelectedID(data.VisibleEntries[i].MainObjectID);
+                __instance.RedrawDetailsCanvas();
+            }
+
+            return false;
+        }
+
+
+
+        [HarmonyPatch(typeof(ItemSpawnerV2), "RedrawSimpleCanvas")]
+        [HarmonyPrefix]
+        private static bool RedrawSimplePatch(ItemSpawnerV2 __instance)
+        {
+            if (__instance.PMode == ItemSpawnerV2.PageMode.MainMenu) return false;
+
+            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
+            data.VisibleEntries.Clear();
+
+            int startIndex = data.CurrentPage * __instance.IMG_SimpleTiles.Count;
+            for (int i = 0; i < __instance.IMG_SimpleTiles.Count; i++)
+            {
+                if(startIndex + i < OtherLoader.SpawnerEntries[data.CurrentPath].Count)
+                {
+                    ItemSpawnerEntry entry = OtherLoader.SpawnerEntries[data.CurrentPath][startIndex + i];
+                    data.VisibleEntries.Add(entry);
+
+                    __instance.IMG_SimpleTiles[i].gameObject.SetActive(true);
+                    __instance.TXT_SimpleTiles[i].gameObject.SetActive(true);
+                    __instance.IMG_SimpleTiles[i].sprite = entry.EntryIcon;
+                    __instance.TXT_SimpleTiles[i].text = entry.DisplayName;
+                }
+                else
+                {
+                    __instance.IMG_SimpleTiles[i].gameObject.SetActive(false);
+                    __instance.TXT_SimpleTiles[i].gameObject.SetActive(false);
+                }
+            }
+
+            int numPages = Mathf.Max(OtherLoader.SpawnerEntries[data.CurrentPath].Count / __instance.IMG_SimpleTiles.Count, 1);
+
+            __instance.TXT_SimpleTiles_PageNumber.text = (data.CurrentPage + 1) + " / " + numPages;
+            __instance.TXT_SimpleTiles_Showing.text = 
+                "Showing " + 
+                (data.CurrentPage * __instance.IMG_SimpleTiles.Count) + 
+                " - " + 
+                (data.CurrentPage * __instance.IMG_SimpleTiles.Count + data.VisibleEntries.Count) +
+                " Of " +
+                OtherLoader.SpawnerEntries[data.CurrentPath].Count;
+
+
+            if(data.CurrentPage > 0)
+            {
+                __instance.GO_SimpleTiles_PrevPage.SetActive(true);
+            }
+            else
+            {
+                __instance.GO_SimpleTiles_PrevPage.SetActive(false);
+            }
+
+            if(data.CurrentPage < numPages - 1)
+            {
+                __instance.GO_SimpleTiles_NextPage.SetActive(true);
+            }
+            else
+            {
+                __instance.GO_SimpleTiles_NextPage.SetActive(false);
+            }
+
+            return false;
+        }
+
+
+
+        /*
         [HarmonyPatch(typeof(ItemSpawnerV2), "RedrawSimpleCanvas")]
         [HarmonyILManipulator]
         private static void SortingPatch(ILContext ctx, MethodBase orig)
@@ -85,6 +216,11 @@ namespace OtherLoader
             //Add the call to sort the list with this new sorting method
             c.Emit(OpCodes.Call, ((Action<List<string>>)SortItems).Method);
         }
+        */
+
+
+
+
 
 
         private static void SortItems(List<string> workingIDs)
@@ -97,6 +233,7 @@ namespace OtherLoader
             workingIDs.Clear();
             workingIDs.AddRange(newList);
         }
+        
 
 
         
@@ -169,6 +306,22 @@ namespace OtherLoader
                 }
             }
 
+        }
+
+        [HarmonyPatch(typeof(IM), "GenerateItemDBs")]
+        [HarmonyPostfix]
+        private static void PopulateSpawnerEntries()
+        {
+            foreach(KeyValuePair<ItemSpawnerV2.PageMode,List<string>> PageLists in IM.Instance.PageItemLists)
+            {
+                foreach(string ItemID in PageLists.Value)
+                {
+                    ItemSpawnerID SpawnerID = IM.Instance.SpawnerIDDic[ItemID];
+
+                    ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
+                    SpawnerEntry.PopulateEntry(PageLists.Key, SpawnerID);
+                }
+            }
         }
 
     }
