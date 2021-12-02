@@ -17,9 +17,10 @@ namespace OtherLoader
         public Sprite EntryIcon;
         public string DisplayName;
         public bool IsDisplayedInMainEntry;
+        public bool IsModded;
         public List<string> TutorialBlockIDs;
 
-        public void PopulateEntry(ItemSpawnerV2.PageMode Page, ItemSpawnerID ID)
+        public void PopulateEntry(ItemSpawnerV2.PageMode Page, ItemSpawnerID ID, bool IsModded)
         {
             MainObjectID = ID.ItemID;
 
@@ -37,11 +38,12 @@ namespace OtherLoader
             DisplayName = ID.DisplayName;
 
             IsDisplayedInMainEntry = ID.IsDisplayedInMainEntry;
+            this.IsModded = IsModded;
 
             TutorialBlockIDs = new List<string>();
             TutorialBlockIDs.AddRange(ID.TutorialBlocks);
 
-            PopulatePaths(Page, ID);
+            PopulatePaths(Page, ID, IsModded);
         }
 
 
@@ -52,7 +54,7 @@ namespace OtherLoader
         /// </summary>
         /// <param name="Page"></param>
         /// <param name="ID"></param>
-        private void PopulatePaths(ItemSpawnerV2.PageMode Page, ItemSpawnerID ID)
+        private void PopulatePaths(ItemSpawnerV2.PageMode Page, ItemSpawnerID ID, bool IsModded)
         {
             //Add the page entry to the dictionary
             string currentPath = Page.ToString();
@@ -64,9 +66,9 @@ namespace OtherLoader
 
 
 
-            //If this is a modded ID that uses custom categories, we also include the category
+            //If this is a modded ID that uses custom categories (or if it's meat fortress), we also include the category
             previousPath = currentPath;
-            if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), ID.Category))
+            if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), ID.Category) || ID.Category == ItemSpawnerID.EItemCategory.MeatFortress)
             {
                 //Check if this category is already added, and if it's not then add it
                 currentPath += "/" + IM.CDefInfo[ID.Category].DisplayName;
@@ -80,6 +82,8 @@ namespace OtherLoader
                     categoryEntry.EntryPath = currentPath;
                     categoryEntry.EntryIcon = IM.CDefInfo[ID.Category].Sprite;
                     categoryEntry.DisplayName = IM.CDefInfo[ID.Category].DisplayName;
+                    categoryEntry.IsDisplayedInMainEntry = true;
+                    categoryEntry.IsModded = !Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), ID.Category);
                     OtherLoader.SpawnerEntries[previousPath].Add(categoryEntry);
                 }
             }
@@ -105,6 +109,8 @@ namespace OtherLoader
                 //Then, add this entry to the previous path (category)
                 ItemSpawnerEntry subcategoryEntry = CreateInstance<ItemSpawnerEntry>();
                 subcategoryEntry.EntryPath = currentPath;
+                subcategoryEntry.IsDisplayedInMainEntry = true;
+                subcategoryEntry.IsModded = !Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), ID.SubCategory);
 
                 if (IM.CDefSubInfo.ContainsKey(ID.SubCategory))
                 {

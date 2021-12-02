@@ -108,6 +108,39 @@ namespace OtherLoader
         }
 
 
+        [HarmonyPatch(typeof(ItemSpawnerV2), "SimpleNextPage")]
+        [HarmonyPrefix]
+        private static bool NextPagePatch(ItemSpawnerV2 __instance)
+        {
+            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
+            
+            if(OtherLoader.SpawnerEntries[data.CurrentPath].Count / __instance.IMG_SimpleTiles.Count > data.CurrentPage)
+            {
+                data.CurrentPage += 1;
+                __instance.RedrawSimpleCanvas();
+            }
+
+            return false;
+        }
+
+
+        [HarmonyPatch(typeof(ItemSpawnerV2), "SimplePrevage")]
+        [HarmonyPrefix]
+        private static bool PrevPagePatch(ItemSpawnerV2 __instance)
+        {
+            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
+
+            if (data.CurrentPage > 0)
+            {
+                data.CurrentPage -= 1;
+                __instance.RedrawSimpleCanvas();
+            }
+
+            return false;
+        }
+
+
+
 
         [HarmonyPatch(typeof(ItemSpawnerV2), "SimpleSelectTile")]
         [HarmonyPrefix]
@@ -142,12 +175,19 @@ namespace OtherLoader
             ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
             data.VisibleEntries.Clear();
 
+            List<ItemSpawnerEntry> entries = OtherLoader.SpawnerEntries[data.CurrentPath].Where(o => o.IsDisplayedInMainEntry).ToList();
+            //List<ItemSpawnerEntry> entries = OtherLoader.SpawnerEntries[data.CurrentPath];
+
+            OtherLogger.Log($"Got {entries.Count} entries for path: {data.CurrentPath}", OtherLogger.LogType.General);
+
+            entries = entries.OrderBy(o => o.DisplayName).OrderBy(o => o.IsModded?1:0).OrderBy(o => (OtherLoader.SpawnerEntries[o.EntryPath].Count > 0)?1:0).ToList();
+
             int startIndex = data.CurrentPage * __instance.IMG_SimpleTiles.Count;
             for (int i = 0; i < __instance.IMG_SimpleTiles.Count; i++)
             {
-                if(startIndex + i < OtherLoader.SpawnerEntries[data.CurrentPath].Count)
+                if(startIndex + i < entries.Count)
                 {
-                    ItemSpawnerEntry entry = OtherLoader.SpawnerEntries[data.CurrentPath][startIndex + i];
+                    ItemSpawnerEntry entry = entries[startIndex + i];
                     data.VisibleEntries.Add(entry);
 
                     __instance.IMG_SimpleTiles[i].gameObject.SetActive(true);
@@ -162,7 +202,7 @@ namespace OtherLoader
                 }
             }
 
-            int numPages = Mathf.Max(OtherLoader.SpawnerEntries[data.CurrentPath].Count / __instance.IMG_SimpleTiles.Count, 1);
+            int numPages = Mathf.Max(entries.Count / __instance.IMG_SimpleTiles.Count, 1);
 
             __instance.TXT_SimpleTiles_PageNumber.text = (data.CurrentPage + 1) + " / " + numPages;
             __instance.TXT_SimpleTiles_Showing.text = 
@@ -171,7 +211,7 @@ namespace OtherLoader
                 " - " + 
                 (data.CurrentPage * __instance.IMG_SimpleTiles.Count + data.VisibleEntries.Count) +
                 " Of " +
-                OtherLoader.SpawnerEntries[data.CurrentPath].Count;
+                entries.Count;
 
 
             if(data.CurrentPage > 0)
@@ -183,7 +223,7 @@ namespace OtherLoader
                 __instance.GO_SimpleTiles_PrevPage.SetActive(false);
             }
 
-            if(data.CurrentPage < numPages - 1)
+            if(data.CurrentPage < numPages)
             {
                 __instance.GO_SimpleTiles_NextPage.SetActive(true);
             }
@@ -297,15 +337,14 @@ namespace OtherLoader
         {
             //If this IDs items didn't get added, add it to the firearm page
             if (IM.Instance.PageItemLists.ContainsKey(ItemSpawnerV2.PageMode.Firearms)){
-                if (!IM.Instance.PageItemLists[ItemSpawnerV2.PageMode.Firearms].Contains(ID.ItemID))
+                if (!IM.Instance.PageItemLists[ItemSpawnerV2.PageMode.Firearms].Contains(ID.ItemID) && IM.OD.ContainsKey(ID.ItemID) && IM.OD[ID.ItemID].IsModContent)
                 {
-                    OtherLogger.Log("Adding misc item to meta tag system: " + ID.ItemID, OtherLogger.LogType.Loading);
+                    OtherLogger.Log("Adding misc mod item to meta tag system: " + ID.ItemID, OtherLogger.LogType.Loading);
 
                     IM.AddMetaTag(ID.Category.ToString(), TagType.Category, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);
                     IM.AddMetaTag(ID.SubCategory.ToString(), TagType.SubCategory, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);
                 }
             }
-
         }
 
         [HarmonyPatch(typeof(IM), "GenerateItemDBs")]
@@ -319,7 +358,7 @@ namespace OtherLoader
                     ItemSpawnerID SpawnerID = IM.Instance.SpawnerIDDic[ItemID];
 
                     ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
-                    SpawnerEntry.PopulateEntry(PageLists.Key, SpawnerID);
+                    SpawnerEntry.PopulateEntry(PageLists.Key, SpawnerID, false);
                 }
             }
         }

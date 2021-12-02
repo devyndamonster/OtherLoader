@@ -470,6 +470,7 @@ namespace OtherLoader
                 }
 
                 
+                
                 //Add ID to the old itemspawner
                 if (IM.CD.ContainsKey(id.Category) && IM.SCD.ContainsKey(id.SubCategory)) {
                     IM.CD[id.Category].Add(id);
@@ -479,18 +480,30 @@ namespace OtherLoader
                     {
                         ManagerSingleton<IM>.Instance.SpawnerIDDic[id.ItemID] = id;
 
+                        
                         //Add this spawner ID to our entry tree structure
-                        //TODO this should be done without having to loop through potentially all spawner entries, I bet this could become expensive
-                        foreach (KeyValuePair<ItemSpawnerV2.PageMode,List<string>> pageItems in IM.Instance.PageItemLists)
+                        if (Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), id.Category))
                         {
-                            if (pageItems.Value.Contains(id.ItemID))
+                            //TODO this should be done without having to loop through potentially all spawner entries, I bet this could become expensive
+                            foreach (KeyValuePair<ItemSpawnerV2.PageMode, List<string>> pageItems in IM.Instance.PageItemLists)
                             {
-                                OtherLogger.Log("Adding SpawnerID to spawner entry tree", OtherLogger.LogType.Loading);
-                                ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
-                                SpawnerEntry.PopulateEntry(pageItems.Key, id);
-                                break;
+                                if (pageItems.Value.Contains(id.ItemID))
+                                {
+                                    OtherLogger.Log("Adding SpawnerID to spawner entry tree", OtherLogger.LogType.Loading);
+                                    ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
+                                    SpawnerEntry.PopulateEntry(pageItems.Key, id, true);
+                                    break;
+                                }
                             }
                         }
+                        else
+                        {
+                            OtherLogger.Log("Adding SpawnerID to spawner entry tree under custom category", OtherLogger.LogType.Loading);
+                            ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
+                            SpawnerEntry.PopulateEntry(ItemSpawnerV2.PageMode.Firearms, id, true);
+                        }
+                        
+                        
                     }
                 }
 
