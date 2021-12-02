@@ -68,7 +68,7 @@ namespace OtherLoader
 
             //If this is a modded ID that uses custom categories (or if it's meat fortress), we also include the category
             previousPath = currentPath;
-            if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), ID.Category) || ID.Category == ItemSpawnerID.EItemCategory.MeatFortress)
+            if ((!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), ID.Category) && IM.CDefInfo.ContainsKey(ID.Category)) || ID.Category == ItemSpawnerID.EItemCategory.MeatFortress)
             {
                 //Check if this category is already added, and if it's not then add it
                 currentPath += "/" + IM.CDefInfo[ID.Category].DisplayName;
@@ -90,40 +90,45 @@ namespace OtherLoader
 
 
 
-            //Update the path
-            previousPath = currentPath;
-            if (IM.CDefSubInfo.ContainsKey(ID.SubCategory))
+            //If the subcategory is not 'none', we inlcude the subcategory
+            if(ID.SubCategory != ItemSpawnerID.ESubCategory.None)
             {
-                currentPath += "/" + IM.CDefSubInfo[ID.SubCategory].DisplayName;
-            }
-            else
-            {
-                currentPath += "/" + ID.SubCategory.ToString();
-            }
-
-            //Check if this subcategory is already added, and if it's not then add it
-            if (!OtherLoader.SpawnerEntries.ContainsKey(currentPath))
-            {
-                OtherLoader.SpawnerEntries.Add(currentPath, new List<ItemSpawnerEntry>());
-
-                //Then, add this entry to the previous path (category)
-                ItemSpawnerEntry subcategoryEntry = CreateInstance<ItemSpawnerEntry>();
-                subcategoryEntry.EntryPath = currentPath;
-                subcategoryEntry.IsDisplayedInMainEntry = true;
-                subcategoryEntry.IsModded = !Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), ID.SubCategory);
-
+                //Update the path
+                previousPath = currentPath;
                 if (IM.CDefSubInfo.ContainsKey(ID.SubCategory))
                 {
-                    subcategoryEntry.EntryIcon = IM.CDefSubInfo[ID.SubCategory].Sprite;
-                    subcategoryEntry.DisplayName = IM.CDefSubInfo[ID.SubCategory].DisplayName;
+                    currentPath += "/" + IM.CDefSubInfo[ID.SubCategory].DisplayName;
                 }
                 else
                 {
-                    subcategoryEntry.DisplayName = ID.SubCategory.ToString();
+                    currentPath += "/" + ID.SubCategory.ToString();
                 }
 
-                OtherLoader.SpawnerEntries[previousPath].Add(subcategoryEntry);
+                //Check if this subcategory is already added, and if it's not then add it
+                if (!OtherLoader.SpawnerEntries.ContainsKey(currentPath))
+                {
+                    OtherLoader.SpawnerEntries.Add(currentPath, new List<ItemSpawnerEntry>());
+
+                    //Then, add this entry to the previous path (category)
+                    ItemSpawnerEntry subcategoryEntry = CreateInstance<ItemSpawnerEntry>();
+                    subcategoryEntry.EntryPath = currentPath;
+                    subcategoryEntry.IsDisplayedInMainEntry = true;
+                    subcategoryEntry.IsModded = !Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), ID.SubCategory);
+
+                    if (IM.CDefSubInfo.ContainsKey(ID.SubCategory))
+                    {
+                        subcategoryEntry.EntryIcon = IM.CDefSubInfo[ID.SubCategory].Sprite;
+                        subcategoryEntry.DisplayName = IM.CDefSubInfo[ID.SubCategory].DisplayName;
+                    }
+                    else
+                    {
+                        subcategoryEntry.DisplayName = ID.SubCategory.ToString();
+                    }
+
+                    OtherLoader.SpawnerEntries[previousPath].Add(subcategoryEntry);
+                }
             }
+            
 
             
 

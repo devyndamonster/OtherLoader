@@ -21,27 +21,16 @@ namespace OtherLoader
         private static bool BeforeAwakePatch(ItemSpawnerV2 __instance)
         {
             __instance.gameObject.AddComponent<ItemSpawnerData>();
+
+            __instance.TXT_Detail.resizeTextForBestFit = true;
+            __instance.TXT_Detail.resizeTextMaxSize = __instance.TXT_Detail.fontSize;
+            __instance.TXT_Detail.resizeTextMinSize = 2;
+
             return true;
         }
 
 
-        /*
-        [HarmonyPatch(typeof(ItemSpawnerV2), "Awake")]
-        [HarmonyPostfix]
-        private static void AwakePatch(ItemSpawnerV2 __instance)
-        {
-            if(LoaderStatus.GetLoaderProgress() >= 1)
-            {
-                UpdateCatDefs(__instance);
-            }
 
-            else
-            {
-                __instance.StartCoroutine(WaitUntilLoadComplete(__instance));
-            }
-
-        }
-        */
 
         private static IEnumerator WaitUntilLoadComplete(ItemSpawnerV2 __instance)
         {
@@ -52,6 +41,8 @@ namespace OtherLoader
 
             UpdateCatDefs(__instance);
         }
+
+
 
 
         private static void UpdateCatDefs(ItemSpawnerV2 __instance)
@@ -141,6 +132,56 @@ namespace OtherLoader
 
 
 
+        [HarmonyPatch(typeof(ItemSpawnerV2), "GetDetailText")]
+        [HarmonyPrefix]
+        private static bool DeatilTextPatch(ItemSpawnerV2 __instance, string id, ref string __result)
+        {
+            
+            if (!IM.Instance.SpawnerIDDic.ContainsKey(id))
+            {
+                OtherLogger.LogError($"The ItemID was not found to have spawnerID! ItemID: {id}");
+                __result = "";
+                return false;
+            }
+
+            ItemSpawnerID spawnerID = IM.Instance.SpawnerIDDic[id];
+            FVRObject fvrObj = IM.OD[spawnerID.MainObject.ItemID];
+
+            string spawnerCat = spawnerID.Category.ToString();
+            if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerID.Category) && IM.CDefInfo.ContainsKey(spawnerID.Category))
+                spawnerCat = IM.CDefInfo[spawnerID.Category].DisplayName;
+
+            string spawnerSubcat = spawnerID.SubCategory.ToString();
+            if (!Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), spawnerID.SubCategory) && IM.CDefSubInfo.ContainsKey(spawnerID.SubCategory))
+                spawnerSubcat = IM.CDefSubInfo[spawnerID.SubCategory].DisplayName;
+
+
+            string text = 
+                "Spawner Category: " + spawnerCat + "\n" +
+                "Spawner Subcategory: " + spawnerSubcat + "\n" +
+                "Object Category: " + fvrObj.Category.ToString() + "\n" +
+                "Set: " + fvrObj.TagSet.ToString() + "\n" +
+                "Size: " + fvrObj.TagFirearmSize.ToString() + "\n" +
+                "Era: " + fvrObj.TagEra.ToString() + "\n" +
+                "Action: " + fvrObj.TagFirearmAction.ToString() + "\n" +
+                "Round Power: " + fvrObj.TagFirearmRoundPower.ToString() + "\n" +
+                "Country: " + fvrObj.TagFirearmCountryOfOrigin.ToString() + "\n" +
+                "Introduction Year: " + fvrObj.TagFirearmFirstYear.ToString() + "\n" +
+                "Magazine Type: " + fvrObj.MagazineType.ToString() + "\n" +
+                "Round Type: " + fvrObj.RoundType.ToString() + "\n" +
+                "Firing Modes: " + string.Join(",", fvrObj.TagFirearmFiringModes.Select(o => o.ToString()).ToArray()) + "\n" +
+                "Feed Options: " + string.Join(",", fvrObj.TagFirearmFeedOption.Select(o => o.ToString()).ToArray()) + "\n" +
+                "Mounts: " + string.Join(",", fvrObj.TagFirearmMounts.Select(o => o.ToString()).ToArray()) + "\n" +
+                "Attachment Mount: " + fvrObj.TagAttachmentMount.ToString() + "\n" +
+                "Attachment Feature: " + fvrObj.TagAttachmentFeature.ToString();
+
+            __result = text;
+
+            return false;
+        }
+
+
+
 
         [HarmonyPatch(typeof(ItemSpawnerV2), "SimpleSelectTile")]
         [HarmonyPrefix]
@@ -152,6 +193,7 @@ namespace OtherLoader
             if (OtherLoader.SpawnerEntries[data.VisibleEntries[i].EntryPath].Count > 0)
             {
                 data.CurrentPath = data.VisibleEntries[i].EntryPath;
+                data.CurrentPage = 0;
                 __instance.RedrawSimpleCanvas();
             }
 
@@ -176,7 +218,6 @@ namespace OtherLoader
             data.VisibleEntries.Clear();
 
             List<ItemSpawnerEntry> entries = OtherLoader.SpawnerEntries[data.CurrentPath].Where(o => o.IsDisplayedInMainEntry).ToList();
-            //List<ItemSpawnerEntry> entries = OtherLoader.SpawnerEntries[data.CurrentPath];
 
             OtherLogger.Log($"Got {entries.Count} entries for path: {data.CurrentPath}", OtherLogger.LogType.General);
 
@@ -202,9 +243,11 @@ namespace OtherLoader
                 }
             }
 
-            int numPages = Mathf.Max(entries.Count / __instance.IMG_SimpleTiles.Count, 1);
+            int numPages = (int) Math.Ceiling((double) entries.Count / __instance.IMG_SimpleTiles.Count);
 
-            __instance.TXT_SimpleTiles_PageNumber.text = (data.CurrentPage + 1) + " / " + numPages;
+            OtherLogger.Log($"There are {numPages} pages for this entry", OtherLogger.LogType.General);
+
+            __instance.TXT_SimpleTiles_PageNumber.text = (data.CurrentPage + 1) + " / " + (numPages);
             __instance.TXT_SimpleTiles_Showing.text = 
                 "Showing " + 
                 (data.CurrentPage * __instance.IMG_SimpleTiles.Count) + 
@@ -223,7 +266,7 @@ namespace OtherLoader
                 __instance.GO_SimpleTiles_PrevPage.SetActive(false);
             }
 
-            if(data.CurrentPage < numPages)
+            if(data.CurrentPage < numPages - 1)
             {
                 __instance.GO_SimpleTiles_NextPage.SetActive(true);
             }
@@ -234,46 +277,6 @@ namespace OtherLoader
 
             return false;
         }
-
-
-
-        /*
-        [HarmonyPatch(typeof(ItemSpawnerV2), "RedrawSimpleCanvas")]
-        [HarmonyILManipulator]
-        private static void SortingPatch(ILContext ctx, MethodBase orig)
-        {
-            ILCursor c = new ILCursor(ctx);
-
-            c.GotoNext(
-                i => i.MatchLdfld(AccessTools.Field(typeof(ItemSpawnerV2), "WorkingItemIDs")),
-                i => i.MatchCallvirt(AccessTools.Method(typeof(List<string>), "Sort", Type.EmptyTypes))
-            );
-
-            //Remove the original call to sort the list
-            c.Index += 1;
-            c.Remove();
-
-            //Add the call to sort the list with this new sorting method
-            c.Emit(OpCodes.Call, ((Action<List<string>>)SortItems).Method);
-        }
-        */
-
-
-
-
-
-
-        private static void SortItems(List<string> workingIDs)
-        {
-            //First sort alphabetically
-            workingIDs.Sort();
-
-            //Then sort by wether the items are modded or not
-            List<string> newList = workingIDs.OrderBy(o => IM.OD.ContainsKey(o) && IM.OD[o].IsModContent).ToList();
-            workingIDs.Clear();
-            workingIDs.AddRange(newList);
-        }
-        
 
 
         

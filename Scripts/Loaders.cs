@@ -495,6 +495,8 @@ namespace OtherLoader
                                     break;
                                 }
                             }
+
+                            OtherLogger.Log("Could not add item to new spawner because it was not tagged properly! ItemID: " + id.ItemID, OtherLogger.LogType.Loading);
                         }
                         else
                         {
