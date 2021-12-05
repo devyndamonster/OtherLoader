@@ -25,6 +25,12 @@ namespace OtherLoader
             __instance.TXT_Detail.resizeTextForBestFit = true;
             __instance.TXT_Detail.resizeTextMaxSize = __instance.TXT_Detail.fontSize;
             __instance.TXT_Detail.resizeTextMinSize = 2;
+            __instance.TXT_Detail.verticalOverflow = VerticalWrapMode.Truncate;
+            __instance.TXT_Detail.rectTransform.anchoredPosition = new Vector2(390, 500);
+            __instance.TXT_Detail.rectTransform.sizeDelta = new Vector2(310, 390);
+
+            Image backing = __instance.TXT_Detail.transform.GetComponentInChildren<Image>();
+            backing.rectTransform.anchoredPosition = new Vector2(0, 10);
 
             return true;
         }

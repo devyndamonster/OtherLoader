@@ -456,8 +456,10 @@ namespace OtherLoader
                     {
                         id.ItemID = id.MainObject.ItemID;
                     }
-
-                    OtherLogger.Log("Tried to select a secondary item for main object. Is it still null?" + (id.MainObject != null), OtherLogger.LogType.General);
+                    else
+                    {
+                        OtherLogger.Log("Could not select a secondary object for ItemSpawnerID, it will not appear in spawner: Display Name: " + id.DisplayName, OtherLogger.LogType.Loading);
+                    }
                 }
 
 

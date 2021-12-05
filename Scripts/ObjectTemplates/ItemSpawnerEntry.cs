@@ -134,7 +134,7 @@ namespace OtherLoader
 
             //Finally add the itemspawnerID as an entry to the dictionary
             previousPath = currentPath;
-            currentPath += "/" + ID.MainObject.ItemID;
+            currentPath += "/" + ID.ItemID;
             if (!OtherLoader.SpawnerEntries.ContainsKey(currentPath))
             {
                 OtherLoader.SpawnerEntries.Add(currentPath, new List<ItemSpawnerEntry>());
