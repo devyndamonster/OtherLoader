@@ -20,6 +20,8 @@ namespace OtherLoader
         [HarmonyPrefix]
         private static bool BeforeAwakePatch(ItemSpawnerV2 __instance)
         {
+            __instance.StartCoroutine(HandleLoadingText(__instance));
+
             __instance.gameObject.AddComponent<ItemSpawnerData>();
 
             __instance.TXT_Detail.resizeTextForBestFit = true;
@@ -37,40 +39,57 @@ namespace OtherLoader
 
 
 
-
-        private static IEnumerator WaitUntilLoadComplete(ItemSpawnerV2 __instance)
+        private static IEnumerator HandleLoadingText(ItemSpawnerV2 instance)
         {
-            while(LoaderStatus.GetLoaderProgress() < 1)
+            //First create the loading text
+            Text text = CreateLoadingText(instance);
+
+            //Now loop until all items are loaded, while updating the text
+            float progress = LoaderStatus.GetLoaderProgress();
+            while (progress < 1)
             {
-                yield return null;
+                string progressBar = new string('I', (int)(progress * 120));
+                text.text = "Loading Mods\n" + progressBar;
+
+                yield return new WaitForSeconds(1);
+
+                progress = LoaderStatus.GetLoaderProgress();
             }
 
-            UpdateCatDefs(__instance);
+            //Finally destroy the text
+            GameObject.Destroy(text.transform.parent.gameObject);
         }
 
 
-
-
-        private static void UpdateCatDefs(ItemSpawnerV2 __instance)
+        private static Text CreateLoadingText(ItemSpawnerV2 instance)
         {
-            OtherLogger.Log("Updating CatDefs!", OtherLogger.LogType.General);
+            GameObject loadingCanvas = new GameObject("LoadingTextCanvas");
+            loadingCanvas.transform.SetParent(instance.transform);
+            loadingCanvas.transform.rotation = instance.transform.rotation;
+            loadingCanvas.transform.localPosition = new Vector3(-0.47f, 0.492f, 0);
 
-            //Go through all subcategories and add any that aren't pre-defined
-            foreach(ItemSpawnerID.ESubCategory subcat in IM.CDefSubInfo.Keys)
-            {
-                if (!Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), subcat)){
+            Canvas canvasComp = loadingCanvas.AddComponent<Canvas>();
+            RectTransform rect = canvasComp.GetComponent<RectTransform>();
+            canvasComp.renderMode = RenderMode.WorldSpace;
+            rect.sizeDelta = new Vector2(1, 1);
 
-                    OtherLogger.Log("Adding unique subcat: " + subcat.ToString(), OtherLogger.LogType.General);
+            GameObject text = new GameObject("LoadingText");
+            text.transform.SetParent(loadingCanvas.transform);
+            text.transform.rotation = instance.transform.rotation;
+            text.transform.localPosition = new Vector3(-0.25f, 0.4f, 0);
 
-                    __instance.m_simpleSpawnerPageDic[ItemSpawnerV2.PageMode.Firearms].TagGroups.Add(new ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup
-                    {
-                        DisplayName = IM.CDefSubInfo[subcat].DisplayName,
-                        Icon = IM.CDefSubInfo[subcat].Sprite,
-                        TagT = TagType.SubCategory,
-                        Tag = subcat.ToString()
-                    });
-                }
-            }
+            text.AddComponent<CanvasRenderer>();
+            Text textComp = text.AddComponent<Text>();
+            Font ArialFont = (Font)Resources.GetBuiltinResource(typeof(Font), "Arial.ttf");
+
+            textComp.text = "Loading Mods\n";
+            textComp.alignment = TextAnchor.MiddleLeft;
+            textComp.fontSize = 32;
+            text.transform.localScale = new Vector3(0.0015f, 0.0015f, 0.0015f);
+            textComp.font = ArialFont;
+            textComp.horizontalOverflow = HorizontalWrapMode.Overflow;
+
+            return textComp;
         }
 
 
