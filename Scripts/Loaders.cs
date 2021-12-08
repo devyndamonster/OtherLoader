@@ -68,7 +68,33 @@ namespace OtherLoader
             return RegisterAssetLoadLate(handle, LoadOrderType.LoadLast);
         }
 
+        public void LoadDirectAssets(CoroutineStarter starter, string folderPath, string[] loadFirst, string[] loadAny, string[] loadLast)
+        {
+            foreach (string bundleFirst in loadFirst)
+            {
+                if (!string.IsNullOrEmpty(bundleFirst))
+                {
+                    starter(StartAssetLoadDirect(folderPath, bundleFirst, LoadOrderType.LoadFirst, false));
+                }
+                
+            }
 
+            foreach (string bundleAny in loadAny)
+            {
+                if (!string.IsNullOrEmpty(bundleAny))
+                {
+                    starter(StartAssetLoadDirect(folderPath, bundleAny, LoadOrderType.LoadUnordered, false));
+                }
+            }
+
+            foreach (string bundleLast in loadLast)
+            {
+                if (!string.IsNullOrEmpty(bundleLast))
+                {
+                    starter(StartAssetLoadDirect(folderPath, bundleLast, LoadOrderType.LoadLast, false));
+                }
+            }
+        }
 
         public IEnumerator StartAssetLoad(FileSystemInfo handle, LoadOrderType loadOrder, bool allowUnload)
         {
@@ -78,7 +104,32 @@ namespace OtherLoader
 
             return LoadAssetsFromPathAsync(file.FullName, bundleID, loadOrder, allowUnload).TryCatch(e =>
             {
-                OtherLogger.LogError("Failed to load mod (" + file + ")");
+                OtherLogger.LogError("Failed to load mod (" + bundleID + ")");
+                OtherLogger.LogError(e.ToString());
+                LoaderStatus.UpdateProgress(bundleID, 1);
+                LoaderStatus.RemoveActiveLoader(bundleID, true);
+            });
+        }
+
+
+        public IEnumerator StartAssetLoadDirect(string folderPath, string bundleName, LoadOrderType loadOrder, bool allowUnload)
+        {
+            OtherLogger.Log("Direct Loading Bundle (" + bundleName + ")", OtherLogger.LogType.General);
+
+            string bundlePath = Path.Combine(folderPath, bundleName);
+            string lateName = "late_" + bundleName;
+            string latePath = Path.Combine(folderPath, lateName);
+            string bundleID = bundlePath.Replace(bundleName, "") + " : " + bundleName;
+            IEnumerator afterLoad = null;
+
+            if (File.Exists(latePath))
+            {
+                afterLoad = RegisterAssetLoadLate(latePath, lateName, loadOrder);
+            }
+
+            return LoadAssetsFromPathAsync(bundlePath, bundleID, loadOrder, allowUnload, afterLoad).TryCatch(e =>
+            {
+                OtherLogger.LogError("Failed to load mod (" + bundleID + ")");
                 OtherLogger.LogError(e.ToString());
                 LoaderStatus.UpdateProgress(bundleID, 1);
                 LoaderStatus.RemoveActiveLoader(bundleID, true);
@@ -90,9 +141,15 @@ namespace OtherLoader
         {
             FileInfo file = handle.ConsumeFile();
 
+            return RegisterAssetLoadLate(file.FullName, file.Name, loadOrder);
+        }
+
+
+        public IEnumerator RegisterAssetLoadLate(string bundlePath, string bundleName, LoadOrderType loadOrder)
+        {
             //In order to get this bundle to load later, we want to replace the file path for the already loaded FVRObject
-            string bundleID = file.FullName.Replace(file.Name, "") + " : " + file.Name.Replace("late_", "");
-            OtherLoader.ManagedBundles[bundleID] = file.FullName;
+            string bundleID = bundlePath.Replace(bundleName, "") + " : " + bundleName.Replace("late_", "");
+            OtherLoader.ManagedBundles[bundleID] = bundlePath;
             LoaderStatus.TrackLoader(bundleID, loadOrder);
 
             AnvilCallbackBase anvilCallbackBase;
@@ -103,12 +160,12 @@ namespace OtherLoader
 
                 if (OtherLoader.LogLoading.Value)
                 {
-                    OtherLogger.Log("Registered asset bundle to load later (" + file.FullName + ")", OtherLogger.LogType.General);
+                    OtherLogger.Log("Registered asset bundle to load later (" + bundlePath + ")", OtherLogger.LogType.General);
                     OtherLogger.Log("This bundle will replace the data bundle (" + bundleID + ")", OtherLogger.LogType.Loading);
                 }
                 else
                 {
-                    OtherLogger.Log("Registered asset bundle to load later (" + file.Name + ")", OtherLogger.LogType.General);
+                    OtherLogger.Log("Registered asset bundle to load later (" + bundleName + ")", OtherLogger.LogType.General);
                     OtherLogger.Log("This bundle will replace the data bundle (" + LoaderUtils.GetBundleNameFromUniqueID(bundleID) + ")", OtherLogger.LogType.Loading);
                 }
             }
@@ -119,6 +176,7 @@ namespace OtherLoader
 
             yield return null;
         }
+
 
         public void LoadLegacyAssets(CoroutineStarter starter)
         {
@@ -157,7 +215,10 @@ namespace OtherLoader
         }
 
 
-        private IEnumerator LoadAssetsFromPathAsync(string path, string bundleID, LoadOrderType loadOrder, bool allowUnload)
+        
+
+
+        private IEnumerator LoadAssetsFromPathAsync(string path, string bundleID, LoadOrderType loadOrder, bool allowUnload, IEnumerator afterLoad = null)
         {
             //Start tracking this bundle and then wait a frame for everything else to be tracked
             LoaderStatus.TrackLoader(bundleID, loadOrder);
@@ -217,6 +278,11 @@ namespace OtherLoader
             OtherLoader.ManagedBundles.Add(bundleID, path);
             LoaderStatus.UpdateProgress(bundleID, 1);
             LoaderStatus.RemoveActiveLoader(bundleID, !(OtherLoader.OptimizeMemory.Value && allowUnload));
+
+            if(afterLoad != null)
+            {
+                yield return afterLoad;
+            }
         }
 
 

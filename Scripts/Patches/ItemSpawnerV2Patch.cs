@@ -130,7 +130,7 @@ namespace OtherLoader
         {
             ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
             
-            if(OtherLoader.SpawnerEntries[data.CurrentPath].Count / __instance.IMG_SimpleTiles.Count > data.CurrentPage)
+            if(OtherLoader.SpawnerEntriesByPath[data.CurrentPath].Count / __instance.IMG_SimpleTiles.Count > data.CurrentPage)
             {
                 data.CurrentPage += 1;
                 __instance.RedrawSimpleCanvas();
@@ -215,7 +215,7 @@ namespace OtherLoader
             ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
 
             //If the entry that was selected has child entries, we should display the child entries
-            if (OtherLoader.SpawnerEntries[data.VisibleEntries[i].EntryPath].Count > 0)
+            if (OtherLoader.SpawnerEntriesByPath[data.VisibleEntries[i].EntryPath].Count > 0)
             {
                 data.CurrentPath = data.VisibleEntries[i].EntryPath;
                 data.CurrentPage = 0;
@@ -242,11 +242,11 @@ namespace OtherLoader
             ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
             data.VisibleEntries.Clear();
 
-            List<ItemSpawnerEntry> entries = OtherLoader.SpawnerEntries[data.CurrentPath].Where(o => o.IsDisplayedInMainEntry).ToList();
+            List<ItemSpawnerEntry> entries = OtherLoader.SpawnerEntriesByPath[data.CurrentPath].Where(o => o.IsDisplayedInMainEntry).ToList();
 
             OtherLogger.Log($"Got {entries.Count} entries for path: {data.CurrentPath}", OtherLogger.LogType.General);
 
-            entries = entries.OrderBy(o => o.DisplayName).OrderBy(o => o.IsModded?1:0).OrderBy(o => (OtherLoader.SpawnerEntries[o.EntryPath].Count > 0)?1:0).ToList();
+            entries = entries.OrderBy(o => o.DisplayName).OrderBy(o => o.IsModded?1:0).OrderBy(o => (OtherLoader.SpawnerEntriesByPath[o.EntryPath].Count > 0)?1:0).ToList();
 
             int startIndex = data.CurrentPage * __instance.IMG_SimpleTiles.Count;
             for (int i = 0; i < __instance.IMG_SimpleTiles.Count; i++)

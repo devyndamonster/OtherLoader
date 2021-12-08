@@ -7,18 +7,53 @@ using UnityEngine;
 
 namespace OtherLoader
 {
+
+
+    [CreateAssetMenu(menuName = "MeatKit/Otherloader/SpawnerEntry", fileName = "New Spawner Entry")]
     public class ItemSpawnerEntry : ScriptableObject
     {
+        [Header("Item IDs")]
+        [Tooltip("ItemID for the main object that will spawn")]
         public string MainObjectID;
+
+        [Tooltip("ItemIDs for items that will spawn alongside the main object")]
         public List<string> SpawnWithIDs;
+
+        [Tooltip("ItemIDs for items that appear in the secondary items section")]
         public List<string> SecondaryObjectIDs;
 
+
+        [Header("Entry Path Properties")]
+        [Tooltip("The path for the entry")]
         public string EntryPath;
+
+        public ItemSpawnerV2.PageMode Page;
+
+        public ItemSpawnerID.ESubCategory SubCategory;
+
+
+        [Header("Display Properties")]
+        [Tooltip("The icon that will appear in the spawner for this entry")]
         public Sprite EntryIcon;
+
+        [Tooltip("The name of the entry")]
         public string DisplayName;
+
+        [Tooltip("Decides wether the entry will be visible in the spawner.\n Set to false if you only want the entry visible as a secondary")]
         public bool IsDisplayedInMainEntry;
-        public bool IsModded;
+
+        [Tooltip("A list of tutorial block IDs that will appear when this entry is selected")]
         public List<string> TutorialBlockIDs;
+
+
+        [Header("Misc Properties")]
+        public bool UsesLargeSpawnPad;
+        public bool UsesHugeSpawnPad;
+
+        [HideInInspector]
+        public bool IsModded;
+
+        
 
         public void PopulateEntry(ItemSpawnerV2.PageMode Page, ItemSpawnerID ID, bool IsModded)
         {
@@ -38,6 +73,8 @@ namespace OtherLoader
             DisplayName = ID.DisplayName;
 
             IsDisplayedInMainEntry = ID.IsDisplayedInMainEntry;
+            UsesHugeSpawnPad = ID.UsesHugeSpawnPad;
+            UsesLargeSpawnPad = ID.UsesLargeSpawnPad;
             this.IsModded = IsModded;
 
             TutorialBlockIDs = new List<string>();
@@ -59,9 +96,9 @@ namespace OtherLoader
             //Add the page entry to the dictionary
             string currentPath = Page.ToString();
             string previousPath = currentPath;
-            if (!OtherLoader.SpawnerEntries.ContainsKey(currentPath))
+            if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
             {
-                OtherLoader.SpawnerEntries.Add(currentPath, new List<ItemSpawnerEntry>());
+                OtherLoader.SpawnerEntriesByPath.Add(currentPath, new List<ItemSpawnerEntry>());
             }
 
 
@@ -72,10 +109,10 @@ namespace OtherLoader
             {
                 //Check if this category is already added, and if it's not then add it
                 currentPath += "/" + IM.CDefInfo[ID.Category].DisplayName;
-                if (!OtherLoader.SpawnerEntries.ContainsKey(currentPath))
+                if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
                 {
                     //First, add the current path to the entry dictionary
-                    OtherLoader.SpawnerEntries.Add(currentPath, new List<ItemSpawnerEntry>());
+                    OtherLoader.SpawnerEntriesByPath.Add(currentPath, new List<ItemSpawnerEntry>());
 
                     //Then, add this entry to the previous path (page)
                     ItemSpawnerEntry categoryEntry = CreateInstance<ItemSpawnerEntry>();
@@ -84,7 +121,7 @@ namespace OtherLoader
                     categoryEntry.DisplayName = IM.CDefInfo[ID.Category].DisplayName;
                     categoryEntry.IsDisplayedInMainEntry = true;
                     categoryEntry.IsModded = !Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), ID.Category);
-                    OtherLoader.SpawnerEntries[previousPath].Add(categoryEntry);
+                    OtherLoader.SpawnerEntriesByPath[previousPath].Add(categoryEntry);
                 }
             }
 
@@ -105,9 +142,9 @@ namespace OtherLoader
                 }
 
                 //Check if this subcategory is already added, and if it's not then add it
-                if (!OtherLoader.SpawnerEntries.ContainsKey(currentPath))
+                if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
                 {
-                    OtherLoader.SpawnerEntries.Add(currentPath, new List<ItemSpawnerEntry>());
+                    OtherLoader.SpawnerEntriesByPath.Add(currentPath, new List<ItemSpawnerEntry>());
 
                     //Then, add this entry to the previous path (category)
                     ItemSpawnerEntry subcategoryEntry = CreateInstance<ItemSpawnerEntry>();
@@ -125,7 +162,7 @@ namespace OtherLoader
                         subcategoryEntry.DisplayName = ID.SubCategory.ToString();
                     }
 
-                    OtherLoader.SpawnerEntries[previousPath].Add(subcategoryEntry);
+                    OtherLoader.SpawnerEntriesByPath[previousPath].Add(subcategoryEntry);
                 }
             }
             
@@ -135,13 +172,13 @@ namespace OtherLoader
             //Finally add the itemspawnerID as an entry to the dictionary
             previousPath = currentPath;
             currentPath += "/" + ID.ItemID;
-            if (!OtherLoader.SpawnerEntries.ContainsKey(currentPath))
+            if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
             {
-                OtherLoader.SpawnerEntries.Add(currentPath, new List<ItemSpawnerEntry>());
+                OtherLoader.SpawnerEntriesByPath.Add(currentPath, new List<ItemSpawnerEntry>());
 
                 //Then, add this entry to the previous path (subcategory)
                 EntryPath = currentPath;
-                OtherLoader.SpawnerEntries[previousPath].Add(this);
+                OtherLoader.SpawnerEntriesByPath[previousPath].Add(this);
             }
         }
 

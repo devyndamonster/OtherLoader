@@ -26,7 +26,8 @@ namespace OtherLoader
         // A dictionary of asset bundles managed by OtherLoader. The key is the UniqueAssetID, and the value is the path to that file
         public static Dictionary<string, string> ManagedBundles = new Dictionary<string, string>();
 
-        public static Dictionary<string, List<ItemSpawnerEntry>> SpawnerEntries = new Dictionary<string, List<ItemSpawnerEntry>>();
+        public static Dictionary<string, List<ItemSpawnerEntry>> SpawnerEntriesByPath = new Dictionary<string, List<ItemSpawnerEntry>>();
+        public static Dictionary<string, ItemSpawnerEntry> SpawnerEntriesByID = new Dictionary<string, ItemSpawnerEntry>();
 
         private static ConfigEntry<int> MaxActiveLoadersConfig;
         public static ConfigEntry<bool> OptimizeMemory;
@@ -35,6 +36,8 @@ namespace OtherLoader
         public static ConfigEntry<bool> AddUnloadButton;
 
         public static int MaxActiveLoaders = 0;
+
+        private static List<DirectLoadMod> directLoadMods = new List<DirectLoadMod>();
 
         public static CoroutineStarter coroutineStarter;
 
@@ -53,6 +56,8 @@ namespace OtherLoader
             {
                 AddUnloadWristMenuButton();
             }
+
+            coroutineStarter = StartCoroutine;
         }
 
         private void Start()
@@ -113,8 +118,7 @@ namespace OtherLoader
         public override IEnumerator OnRuntime(IStageContext<IEnumerator> ctx)
         {
             ItemLoader loader = new ItemLoader();
-            coroutineStarter = StartCoroutine;
-
+            
             //On-Demand Loaders
             ctx.Loaders.Add("item_data", loader.StartAssetDataLoad);
             ctx.Loaders.Add("item_first_late", loader.RegisterAssetLoadFirstLate);
@@ -128,7 +132,24 @@ namespace OtherLoader
             
             loader.LoadLegacyAssets(coroutineStarter);
 
+            foreach(DirectLoadMod mod in directLoadMods)
+            {
+                loader.LoadDirectAssets(coroutineStarter, mod.path, mod.loadFirst.Split(','), mod.loadAny.Split(','), mod.loadLast.Split(','));
+            }
+
             yield break;
+        }
+
+
+        public static void RegisterDirectLoad(string path, string loadFirst, string loadAny, string loadLast)
+        {
+            directLoadMods.Add(new DirectLoadMod()
+            {
+                path = path,
+                loadFirst = loadFirst,
+                loadAny = loadAny,
+                loadLast = loadLast
+            });
         }
 
 
@@ -240,7 +261,13 @@ namespace OtherLoader
         }
 
 
-
+        private class DirectLoadMod
+        {
+            public string path;
+            public string loadFirst;
+            public string loadAny;
+            public string loadLast;
+        }
 
     }
 
