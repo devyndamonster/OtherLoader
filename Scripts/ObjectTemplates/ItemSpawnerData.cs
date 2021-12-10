@@ -12,6 +12,8 @@ namespace OtherLoader
 
         public List<ItemSpawnerEntry> VisibleEntries = new List<ItemSpawnerEntry>();
 
+        public List<ItemSpawnerEntry> VisibleSecondaryEntries = new List<ItemSpawnerEntry>();
+
         public int CurrentPage;
     }
 }

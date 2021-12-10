@@ -48,7 +48,7 @@ namespace OtherLoader
 
         [Header("Misc Properties")]
         public bool UsesLargeSpawnPad;
-        public bool UsesHugeSpawnPad;
+        public bool IsReward;
 
         [HideInInspector]
         public bool IsModded;
@@ -57,7 +57,7 @@ namespace OtherLoader
 
         public void LegacyPopulateFromID(ItemSpawnerV2.PageMode Page, ItemSpawnerID ID, bool IsModded)
         {
-            MainObjectID = ID.ItemID;
+            MainObjectID = ID.MainObject.ItemID;
 
             SpawnWithIDs = new List<string>();
             if(ID.SecondObject != null)
@@ -65,7 +65,7 @@ namespace OtherLoader
                 SpawnWithIDs.Add(ID.SecondObject.ItemID);
             }
             
-            SecondaryObjectIDs = ID.Secondaries.Select(o => o.ItemID).ToList();
+            SecondaryObjectIDs = ID.Secondaries.Select(o => o.MainObject.ItemID).ToList();
             SecondaryObjectIDs.AddRange(ID.Secondaries_ByStringID);
 
             EntryPath = CreatePath(Page, ID);
@@ -73,7 +73,6 @@ namespace OtherLoader
             DisplayName = ID.DisplayName;
 
             IsDisplayedInMainEntry = ID.IsDisplayedInMainEntry;
-            UsesHugeSpawnPad = ID.UsesHugeSpawnPad;
             UsesLargeSpawnPad = ID.UsesLargeSpawnPad;
             this.IsModded = IsModded;
 
@@ -113,7 +112,7 @@ namespace OtherLoader
                 }
             }
 
-            path += "/" + ID.ItemID;
+            path += "/" + ID.MainObject.ItemID;
 
             return path;
         }

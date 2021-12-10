@@ -310,11 +310,16 @@ namespace OtherLoader
             yield return spawnerCats;
             LoadSpawnerCategories(spawnerCats.allAssets);
 
-            //Finally, add all the items to the spawner
+            //Load the legacy spawner IDs
             AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
             yield return spawnerIDs;
             LoadSpawnerIDs(spawnerIDs.allAssets);
-            
+
+            //Load the spawner entries for the new spawner
+            AssetBundleRequest spawnerEntries = bundle.Result.LoadAllAssetsAsync<ItemSpawnerEntry>();
+            yield return spawnerEntries;
+            LoadSpawnerEntries(spawnerEntries.allAssets);
+
             //handle handling grab/release/slot sets
             AssetBundleRequest HandlingGrabSet = bundle.Result.LoadAllAssetsAsync<HandlingGrabSet>();
             yield return HandlingGrabSet;
@@ -349,7 +354,8 @@ namespace OtherLoader
         { //nothing fancy; just dumps them into the lists above and logs it
             foreach (ItemSpawnerEntry entry in allAssets)
             {
-                OtherLogger.Log("Loading new item spawner entry", OtherLogger.LogType.Loading);
+                OtherLogger.Log("Loading new item spawner entry: " + entry.EntryPath, OtherLogger.LogType.Loading);
+                entry.IsModded = true;
                 PopulateEntryPaths(entry);
             }
         }
@@ -727,6 +733,9 @@ namespace OtherLoader
                 //If we are at the full path length for this entry, we can just assign the entry
                 if(i == pathSegments.Length - 1)
                 {
+                    EntryNode previousNode = OtherLoader.SpawnerEntriesByPath[currentPath];
+                    currentPath += (i == 0 ? "" : "/") + pathSegments[i];
+
                     //If there is already an node at this path, we should just update it. Otherwise, add it as a new node
                     EntryNode node;
                     if (OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
@@ -737,10 +746,6 @@ namespace OtherLoader
                     else
                     {
                         node = new EntryNode(entry);
-
-                        EntryNode previousNode = OtherLoader.SpawnerEntriesByPath[currentPath];
-                        currentPath += (i == 0 ? "" : "/") + pathSegments[i];
-
                         OtherLoader.SpawnerEntriesByPath[currentPath] = node;
                         previousNode.childNodes.Add(node);
                     }
@@ -775,7 +780,7 @@ namespace OtherLoader
                     {
                         EntryNode node = new EntryNode();
                         node.entry.EntryPath = currentPath;
-
+                        node.entry.IsDisplayedInMainEntry = true;
 
                         //Now this section below is for legacy support
                         if(spawnerID != null)
@@ -803,9 +808,10 @@ namespace OtherLoader
                                 node.entry.EntryIcon = IM.CDefSubInfo[spawnerID.SubCategory].Sprite;
                                 node.entry.DisplayName = IM.CDefSubInfo[spawnerID.SubCategory].DisplayName;
                             }
+
+                            node.entry.IsModded = IM.OD[spawnerID.MainObject.ItemID].IsModContent;
                         }
                         
-
                         previousNode.childNodes.Add(node);
                         OtherLoader.SpawnerEntriesByPath[currentPath] = node;
                     }
