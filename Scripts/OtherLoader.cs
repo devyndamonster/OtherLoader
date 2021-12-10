@@ -26,7 +26,7 @@ namespace OtherLoader
         // A dictionary of asset bundles managed by OtherLoader. The key is the UniqueAssetID, and the value is the path to that file
         public static Dictionary<string, string> ManagedBundles = new Dictionary<string, string>();
 
-        public static Dictionary<string, List<ItemSpawnerEntry>> SpawnerEntriesByPath = new Dictionary<string, List<ItemSpawnerEntry>>();
+        public static Dictionary<string, EntryNode> SpawnerEntriesByPath = new Dictionary<string, EntryNode>();
         public static Dictionary<string, ItemSpawnerEntry> SpawnerEntriesByID = new Dictionary<string, ItemSpawnerEntry>();
 
         private static ConfigEntry<int> MaxActiveLoadersConfig;

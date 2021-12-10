@@ -101,6 +101,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Scripts\ObjectTemplates\EntryNode.cs" />
     <Compile Include="Scripts\ObjectTemplates\ItemSpawnerData.cs" />
     <Compile Include="Scripts\ObjectTemplates\ItemSpawnerEntry.cs" />
     <Compile Include="Scripts\Patches\ItemSpawnerV2Patch.cs" />

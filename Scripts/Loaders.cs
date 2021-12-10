@@ -344,6 +344,16 @@ namespace OtherLoader
         }
 
 
+
+        private void LoadSpawnerEntries(UnityEngine.Object[] allAssets)
+        { //nothing fancy; just dumps them into the lists above and logs it
+            foreach (ItemSpawnerEntry entry in allAssets)
+            {
+                OtherLogger.Log("Loading new item spawner entry", OtherLogger.LogType.Loading);
+                PopulateEntryPaths(entry);
+            }
+        }
+
         private void LoadHandlingGrabSetEntries(UnityEngine.Object[] allAssets)
         { //nothing fancy; just dumps them into the lists above and logs it
             foreach (HandlingGrabSet grabSet in allAssets)
@@ -442,8 +452,8 @@ namespace OtherLoader
             {
                 foreach (ItemSpawnerCategoryDefinitions.Category newCategory in newLoadedCats.Categories)
                 {
-
                     OtherLogger.Log("Loading New ItemSpawner Category: " + newCategory.DisplayName, OtherLogger.LogType.Loading);
+
 
                     //If the loaded categories already contains this new category, we want to add subcategories
                     if (IM.CD.ContainsKey(newCategory.Cat))
@@ -539,7 +549,6 @@ namespace OtherLoader
 
                 
                 
-                //Add ID to the old itemspawner
                 if (IM.CD.ContainsKey(id.Category) && IM.SCD.ContainsKey(id.SubCategory)) {
                     IM.CD[id.Category].Add(id);
                     IM.SCD[id.SubCategory].Add(id);
@@ -559,7 +568,8 @@ namespace OtherLoader
                                 {
                                     OtherLogger.Log("Adding SpawnerID to spawner entry tree", OtherLogger.LogType.Loading);
                                     ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
-                                    SpawnerEntry.PopulateEntry(pageItems.Key, id, true);
+                                    SpawnerEntry.LegacyPopulateFromID(pageItems.Key, id, true);
+                                    PopulateEntryPaths(SpawnerEntry, id);
                                     break;
                                 }
                             }
@@ -570,10 +580,9 @@ namespace OtherLoader
                         {
                             OtherLogger.Log("Adding SpawnerID to spawner entry tree under custom category", OtherLogger.LogType.Loading);
                             ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
-                            SpawnerEntry.PopulateEntry(ItemSpawnerV2.PageMode.Firearms, id, true);
+                            SpawnerEntry.LegacyPopulateFromID(ItemSpawnerV2.PageMode.Firearms, id, true);
+                            PopulateEntryPaths(SpawnerEntry, id);
                         }
-                        
-                        
                     }
                 }
 
@@ -700,6 +709,110 @@ namespace OtherLoader
                 }
             }
         }
+
+
+
+        /// <summary>
+        /// Converts legacy ItemSpawnerIDs into a new tree based format, and adds this converted info to a global dictionary
+        /// </summary>
+        /// <param name="Page"></param>
+        /// <param name="ID"></param>
+        public static void PopulateEntryPaths(ItemSpawnerEntry entry, ItemSpawnerID spawnerID = null)
+        {
+            string[] pathSegments = entry.EntryPath.Split('/');
+            string currentPath = "";
+
+            for(int i = 0; i < pathSegments.Length; i++)
+            {
+                //If we are at the full path length for this entry, we can just assign the entry
+                if(i == pathSegments.Length - 1)
+                {
+                    //If there is already an node at this path, we should just update it. Otherwise, add it as a new node
+                    EntryNode node;
+                    if (OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
+                    {
+                        node = OtherLoader.SpawnerEntriesByPath[currentPath];
+                        node.entry = entry;
+                    }
+                    else
+                    {
+                        node = new EntryNode(entry);
+
+                        EntryNode previousNode = OtherLoader.SpawnerEntriesByPath[currentPath];
+                        currentPath += (i == 0 ? "" : "/") + pathSegments[i];
+
+                        OtherLoader.SpawnerEntriesByPath[currentPath] = node;
+                        previousNode.childNodes.Add(node);
+                    }
+
+                    if (IM.OD.ContainsKey(entry.MainObjectID))
+                    {
+                        OtherLoader.SpawnerEntriesByID[entry.MainObjectID] = entry;
+                    }
+                }
+
+
+                //If we are at the page level, just check to see if we need to add a page node
+                else if(i == 0)
+                {
+                    currentPath += (i == 0 ? "" : "/") + pathSegments[i];
+
+                    if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
+                    {
+                        EntryNode pageNode = new EntryNode();
+                        pageNode.entry.EntryPath = currentPath;
+                        OtherLoader.SpawnerEntriesByPath[currentPath] = pageNode;
+                    }
+                }
+
+                //If these are just custom categories of any depth, just add the ones that aren't already loaded
+                else
+                {
+                    EntryNode previousNode = OtherLoader.SpawnerEntriesByPath[currentPath];
+                    currentPath += (i == 0 ? "" : "/") + pathSegments[i];
+
+                    if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
+                    {
+                        EntryNode node = new EntryNode();
+                        node.entry.EntryPath = currentPath;
+
+
+                        //Now this section below is for legacy support
+                        if(spawnerID != null)
+                        {
+                            //If this is meatfortress category, do that
+                            if (i == 1 && spawnerID.Category == ItemSpawnerID.EItemCategory.MeatFortress)
+                            {
+                                node.entry.EntryIcon = IM.CDefInfo[ItemSpawnerID.EItemCategory.MeatFortress].Sprite;
+                                node.entry.DisplayName = IM.CDefInfo[ItemSpawnerID.EItemCategory.MeatFortress].DisplayName;
+                            }
+
+                            //If this is a modded main category, do that
+                            else if (i == 1 && !Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerID.Category))
+                            {
+                                if (IM.CDefInfo.ContainsKey(spawnerID.Category))
+                                {
+                                    node.entry.EntryIcon = IM.CDefInfo[spawnerID.Category].Sprite;
+                                    node.entry.DisplayName = IM.CDefInfo[spawnerID.Category].DisplayName;
+                                }
+                            }
+
+                            //If this is a subcategory (modded or not), do that
+                            else if (IM.CDefSubInfo.ContainsKey(spawnerID.SubCategory))
+                            {
+                                node.entry.EntryIcon = IM.CDefSubInfo[spawnerID.SubCategory].Sprite;
+                                node.entry.DisplayName = IM.CDefSubInfo[spawnerID.SubCategory].DisplayName;
+                            }
+                        }
+                        
+
+                        previousNode.childNodes.Add(node);
+                        OtherLoader.SpawnerEntriesByPath[currentPath] = node;
+                    }
+                }
+            }
+        }
+
 
     }
 
