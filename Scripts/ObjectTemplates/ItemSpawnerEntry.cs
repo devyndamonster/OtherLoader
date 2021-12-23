@@ -93,7 +93,7 @@ namespace OtherLoader
             }
 
             //If the category is modded, include it
-            else if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), ID.Category))
+            else if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), ID.Category) && IM.CDefInfo.ContainsKey(ID.Category))
             {
                 path += "/" + IM.CDefInfo[ID.Category].DisplayName;
             }
@@ -106,7 +106,7 @@ namespace OtherLoader
                     path += "/" + ID.SubCategory.ToString();
                 }
 
-                else
+                else if(IM.CDefSubInfo.ContainsKey(ID.SubCategory))
                 {
                     path += "/" + IM.CDefSubInfo[ID.SubCategory].DisplayName;
                 }

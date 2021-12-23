@@ -68,13 +68,13 @@ namespace OtherLoader
             return RegisterAssetLoadLate(handle, LoadOrderType.LoadLast);
         }
 
-        public void LoadDirectAssets(CoroutineStarter starter, string folderPath, string[] loadFirst, string[] loadAny, string[] loadLast)
+        public void LoadDirectAssets(CoroutineStarter starter, string folderPath, string guid, string[] dependancies, string[] loadFirst, string[] loadAny, string[] loadLast)
         {
             foreach (string bundleFirst in loadFirst)
             {
                 if (!string.IsNullOrEmpty(bundleFirst))
                 {
-                    starter(StartAssetLoadDirect(folderPath, bundleFirst, LoadOrderType.LoadFirst, false));
+                    starter(StartAssetLoadDirect(folderPath, bundleFirst, guid, dependancies, LoadOrderType.LoadFirst, false));
                 }
                 
             }
@@ -83,7 +83,7 @@ namespace OtherLoader
             {
                 if (!string.IsNullOrEmpty(bundleAny))
                 {
-                    starter(StartAssetLoadDirect(folderPath, bundleAny, LoadOrderType.LoadUnordered, false));
+                    starter(StartAssetLoadDirect(folderPath, bundleAny, guid, dependancies, LoadOrderType.LoadUnordered, false));
                 }
             }
 
@@ -91,7 +91,7 @@ namespace OtherLoader
             {
                 if (!string.IsNullOrEmpty(bundleLast))
                 {
-                    starter(StartAssetLoadDirect(folderPath, bundleLast, LoadOrderType.LoadLast, false));
+                    starter(StartAssetLoadDirect(folderPath, bundleLast, guid, dependancies, LoadOrderType.LoadLast, false));
                 }
             }
         }
@@ -102,7 +102,7 @@ namespace OtherLoader
 
             string bundleID = file.FullName.Replace(file.Name, "") + " : " + file.Name;
 
-            return LoadAssetsFromPathAsync(file.FullName, bundleID, loadOrder, allowUnload).TryCatch(e =>
+            return LoadAssetsFromPathAsync(file.FullName, bundleID, "", new string[] { }, loadOrder, allowUnload).TryCatch(e =>
             {
                 OtherLogger.LogError("Failed to load mod (" + bundleID + ")");
                 OtherLogger.LogError(e.ToString());
@@ -112,7 +112,7 @@ namespace OtherLoader
         }
 
 
-        public IEnumerator StartAssetLoadDirect(string folderPath, string bundleName, LoadOrderType loadOrder, bool allowUnload)
+        public IEnumerator StartAssetLoadDirect(string folderPath, string bundleName, string guid, string[] dependancies, LoadOrderType loadOrder, bool allowUnload)
         {
             OtherLogger.Log("Direct Loading Bundle (" + bundleName + ")", OtherLogger.LogType.General);
 
@@ -127,7 +127,7 @@ namespace OtherLoader
                 afterLoad = RegisterAssetLoadLate(latePath, lateName, loadOrder);
             }
 
-            return LoadAssetsFromPathAsync(bundlePath, bundleID, loadOrder, allowUnload, afterLoad).TryCatch(e =>
+            return LoadAssetsFromPathAsync(bundlePath, bundleID, guid, dependancies, loadOrder, allowUnload, afterLoad).TryCatch(e =>
             {
                 OtherLogger.LogError("Failed to load mod (" + bundleID + ")");
                 OtherLogger.LogError(e.ToString());
@@ -201,7 +201,7 @@ namespace OtherLoader
 
                     string bundleID = bundlePath.Replace(Path.GetFileName(bundlePath), "") + " : " + Path.GetFileName(bundlePath);
 
-                    IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, bundleID, LoadOrderType.LoadUnordered, true).TryCatch<Exception>(e =>
+                    IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, bundleID, "", new string[] { }, LoadOrderType.LoadUnordered, true).TryCatch<Exception>(e =>
                     {
                         OtherLogger.LogError("Failed to load mod (" + bundleID + ")");
                         OtherLogger.LogError(e.ToString());
@@ -218,7 +218,7 @@ namespace OtherLoader
         
 
 
-        private IEnumerator LoadAssetsFromPathAsync(string path, string bundleID, LoadOrderType loadOrder, bool allowUnload, IEnumerator afterLoad = null)
+        private IEnumerator LoadAssetsFromPathAsync(string path, string bundleID, string guid, string[] dependancies, LoadOrderType loadOrder, bool allowUnload, IEnumerator afterLoad = null)
         {
             //Start tracking this bundle and then wait a frame for everything else to be tracked
             LoaderStatus.TrackLoader(bundleID, loadOrder);
@@ -458,11 +458,11 @@ namespace OtherLoader
             {
                 foreach (ItemSpawnerCategoryDefinitions.Category newCategory in newLoadedCats.Categories)
                 {
-                    OtherLogger.Log("Loading New ItemSpawner Category: " + newCategory.DisplayName, OtherLogger.LogType.Loading);
+                    OtherLogger.Log("Loading New ItemSpawner Category! Name (" + newCategory.DisplayName + "), Value (" + newCategory.Cat + ")", OtherLogger.LogType.Loading);
 
 
                     //If the loaded categories already contains this new category, we want to add subcategories
-                    if (IM.CD.ContainsKey(newCategory.Cat))
+                    if (IM.CDefs.Categories.Any(o => o.Cat == newCategory.Cat))
                     {
                         OtherLogger.Log("Category already exists! Adding subcategories", OtherLogger.LogType.Loading);
 

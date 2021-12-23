@@ -134,18 +134,20 @@ namespace OtherLoader
 
             foreach(DirectLoadMod mod in directLoadMods)
             {
-                loader.LoadDirectAssets(coroutineStarter, mod.path, mod.loadFirst.Split(','), mod.loadAny.Split(','), mod.loadLast.Split(','));
+                loader.LoadDirectAssets(coroutineStarter, mod.path, mod.guid, mod.dependancies.Split(','), mod.loadFirst.Split(','), mod.loadAny.Split(','), mod.loadLast.Split(','));
             }
 
             yield break;
         }
 
 
-        public static void RegisterDirectLoad(string path, string loadFirst, string loadAny, string loadLast)
+        public static void RegisterDirectLoad(string path, string guid, string dependancies, string loadFirst, string loadAny, string loadLast)
         {
             directLoadMods.Add(new DirectLoadMod()
             {
                 path = path,
+                guid = guid,
+                dependancies = dependancies,
                 loadFirst = loadFirst,
                 loadAny = loadAny,
                 loadLast = loadLast
@@ -264,6 +266,8 @@ namespace OtherLoader
         private class DirectLoadMod
         {
             public string path;
+            public string guid;
+            public string dependancies;
             public string loadFirst;
             public string loadAny;
             public string loadLast;
