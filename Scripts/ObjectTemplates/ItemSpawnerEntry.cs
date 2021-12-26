@@ -57,7 +57,15 @@ namespace OtherLoader
 
         public void LegacyPopulateFromID(ItemSpawnerV2.PageMode Page, ItemSpawnerID ID, bool IsModded)
         {
-            MainObjectID = ID.MainObject.ItemID;
+            if(ID.MainObject != null)
+            {
+                MainObjectID = ID.MainObject.ItemID;
+            }
+            else
+            {
+                OtherLogger.LogWarning("ItemSpawnerID has a null MainObject! ItemID: " + ID.ItemID);
+                MainObjectID = ID.ItemID;
+            }
 
             SpawnWithIDs = new List<string>();
             if(ID.SecondObject != null)
@@ -112,7 +120,7 @@ namespace OtherLoader
                 }
             }
 
-            path += "/" + ID.MainObject.ItemID;
+            path += "/" + MainObjectID;
 
             return path;
         }

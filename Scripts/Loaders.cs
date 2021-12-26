@@ -225,8 +225,16 @@ namespace OtherLoader
             yield return null;
 
             //If there are many active loaders at once, we should wait our turn
+            bool overTime = false;
             while (!LoaderStatus.CanOrderedModLoad(bundleID))
             {
+                if(!overTime && Time.time - LoaderStatus.LastLoadEventTime > 30)
+                {
+                    OtherLogger.Log("Bundle has been waiting a long time to load! (" + bundleID + ")", OtherLogger.LogType.General);
+                    LoaderStatus.PrintWaitingBundles(bundleID);
+                    overTime = true;
+                }
+
                 yield return null;
             }
 
@@ -235,8 +243,6 @@ namespace OtherLoader
 
             if (OtherLoader.LogLoading.Value)
                 OtherLogger.Log("Beginning async loading of asset bundle (" + bundleID + ")", OtherLogger.LogType.General);
-            //else
-                //OtherLogger.Log("Beginning async loading of asset bundle (" + LoaderUtils.GetBundleNameFromUniqueID(bundleID) + ")", OtherLogger.LogType.General);
 
 
             //Load the bundle and apply it's contents

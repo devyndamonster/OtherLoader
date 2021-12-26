@@ -62,8 +62,8 @@ namespace OtherLoader
 
         public static event StatusUpdate ProgressUpdated;
 
-        public static float timeSinceLastLoadEvent;
-        public static float loadTimeBuffer = 2;
+        public static float LastLoadEventTime;
+        public static float LoadTimeBuffer = 2;
 
         public static float GetLoaderProgress()
         {
@@ -78,7 +78,7 @@ namespace OtherLoader
             }
 
             //If the load time has passed, we can return the actual progress of all bundles
-            if (Time.time - timeSinceLastLoadEvent > loadTimeBuffer)
+            if (Time.time - LastLoadEventTime > LoadTimeBuffer)
             {
                 return summedProgress / trackedLoaders.Count;
             }
@@ -93,7 +93,7 @@ namespace OtherLoader
 
         public static IEnumerator LoadTimeCoroutine()
         {
-            timeSinceLastLoadEvent = Time.time;
+            LastLoadEventTime = Time.time;
 
             float progress = GetLoaderProgress();
             while (progress < 1)
@@ -125,7 +125,7 @@ namespace OtherLoader
                 orderedLoadingLists[modPath].MarkBundleAsLoaded(bundleID, permanentlyLoaded);
 
                 //Update the time when the loader is removed
-                timeSinceLastLoadEvent = Time.time;
+                LastLoadEventTime = Time.time;
             }
         }
 
@@ -140,7 +140,7 @@ namespace OtherLoader
             }
 
             //Update the time when something is tracked
-            timeSinceLastLoadEvent = Time.time;
+            LastLoadEventTime = Time.time;
 
             //Only actively track this asset bundle if it is immediately being loaded
             if (!trackedLoaders.ContainsKey(bundleID)) trackedLoaders.Add(bundleID, 0);
@@ -172,6 +172,23 @@ namespace OtherLoader
 
             return (OtherLoader.MaxActiveLoaders <= 0 || NumActiveLoaders < OtherLoader.MaxActiveLoaders) && orderedLoadingLists[modPath].CanBundleLoad(bundleID);
         }
+
+        public static void PrintWaitingBundles(string bundleID)
+        {
+            OtherLogger.Log("Current Active Loaders: " + NumActiveLoaders, OtherLogger.LogType.General);
+
+            string modPath = LoaderUtils.GetModPathFromUniqueID(bundleID);
+            List<BundleInfo> loadingDeps = orderedLoadingLists[modPath]
+                .GetBundleDependencies(bundleID)
+                .Where(o => o.Status != BundleStatus.Loaded && o.Status != BundleStatus.Unloaded)
+                .ToList();
+
+            foreach (BundleInfo info in loadingDeps)
+            {
+                OtherLogger.Log("Waiting on bundle: " + info.BundleID + ", Status: " + info.Status, OtherLogger.LogType.General);
+            }
+        }
+
 
         public static void UpdateProgress(string bundleID, float progress)
         {
@@ -211,40 +228,9 @@ namespace OtherLoader
             {
                 BundleInfo bundleInfo = new BundleInfo(bundleID, loadOrderType);
 
-                //With this new bundle, we should decide if it is able to start being loaded immediately
-
-                if (loadOrderType == LoadOrderType.LoadFirst)
-                {
-                    if (loadFirst.Count == 0 || loadFirst.All(o => o.Status == BundleStatus.Loaded)) bundleInfo.Status = BundleStatus.CanLoad;
-
-                    //When adding load first bundles, there must never be unordered or load last bundles already added
-                    if(loadUnordered.Count != 0 || loadLast.Count != 0)
-                    {
-                        OtherLogger.LogError($"Mod is set to load first, but it looks like unordered or load last mods are already loading! BundleID ({bundleID})");
-                        loadUnordered.ForEach(o => OtherLogger.LogError($"Load Unordered BundleID ({o.BundleID})"));
-                        loadLast.ForEach(o => OtherLogger.LogError($"Load Last BundleID ({o.BundleID})"));
-                    }
-                }
-
-                if(loadOrderType == LoadOrderType.LoadUnordered)
-                {
-                    if (loadFirst.Count == 0 || loadFirst.All(o => o.Status == BundleStatus.Loaded)) bundleInfo.Status = BundleStatus.CanLoad;
-
-                    //When adding load unordered bundles, there must never be load last bundles already added
-                    if (loadLast.Count != 0)
-                    {
-                        OtherLogger.LogError($"Mod is set to load unordered, but it looks like load last mods are already loading! BundleID ({bundleID})");
-                        loadLast.ForEach(o => OtherLogger.LogError($"Load Last BundleID ({o.BundleID})"));
-                    }
-                }
-
-                if(loadOrderType == LoadOrderType.LoadLast)
-                {
-                    if ((loadFirst.Count == 0 && loadUnordered.Count == 0 && loadLast.Count == 0) ||
-                        (loadFirst.All(o => o.Status == BundleStatus.Loaded) && loadUnordered.All(o => o.Status == BundleStatus.Loaded) && loadLast.All(o => o.Status == BundleStatus.Loaded))) bundleInfo.Status = BundleStatus.CanLoad;
-                }
 
                 //If this is replacing an already loaded bundle (load late), remove the old instances
+                //Also, update the new bundle info to be marked as unloaded
                 if (bundleInfoDic.ContainsKey(bundleID))
                 {
                     BundleInfo oldInfo = bundleInfoDic[bundleID];
@@ -252,7 +238,54 @@ namespace OtherLoader
                     loadFirst.Remove(oldInfo);
                     loadUnordered.Remove(oldInfo);
                     loadLast.Remove(oldInfo);
+
+                    bundleInfo.Status = BundleStatus.Unloaded;
+                    bundleInfo.LoadOrderType = oldInfo.LoadOrderType;
+
+                    if (oldInfo.Status != BundleStatus.Loaded && oldInfo.Status != BundleStatus.Unloaded)
+                    {
+                        OtherLogger.LogError("Tracking a late bundle, but the data bundle isn't already loaded! Data bundle status: " + oldInfo.Status);
+                    }
                 }
+
+
+                //If this is a new bundle, we should decide if it is able to start being loaded immediately
+                else
+                {
+                    if (loadOrderType == LoadOrderType.LoadFirst)
+                    {
+                        if (loadFirst.Count == 0 || loadFirst.All(o => o.Status == BundleStatus.Loaded || o.Status == BundleStatus.Unloaded)) bundleInfo.Status = BundleStatus.CanLoad;
+
+                        //When adding load first bundles, there must never be unordered or load last bundles already added
+                        if (loadUnordered.Count != 0 || loadLast.Count != 0)
+                        {
+                            OtherLogger.LogError($"Mod is set to load first, but it looks like unordered or load last mods are already loading! BundleID ({bundleID})");
+                            loadUnordered.ForEach(o => OtherLogger.LogError($"Load Unordered BundleID ({o.BundleID})"));
+                            loadLast.ForEach(o => OtherLogger.LogError($"Load Last BundleID ({o.BundleID})"));
+                        }
+                    }
+
+                    if (loadOrderType == LoadOrderType.LoadUnordered)
+                    {
+                        if (loadFirst.Count == 0 || loadFirst.All(o => o.Status == BundleStatus.Loaded || o.Status == BundleStatus.Unloaded)) bundleInfo.Status = BundleStatus.CanLoad;
+
+                        //When adding load unordered bundles, there must never be load last bundles already added
+                        if (loadLast.Count != 0)
+                        {
+                            OtherLogger.LogError($"Mod is set to load unordered, but it looks like load last mods are already loading! BundleID ({bundleID})");
+                            loadLast.ForEach(o => OtherLogger.LogError($"Load Last BundleID ({o.BundleID})"));
+                        }
+                    }
+
+                    if (loadOrderType == LoadOrderType.LoadLast)
+                    {
+                        if ((loadFirst.Count == 0 && loadUnordered.Count == 0 && loadLast.Count == 0) ||
+                            (loadFirst.All(o => o.Status == BundleStatus.Loaded || o.Status == BundleStatus.Unloaded) &&
+                            loadUnordered.All(o => o.Status == BundleStatus.Loaded || o.Status == BundleStatus.Unloaded) &&
+                            loadLast.All(o => o.Status == BundleStatus.Loaded || o.Status == BundleStatus.Unloaded))) bundleInfo.Status = BundleStatus.CanLoad;
+                    }
+                }
+                
 
                 bundleInfoDic.Add(bundleID, bundleInfo);
                 if (loadOrderType == LoadOrderType.LoadFirst) loadFirst.Add(bundleInfo);
@@ -264,7 +297,7 @@ namespace OtherLoader
             {
                 BundleInfo loadStatus = bundleInfoDic[bundleID];
 
-                if (loadStatus.Status == BundleStatus.Loaded || loadStatus.Status == BundleStatus.Loading)
+                if (loadStatus.Status == BundleStatus.Loaded || loadStatus.Status == BundleStatus.Loading || loadStatus.Status == BundleStatus.Unloaded)
                 {
                     OtherLogger.LogError($"Mod is already loading or loaded, but something is still asking to load it! BundleID ({bundleID})");
                     return false;
