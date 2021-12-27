@@ -161,7 +161,10 @@ namespace OtherLoader
         {
             ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
             data.CurrentPath = ((ItemSpawnerV2.PageMode)i).ToString();
-            data.CurrentPage = 0;
+            data.CurrentDepth = 0;
+            data.SavedPagePositions[(ItemSpawnerV2.PageMode)i] = new Dictionary<int, int>();
+
+            data.SavedPagePositions[(ItemSpawnerV2.PageMode)i][data.CurrentDepth] = 0;
 
             return true;
         }
@@ -176,7 +179,8 @@ namespace OtherLoader
             if (!data.CurrentPath.Contains("/")) return false;
 
             data.CurrentPath = data.CurrentPath.Substring(0, data.CurrentPath.LastIndexOf("/"));
-            data.CurrentPage = 0;
+            data.SavedPagePositions[__instance.PMode][data.CurrentDepth] = 0;
+            data.CurrentDepth -= 1;
 
             OtherLogger.Log("Going back to path: " + data.CurrentPath, OtherLogger.LogType.General);
             __instance.RedrawSimpleCanvas();
@@ -191,9 +195,9 @@ namespace OtherLoader
         {
             ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
             
-            if(OtherLoader.SpawnerEntriesByPath[data.CurrentPath].childNodes.Count / __instance.IMG_SimpleTiles.Count > data.CurrentPage)
+            if(OtherLoader.SpawnerEntriesByPath[data.CurrentPath].childNodes.Count / __instance.IMG_SimpleTiles.Count > data.SavedPagePositions[__instance.PMode][data.CurrentDepth])
             {
-                data.CurrentPage += 1;
+                data.SavedPagePositions[__instance.PMode][data.CurrentDepth] += 1;
                 __instance.RedrawSimpleCanvas();
             }
 
@@ -207,9 +211,9 @@ namespace OtherLoader
         {
             ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
 
-            if (data.CurrentPage > 0)
+            if (data.SavedPagePositions[__instance.PMode][data.CurrentDepth] > 0)
             {
-                data.CurrentPage -= 1;
+                data.SavedPagePositions[__instance.PMode][data.CurrentDepth] -= 1;
                 __instance.RedrawSimpleCanvas();
             }
 
@@ -297,7 +301,9 @@ namespace OtherLoader
             if (OtherLoader.SpawnerEntriesByPath[data.VisibleEntries[i].EntryPath].childNodes.Count > 0)
             {
                 data.CurrentPath = data.VisibleEntries[i].EntryPath;
-                data.CurrentPage = 0;
+                data.CurrentDepth += 1;
+                data.SavedPagePositions[__instance.PMode][data.CurrentDepth] = 0;
+                
                 __instance.RedrawSimpleCanvas();
             }
 
@@ -355,6 +361,11 @@ namespace OtherLoader
                 List<ItemSpawnerEntry> secondaryEntries = new List<ItemSpawnerEntry>();
                 for (int m = 0; m < entry.SecondaryObjectIDs.Count; m++)
                 {
+                    if (!OtherLoader.SpawnerEntriesByID.ContainsKey(entry.SecondaryObjectIDs[m])){
+                        OtherLogger.LogWarning($"Secondary ID for ({entry.MainObjectID}) was not in entry dictionary! It will not appear! Secondary ID ({entry.SecondaryObjectIDs[m]})");
+                        continue;
+                    }
+
                     ItemSpawnerEntry secondary = OtherLoader.SpawnerEntriesByID[entry.SecondaryObjectIDs[m]];
                     if(!secondary.IsReward || GM.Rewards.RewardUnlocks.Rewards.Contains(secondary.MainObjectID))
                     {
@@ -466,7 +477,8 @@ namespace OtherLoader
 
             entries = entries.OrderBy(o => o.entry.DisplayName).OrderBy(o => o.entry.IsModded?1:0).OrderBy(o => o.childNodes.Count > 0?0:1).ToList();
 
-            int startIndex = data.CurrentPage * __instance.IMG_SimpleTiles.Count;
+            int currPage = data.SavedPagePositions[__instance.PMode][data.CurrentDepth];
+            int startIndex = currPage * __instance.IMG_SimpleTiles.Count;
             for (int i = 0; i < __instance.IMG_SimpleTiles.Count; i++)
             {
                 if(startIndex + i < entries.Count)
@@ -490,17 +502,17 @@ namespace OtherLoader
 
             OtherLogger.Log($"There are {numPages} pages for this entry", OtherLogger.LogType.General);
 
-            __instance.TXT_SimpleTiles_PageNumber.text = (data.CurrentPage + 1) + " / " + (numPages);
+            __instance.TXT_SimpleTiles_PageNumber.text = (currPage + 1) + " / " + (numPages);
             __instance.TXT_SimpleTiles_Showing.text = 
                 "Showing " + 
-                (data.CurrentPage * __instance.IMG_SimpleTiles.Count) + 
+                (currPage * __instance.IMG_SimpleTiles.Count) + 
                 " - " + 
-                (data.CurrentPage * __instance.IMG_SimpleTiles.Count + data.VisibleEntries.Count) +
+                (currPage * __instance.IMG_SimpleTiles.Count + data.VisibleEntries.Count) +
                 " Of " +
                 entries.Count;
 
 
-            if(data.CurrentPage > 0)
+            if(currPage > 0)
             {
                 __instance.GO_SimpleTiles_PrevPage.SetActive(true);
             }
@@ -509,7 +521,7 @@ namespace OtherLoader
                 __instance.GO_SimpleTiles_PrevPage.SetActive(false);
             }
 
-            if(data.CurrentPage < numPages - 1)
+            if(currPage < numPages - 1)
             {
                 __instance.GO_SimpleTiles_NextPage.SetActive(true);
             }

@@ -560,7 +560,6 @@ namespace OtherLoader
                 }
 
                 
-                
                 if (IM.CD.ContainsKey(id.Category) && IM.SCD.ContainsKey(id.SubCategory)) {
                     IM.CD[id.Category].Add(id);
                     IM.SCD[id.SubCategory].Add(id);
@@ -569,29 +568,38 @@ namespace OtherLoader
                     {
                         ManagerSingleton<IM>.Instance.SpawnerIDDic[id.ItemID] = id;
 
-                        
-                        //Add this spawner ID to our entry tree structure
+                        //Now we will try to convert this SpawnerID into a spawner entry
+                        ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
+
+                        //If the category is defined, we can try to add it based on what page it was given
                         if (Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), id.Category))
                         {
                             //TODO this should be done without having to loop through potentially all spawner entries, I bet this could become expensive
+                            bool added = false;
                             foreach (KeyValuePair<ItemSpawnerV2.PageMode, List<string>> pageItems in IM.Instance.PageItemLists)
                             {
                                 if (pageItems.Value.Contains(id.ItemID))
                                 {
                                     OtherLogger.Log("Adding SpawnerID to spawner entry tree", OtherLogger.LogType.Loading);
-                                    ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
                                     SpawnerEntry.LegacyPopulateFromID(pageItems.Key, id, true);
                                     PopulateEntryPaths(SpawnerEntry, id);
+                                    added = true;
+
                                     break;
                                 }
                             }
 
-                            OtherLogger.Log("Could not add item to new spawner because it was not tagged properly! ItemID: " + id.ItemID, OtherLogger.LogType.Loading);
+                            if (added) continue;
+
+                            //If we make it to this point, we failed to add the entry to the tree structure, but should still populate the entries data
+                            OtherLogger.Log("ItemSpawnerID could not be converted for new spawner because of metadata issues! ItemID: " + id.ItemID, OtherLogger.LogType.Loading);
+                            SpawnerEntry.LegacyPopulateFromID(ItemSpawnerV2.PageMode.Firearms, id, true);
                         }
+
+                        //Otherwise, all custom category items go under the firearms page
                         else
                         {
                             OtherLogger.Log("Adding SpawnerID to spawner entry tree under custom category", OtherLogger.LogType.Loading);
-                            ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
                             SpawnerEntry.LegacyPopulateFromID(ItemSpawnerV2.PageMode.Firearms, id, true);
                             PopulateEntryPaths(SpawnerEntry, id);
                         }
@@ -725,7 +733,7 @@ namespace OtherLoader
 
 
         /// <summary>
-        /// Converts legacy ItemSpawnerIDs into a new tree based format, and adds this converted info to a global dictionary
+        /// Pop 
         /// </summary>
         /// <param name="Page"></param>
         /// <param name="ID"></param>
@@ -754,11 +762,6 @@ namespace OtherLoader
                         node = new EntryNode(entry);
                         OtherLoader.SpawnerEntriesByPath[currentPath] = node;
                         previousNode.childNodes.Add(node);
-                    }
-
-                    if (IM.OD.ContainsKey(entry.MainObjectID))
-                    {
-                        OtherLoader.SpawnerEntriesByID[entry.MainObjectID] = entry;
                     }
                 }
 

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FistVR;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,6 +15,8 @@ namespace OtherLoader
 
         public List<ItemSpawnerEntry> VisibleSecondaryEntries = new List<ItemSpawnerEntry>();
 
-        public int CurrentPage;
+        public int CurrentDepth = 0;
+
+        public Dictionary<ItemSpawnerV2.PageMode, Dictionary<int, int>> SavedPagePositions = new Dictionary<ItemSpawnerV2.PageMode, Dictionary<int, int>>();
     }
 }

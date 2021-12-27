@@ -67,6 +67,11 @@ namespace OtherLoader
                 MainObjectID = ID.ItemID;
             }
 
+            if (IM.OD.ContainsKey(MainObjectID))
+            {
+                OtherLoader.SpawnerEntriesByID[MainObjectID] = this;
+            }
+
             SpawnWithIDs = new List<string>();
             if(ID.SecondObject != null)
             {
