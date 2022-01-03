@@ -495,7 +495,7 @@ namespace OtherLoader
 
                                     else
                                     {
-                                        OtherLogger.LogError("SubCategory type is already being used, and SubCategory will not be added! Make sure your subcategory is using a unique type! SubCategory Type: " + newSubCat.Subcat);
+                                        OtherLogger.LogWarning("SubCategory type is already being used, and SubCategory will not be added! Make sure your subcategory is using a unique type! SubCategory Type: " + newSubCat.Subcat);
                                     }
                                 }
                             }
@@ -540,11 +540,7 @@ namespace OtherLoader
                 if (id.MainObject == null && id.Secondaries.Length > 0)
                 {
                     id.MainObject = id.Secondaries.Select(o => o.MainObject).FirstOrDefault(o => o != null);
-                    if (id.MainObject != null)
-                    {
-                        id.ItemID = id.MainObject.ItemID;
-                    }
-                    else
+                    if (id.MainObject == null)
                     {
                         OtherLogger.Log("Could not select a secondary object for ItemSpawnerID, it will not appear in spawner: Display Name: " + id.DisplayName, OtherLogger.LogType.Loading);
                     }
@@ -553,6 +549,8 @@ namespace OtherLoader
 
                 if(id.MainObject != null)
                 {
+                    id.ItemID = id.MainObject.ItemID;
+
                     if (id.UnlockCost == 0) id.UnlockCost = id.MainObject.CreditCost;
 
                     IM.RegisterItemIntoMetaTagSystem(id);
