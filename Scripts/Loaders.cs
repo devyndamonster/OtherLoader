@@ -363,6 +363,7 @@ namespace OtherLoader
                 OtherLogger.Log("Loading new item spawner entry: " + entry.EntryPath, OtherLogger.LogType.Loading);
                 entry.IsModded = true;
                 PopulateEntryPaths(entry);
+                OtherLoader.SpawnerEntriesByID[entry.MainObjectID] = entry;
             }
         }
 
