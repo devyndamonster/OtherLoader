@@ -544,13 +544,15 @@ namespace OtherLoader
                     {
                         OtherLogger.Log("Could not select a secondary object for ItemSpawnerID, it will not appear in spawner: Display Name: " + id.DisplayName, OtherLogger.LogType.Loading);
                     }
+                    else
+                    {
+                        id.ItemID = id.MainObject.ItemID;
+                    }
                 }
 
 
                 if(id.MainObject != null)
                 {
-                    id.ItemID = id.MainObject.ItemID;
-
                     if (id.UnlockCost == 0) id.UnlockCost = id.MainObject.CreditCost;
 
                     IM.RegisterItemIntoMetaTagSystem(id);
