@@ -357,18 +357,20 @@ namespace OtherLoader
 
 
         private void LoadSpawnerEntries(UnityEngine.Object[] allAssets)
-        { //nothing fancy; just dumps them into the lists above and logs it
+        {
             foreach (ItemSpawnerEntry entry in allAssets)
             {
                 OtherLogger.Log("Loading new item spawner entry: " + entry.EntryPath, OtherLogger.LogType.Loading);
                 entry.IsModded = true;
                 PopulateEntryPaths(entry);
                 OtherLoader.SpawnerEntriesByID[entry.MainObjectID] = entry;
+
+                RegisterItemIntoMetaTagSystem(entry);
             }
         }
 
         private void LoadHandlingGrabSetEntries(UnityEngine.Object[] allAssets)
-        { //nothing fancy; just dumps them into the lists above and logs it
+        {
             foreach (HandlingGrabSet grabSet in allAssets)
             {
                 OtherLogger.Log("Loading new handling grab set entry: " + grabSet.name, OtherLogger.LogType.Loading);
@@ -826,6 +828,72 @@ namespace OtherLoader
                         OtherLoader.SpawnerEntriesByPath[currentPath] = node;
                     }
                 }
+            }
+        }
+
+
+
+        private void RegisterItemIntoMetaTagSystem(ItemSpawnerEntry entry)
+        {
+            if (!IM.OD.ContainsKey(entry.MainObjectID)) return;
+
+            FVRObject mainObject = IM.OD[entry.MainObjectID];
+            string pageString = entry.EntryPath.Split('/')[0];
+            string subCategoryString = entry.EntryPath.Split('/')[1];
+
+            ItemSpawnerV2.PageMode page = ItemSpawnerV2.PageMode.Firearms;
+            if(Enum.IsDefined(typeof(ItemSpawnerV2.PageMode), pageString))
+            {
+                page = (ItemSpawnerV2.PageMode)Enum.Parse(typeof(ItemSpawnerV2.PageMode), pageString);
+            }
+
+            ItemSpawnerID.ESubCategory subCategory = ItemSpawnerID.ESubCategory.None;
+            if (Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), subCategoryString))
+            {
+                subCategory = (ItemSpawnerID.ESubCategory)Enum.Parse(typeof(ItemSpawnerID.ESubCategory), subCategoryString);
+            }
+
+            IM.AddMetaTag(subCategoryString, TagType.SubCategory, entry.MainObjectID, page);
+
+            entry.ModTags.ForEach(tag =>
+                IM.AddMetaTag(tag, TagType.ModTag, entry.MainObjectID, page));
+
+            RegisterItemIntoMetaTagSystem(mainObject, page);
+        }
+
+
+        private void RegisterItemIntoMetaTagSystem(FVRObject mainObject, ItemSpawnerV2.PageMode page)
+        {
+            if(mainObject.Category == FVRObject.ObjectCategory.Firearm)
+            {
+                IM.AddMetaTag(mainObject.TagSet.ToString(), TagType.Set, mainObject.ItemID, page);
+                IM.AddMetaTag(mainObject.TagEra.ToString(), TagType.Era, mainObject.ItemID, page);
+                IM.AddMetaTag(mainObject.TagFirearmSize.ToString(), TagType.Size, mainObject.ItemID, page);
+                IM.AddMetaTag(mainObject.TagFirearmAction.ToString(), TagType.Action, mainObject.ItemID, page);
+                IM.AddMetaTag(mainObject.TagFirearmRoundPower.ToString(), TagType.RoundClass, mainObject.ItemID, page);
+                IM.AddMetaTag(mainObject.TagFirearmCountryOfOrigin.ToString(), TagType.CountryOfOrigin, mainObject.ItemID, page);
+                IM.AddMetaTag(mainObject.TagFirearmFirstYear.ToString(), TagType.IntroductionYear, mainObject.ItemID, page);
+                IM.AddMetaTag(mainObject.MagazineType.ToString(), TagType.MagazineType, mainObject.ItemID, page);
+
+                if(mainObject.UsesRoundTypeFlag) 
+                    IM.AddMetaTag(mainObject.RoundType.ToString(), TagType.Caliber, mainObject.ItemID, page);
+
+                mainObject.TagFirearmFiringModes.ForEach(tag => 
+                    IM.AddMetaTag(tag.ToString(), TagType.FiringMode, mainObject.ItemID, page));
+
+                mainObject.TagFirearmFeedOption.ForEach(tag =>
+                    IM.AddMetaTag(tag.ToString(), TagType.FeedOption, mainObject.ItemID, page));
+
+                mainObject.TagFirearmMounts.ForEach(mode =>
+                    IM.AddMetaTag(mode.ToString(), TagType.AttachmentMount, mainObject.ItemID, page));
+            }
+
+            else if(mainObject.Category == FVRObject.ObjectCategory.Attachment)
+            {
+                IM.AddMetaTag(mainObject.TagSet.ToString(), TagType.Set, mainObject.ItemID, page);
+                IM.AddMetaTag(mainObject.TagEra.ToString(), TagType.Era, mainObject.ItemID, page);
+                IM.AddMetaTag(mainObject.TagAttachmentFeature.ToString(), TagType.AttachmentFeature, mainObject.ItemID, page);
+                IM.AddMetaTag(mainObject.TagAttachmentMount.ToString(), TagType.AttachmentMount, mainObject.ItemID, page);
             }
         }
 

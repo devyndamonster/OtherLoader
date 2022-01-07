@@ -534,7 +534,248 @@ namespace OtherLoader
         }
 
 
-        
+
+        [HarmonyPatch(typeof(ItemSpawnerV2), "RedrawListCanvas")]
+        [HarmonyPrefix]
+        private static bool RedrawListPatch(ItemSpawnerV2 __instance)
+        {
+            if (__instance.PMode == ItemSpawnerV2.PageMode.MainMenu) return false;
+
+            //Ensure that the selected tags list contains values for every tag type
+            //TODO this should be done in the place where the selected tags list is assigned, but that will require a new patch
+            if (!__instance.m_selectedTags.ContainsKey(__instance.PMode)) __instance.m_selectedTags[__instance.PMode] = new Dictionary<TagType, List<string>>();
+            foreach (TagType tagType in Enum.GetValues(typeof(TagType)))
+            {
+                if (!__instance.m_selectedTags[__instance.PMode].ContainsKey(tagType)) __instance.m_selectedTags[__instance.PMode][tagType] = new List<string>();
+            }
+
+            Dictionary<FVRObject, ItemSpawnerEntry> entries = GetEntryPairsFromQuery(IM.Instance.PageItemLists[__instance.PMode], __instance.m_selectedTags[__instance.PMode]);
+
+            __instance.WorkingItemIDs.Clear();
+            __instance.WorkingItemIDs.AddRange(entries.Keys.Select(o => o.ItemID));
+            __instance.WorkingItemIDs.Sort();
+            __instance.m_displayedItemIds.Clear();
+
+            //Assign values based on the display mode of the spawner
+            int numItems = __instance.WorkingItemIDs.Count;
+            int numPages = 1;
+            int entriesPerPage;
+            List<Image> images;
+            List<Text> texts;
+
+            if (__instance.LDMode == ItemSpawnerV2.ListDisplayMode.Text)
+            {
+                __instance.GO_List.SetActive(true);
+                __instance.GO_Grid.SetActive(false);
+
+                entriesPerPage = 22;
+                images = __instance.IM_List;
+                texts = __instance.TXT_List;
+            }
+            else
+            {
+                __instance.GO_List.SetActive(false);
+                __instance.GO_Grid.SetActive(true);
+
+                entriesPerPage = 12;
+                images = __instance.IM_Grid;
+                texts = __instance.TXT_Grid;
+            }
+
+
+            //If there are no items from our query, let the use know
+            if (numItems == 0)
+            {
+                for (int l = 0; l < images.Count; l++)
+                {
+                    __instance.m_curListPageNum[__instance.PMode] = 0;
+                    images[l].gameObject.SetActive(false);
+                    texts[l].gameObject.SetActive(false);
+                }
+                __instance.TXT_ListPage.text = string.Empty;
+                __instance.TXT_ListShowing.text = "No Items Match All Selected Tags";
+            }
+
+            else
+            {
+                numPages = Mathf.Max(Mathf.CeilToInt((float)numItems / entriesPerPage), 1);
+
+                if (__instance.m_curListPageNum[__instance.PMode] >= numPages)
+                {
+                    __instance.m_curListPageNum[__instance.PMode] = numPages - 1;
+                }
+
+                int startIndex = __instance.m_curListPageNum[__instance.PMode] * entriesPerPage;
+                int nextPageStartIndex = (__instance.m_curListPageNum[__instance.PMode] + 1) * entriesPerPage;
+                int currentIndex = startIndex;
+
+                for (int m = 0; m < images.Count; m++)
+                {
+                    if (currentIndex >= numItems)
+                    {
+                        images[m].gameObject.SetActive(false);
+                        texts[m].gameObject.SetActive(false);
+                    }
+                    else
+                    {
+                        ItemSpawnerEntry entry = OtherLoader.SpawnerEntriesByID[__instance.WorkingItemIDs[currentIndex]];
+                        __instance.m_displayedItemIds.Add(entry.MainObjectID);
+                        images[m].sprite = entry.EntryIcon;
+                        images[m].gameObject.SetActive(true);
+                        texts[m].text = entry.DisplayName;
+                        texts[m].gameObject.SetActive(true);
+                    }
+
+                    currentIndex++;
+                }
+
+                __instance.TXT_ListShowing.text = string.Concat(new object[]
+                {
+                    "Showing ",
+                    startIndex,
+                    " - ",
+                    Mathf.Min(nextPageStartIndex, numItems),
+                    " of ",
+                    numItems
+                });
+            }
+
+
+            //Now perform logic for displaying page buttons
+            __instance.TXT_ListPage.text = (__instance.m_curListPageNum[__instance.PMode] + 1).ToString() + " / " + numPages.ToString();
+            if (__instance.m_curListPageNum[__instance.PMode] > 0)
+            {
+                __instance.BTN_ListPagePrev.SetActive(true);
+            }
+            else
+            {
+                __instance.BTN_ListPagePrev.SetActive(false);
+            }
+            if (__instance.m_curListPageNum[__instance.PMode] < numPages - 1)
+            {
+                __instance.BTN_ListPageNext.SetActive(true);
+            }
+            else
+            {
+                __instance.BTN_ListPageNext.SetActive(false);
+            }
+
+            return false;
+        }
+
+
+
+
+        private static Dictionary<FVRObject, ItemSpawnerEntry> GetEntryPairsFromQuery(List<string> itemIDs, Dictionary<TagType, List<string>> tagQuery)
+        {
+            //Create a dictionary and populate it with items that have an FVRObject and a spawner entry
+            Dictionary<FVRObject, ItemSpawnerEntry> entryDic = new Dictionary<FVRObject, ItemSpawnerEntry>();
+            for (int i = 0; i < itemIDs.Count; i++)
+            {
+                string itemID = itemIDs[i];
+
+
+                //First, ensure that this item ID has all necessary information (FVRObject and SpawnerEntry
+                FVRObject item;
+                IM.OD.TryGetValue(itemID, out item);
+
+                //For vanilla items, the itemID might not be the object ID (out of my control)
+                //So if the item is still null, try to get it through an itemspawnerID
+                if(item == null)
+                {
+                    ItemSpawnerID ID;
+                    IM.Instance.SpawnerIDDic.TryGetValue(itemID, out ID);
+                    if(ID != null)
+                    {
+                        item = ID.MainObject;
+                    }
+                }
+                if (item == null) continue;
+
+
+                ItemSpawnerEntry entry;
+                OtherLoader.SpawnerEntriesByID.TryGetValue(item.ItemID, out entry);
+                if (entry == null) continue;
+
+
+                //Now, Decide wether this item will be displayed
+                if (!entry.IsDisplayedInMainEntry) continue;
+
+                else if(!ShouldIncludeGeneral(item, entry, tagQuery)) continue;
+
+                else if (item.Category == FVRObject.ObjectCategory.Firearm && !ShouldIncludeFirearm(item, tagQuery)) continue;
+
+                else if (item.Category == FVRObject.ObjectCategory.Attachment && !ShouldIncludeAttachment(item, tagQuery)) continue;
+
+                else if (item.Category == FVRObject.ObjectCategory.Magazine && !ShouldIncludeMagazine(item, tagQuery)) continue;
+
+                entryDic[item] = entry;
+            }
+
+            return entryDic;
+        }
+
+
+        private static bool ShouldIncludeGeneral(FVRObject item, ItemSpawnerEntry entry, Dictionary<TagType, List<string>> tagQuery)
+        {
+            if (tagQuery[TagType.SubCategory].Count > 0 && !tagQuery[TagType.SubCategory].Contains(entry.EntryPath.Split('/')[1])) return false;
+
+            if (tagQuery[TagType.Set].Count > 0 && !tagQuery[TagType.Set].Contains(item.TagSet.ToString())) return false;
+
+            if (tagQuery[TagType.Era].Count > 0 && !tagQuery[TagType.Era].Contains(item.TagEra.ToString())) return false;
+
+            if (tagQuery[TagType.ModTag].Count > 0 && !entry.ModTags.Any(o => tagQuery[TagType.ModTag].Contains(o.ToString()))) return false;
+
+            return true;
+        }
+
+        private static bool ShouldIncludeFirearm(FVRObject item, Dictionary<TagType, List<string>> tagQuery)
+        {
+            if (tagQuery[TagType.Size].Count > 0 && !tagQuery[TagType.Size].Contains(item.TagFirearmSize.ToString())) return false;
+
+            if (tagQuery[TagType.Action].Count > 0 && !tagQuery[TagType.Action].Contains(item.TagFirearmAction.ToString())) return false;
+
+            if (tagQuery[TagType.RoundClass].Count > 0 && !tagQuery[TagType.RoundClass].Contains(item.TagFirearmRoundPower.ToString())) return false;
+
+            if (tagQuery[TagType.CountryOfOrigin].Count > 0 && !tagQuery[TagType.CountryOfOrigin].Contains(item.TagFirearmCountryOfOrigin.ToString())) return false;
+
+            if (tagQuery[TagType.IntroductionYear].Count > 0 && !tagQuery[TagType.IntroductionYear].Contains(item.TagFirearmFirstYear.ToString())) return false;
+
+            if (tagQuery[TagType.MagazineType].Count > 0 && !tagQuery[TagType.MagazineType].Contains(item.MagazineType.ToString())) return false;
+
+            if (tagQuery[TagType.Caliber].Count > 0 && (!item.UsesRoundTypeFlag || !tagQuery[TagType.Caliber].Contains(item.RoundType.ToString()))) return false;
+
+            if (tagQuery[TagType.FiringMode].Count > 0 && !item.TagFirearmFiringModes.Any(o => tagQuery[TagType.FiringMode].Contains(o.ToString()))) return false;
+
+            if (tagQuery[TagType.FeedOption].Count > 0 && !item.TagFirearmFeedOption.Any(o => tagQuery[TagType.FeedOption].Contains(o.ToString()))) return false;
+
+            if (tagQuery[TagType.AttachmentMount].Count > 0 && !item.TagFirearmMounts.Any(o => tagQuery[TagType.AttachmentMount].Contains(o.ToString()))) return false;
+
+            return true;
+        }
+
+
+        private static bool ShouldIncludeAttachment(FVRObject item, Dictionary<TagType, List<string>> tagQuery)
+        {
+            if (tagQuery[TagType.AttachmentFeature].Count > 0 && !tagQuery[TagType.AttachmentFeature].Contains(item.TagAttachmentFeature.ToString())) return false;
+
+            if (tagQuery[TagType.AttachmentMount].Count > 0 && !tagQuery[TagType.AttachmentMount].Contains(item.TagAttachmentMount.ToString())) return false;
+
+            return true;
+        }
+
+
+        private static bool ShouldIncludeMagazine(FVRObject item, Dictionary<TagType, List<string>> tagQuery)
+        {
+            if (tagQuery[TagType.MagazineType].Count > 0 && !tagQuery[TagType.MagazineType].Contains(item.MagazineType.ToString())) return false;
+
+            return true;
+        }
+
+
+
+
+
 
         [HarmonyPatch(typeof(ItemSpawnerV2), "RedrawTagsCanvas")]
         [HarmonyILManipulator]

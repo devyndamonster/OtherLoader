@@ -42,6 +42,9 @@ namespace OtherLoader
         [Tooltip("Decides wether the entry will be visible in the spawner.\n Set to false if you only want the entry visible as a secondary")]
         public bool IsDisplayedInMainEntry;
 
+        [Tooltip("A list modding tags to allow for sorting by mod groups in itemspawner")]
+        public List<string> ModTags = new List<string>();
+
         [Tooltip("A list of tutorial block IDs that will appear when this entry is selected")]
         public List<string> TutorialBlockIDs;
 
