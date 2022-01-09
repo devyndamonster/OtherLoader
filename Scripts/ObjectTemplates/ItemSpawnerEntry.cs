@@ -94,6 +94,9 @@ namespace OtherLoader
 
             TutorialBlockIDs = new List<string>();
             TutorialBlockIDs.AddRange(ID.TutorialBlocks);
+
+            ModTags = new List<string>();
+            ModTags.AddRange(ID.ModTags);
         }
 
 
