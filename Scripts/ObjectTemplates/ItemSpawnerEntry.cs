@@ -81,8 +81,30 @@ namespace OtherLoader
                 SpawnWithIDs.Add(ID.SecondObject.ItemID);
             }
             
-            SecondaryObjectIDs = ID.Secondaries.Select(o => o.MainObject.ItemID).ToList();
-            SecondaryObjectIDs.AddRange(ID.Secondaries_ByStringID);
+
+            //Add secondary items to entry, being careful of null values!
+            SecondaryObjectIDs = new List<string>();
+            foreach(ItemSpawnerID secondary in ID.Secondaries)
+            {
+                if(secondary != null && secondary.MainObject != null)
+                {
+                    SecondaryObjectIDs.Add(secondary.MainObject.ItemID);
+                }
+                else if(secondary == null)
+                {
+                    OtherLogger.LogWarning("Failed to add secondary to item (" + MainObjectID + ") due to secondary item being null!");
+                }
+                else
+                {
+                    OtherLogger.LogWarning("Failed to add secondary to item (" + MainObjectID + ") due to null MainObject!, Secondary display name: " + secondary.DisplayName);
+                }
+            }
+
+            if(ID.Secondaries_ByStringID != null)
+            {
+                SecondaryObjectIDs.AddRange(ID.Secondaries_ByStringID);
+            }
+
 
             EntryPath = CreatePath(Page, ID);
             EntryIcon = ID.Sprite;
