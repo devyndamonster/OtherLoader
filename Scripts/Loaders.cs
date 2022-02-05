@@ -358,6 +358,8 @@ namespace OtherLoader
 
         private void LoadSpawnerEntries(UnityEngine.Object[] allAssets)
         {
+            List<ItemSpawnerID> convertedSpawnerIDs = new List<ItemSpawnerID>();
+
             foreach (ItemSpawnerEntry entry in allAssets)
             {
                 OtherLogger.Log("Loading new item spawner entry: " + entry.EntryPath, OtherLogger.LogType.Loading);
@@ -366,6 +368,12 @@ namespace OtherLoader
                 OtherLoader.SpawnerEntriesByID[entry.MainObjectID] = entry;
 
                 RegisterItemIntoMetaTagSystem(entry);
+                convertedSpawnerIDs.Add(AddEntryToLegacySpawner(entry));
+            }
+
+            foreach(ItemSpawnerID spawnerID in convertedSpawnerIDs)
+            {
+                spawnerID.Secondaries = spawnerID.Secondaries_ByStringID.Where(o => IM.Instance.SpawnerIDDic.ContainsKey(o)).Select(o => IM.Instance.SpawnerIDDic[o]).ToArray();
             }
         }
 
@@ -896,6 +904,70 @@ namespace OtherLoader
                 IM.AddMetaTag(mainObject.TagAttachmentMount.ToString(), TagType.AttachmentMount, mainObject.ItemID, page);
             }
         }
+
+
+        private ItemSpawnerID AddEntryToLegacySpawner(ItemSpawnerEntry entry)
+        {
+            if(!string.IsNullOrEmpty(entry.MainObjectID) && IM.OD.ContainsKey(entry.MainObjectID))
+            {
+                ItemSpawnerID itemSpawnerID = ConvertEntryToSpawnerID(entry);
+
+                if (itemSpawnerID == null) return null;
+
+                IM.CD[itemSpawnerID.Category].Add(itemSpawnerID);
+                IM.SCD[itemSpawnerID.SubCategory].Add(itemSpawnerID);
+                IM.Instance.SpawnerIDDic[itemSpawnerID.MainObject.ItemID] = itemSpawnerID;
+
+                return itemSpawnerID;
+            }
+
+            return null;
+        }
+
+        private ItemSpawnerID ConvertEntryToSpawnerID(ItemSpawnerEntry entry)
+        {
+            OtherLogger.Log("Converting to legacy spawner: " + entry.MainObjectID, OtherLogger.LogType.Loading);
+
+            List<ItemSpawnerID.ESubCategory> subcats = entry.EntryPath
+                .Split('/')
+                .Where(o => Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), o))
+                .Select(o => (ItemSpawnerID.ESubCategory)Enum.Parse(typeof(ItemSpawnerID.ESubCategory), o))
+                .ToList();
+
+            OtherLogger.Log("Possible subcategories: " + subcats.Count(), OtherLogger.LogType.Loading);
+
+            if (subcats.Count() == 0 ||
+                subcats[0] == ItemSpawnerID.ESubCategory.None ||
+                !IM.OD.ContainsKey(entry.MainObjectID)) return null;
+
+
+            ItemSpawnerID itemSpawnerID = ScriptableObject.CreateInstance<ItemSpawnerID>();
+
+            foreach(ItemSpawnerCategoryDefinitions.Category category in IM.CDefs.Categories)
+            {
+                if(category.Subcats.Any(o => o.Subcat == subcats[0]))
+                {
+                    itemSpawnerID.Category = category.Cat;
+                    itemSpawnerID.SubCategory = subcats[0];
+                }
+            }
+
+            
+            itemSpawnerID.MainObject = IM.OD[entry.MainObjectID];
+            itemSpawnerID.SecondObject = entry.SecondaryObjectIDs.Where(o => IM.OD.ContainsKey(o)).Select(o => IM.OD[o]).FirstOrDefault();
+            itemSpawnerID.DisplayName = entry.DisplayName;
+            itemSpawnerID.IsDisplayedInMainEntry = entry.IsDisplayedInMainEntry;
+            itemSpawnerID.ItemID = entry.MainObjectID;
+            itemSpawnerID.ModTags = entry.ModTags;
+            itemSpawnerID.Secondaries_ByStringID = entry.SecondaryObjectIDs.Where(o => IM.OD.ContainsKey(o)).ToList();
+            itemSpawnerID.Secondaries = new ItemSpawnerID[] { };
+            itemSpawnerID.Sprite = entry.EntryIcon;
+            itemSpawnerID.UsesLargeSpawnPad = entry.UsesLargeSpawnPad;
+            itemSpawnerID.IsReward = entry.IsReward;
+
+            return itemSpawnerID;
+        }
+
 
 
     }
