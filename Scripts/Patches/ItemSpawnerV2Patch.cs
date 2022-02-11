@@ -298,7 +298,7 @@ namespace OtherLoader
             ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
 
             //If the entry that was selected has child entries, we should display the child entries
-            if (OtherLoader.SpawnerEntriesByPath[data.VisibleEntries[i].EntryPath].childNodes.Count > 0)
+            if (OtherLoader.DoesEntryHaveChildren(data.VisibleEntries[i]))
             {
                 data.CurrentPath = data.VisibleEntries[i].EntryPath;
                 data.CurrentDepth += 1;
@@ -307,16 +307,34 @@ namespace OtherLoader
                 __instance.RedrawSimpleCanvas();
             }
 
-            else
+            //If the item is unlocked, allow it to be selected
+            else if (OtherLoader.UnlockSaveData.IsItemUnlocked(data.VisibleEntries[i].MainObjectID))
             {
                 OtherLogger.Log("Setting selected id to: " + data.VisibleEntries[i].MainObjectID, OtherLogger.LogType.General);
 
                 __instance.SetSelectedID(data.VisibleEntries[i].MainObjectID);
                 __instance.RedrawDetailsCanvas();
+
             }
 
             return false;
         }
+
+
+
+        [HarmonyPatch(typeof(ItemSpawnerV2), "SelectItem")]
+        [HarmonyPrefix]
+        private static bool SelectItemPatch(ItemSpawnerV2 __instance, int i)
+        {
+            if (i < __instance.m_displayedItemIds.Count && OtherLoader.UnlockSaveData.IsItemUnlocked(__instance.m_displayedItemIds[i]))
+            {
+                __instance.SetSelectedID(__instance.m_displayedItemIds[i]);
+                __instance.RedrawDetailsCanvas();
+            }
+
+            return false;
+        }
+
 
 
         /// <summary>
@@ -486,10 +504,20 @@ namespace OtherLoader
                     ItemSpawnerEntry entry = entries[startIndex + i].entry;
                     data.VisibleEntries.Add(entry);
 
-                    __instance.IMG_SimpleTiles[i].gameObject.SetActive(true);
-                    __instance.TXT_SimpleTiles[i].gameObject.SetActive(true);
-                    __instance.IMG_SimpleTiles[i].sprite = entry.EntryIcon;
-                    __instance.TXT_SimpleTiles[i].text = entry.DisplayName;
+                    if (OtherLoader.DoesEntryHaveChildren(entry) || OtherLoader.UnlockSaveData.IsItemUnlocked(entry.MainObjectID))
+                    {
+                        __instance.IMG_SimpleTiles[i].gameObject.SetActive(true);
+                        __instance.TXT_SimpleTiles[i].gameObject.SetActive(true);
+                        __instance.IMG_SimpleTiles[i].sprite = entry.EntryIcon;
+                        __instance.TXT_SimpleTiles[i].text = entry.DisplayName;
+                    }
+                    else
+                    {
+                        __instance.IMG_SimpleTiles[i].gameObject.SetActive(true);
+                        __instance.TXT_SimpleTiles[i].gameObject.SetActive(true);
+                        __instance.IMG_SimpleTiles[i].sprite = OtherLoader.LockIcon;
+                        __instance.TXT_SimpleTiles[i].text = "???";
+                    }
                 }
                 else
                 {
@@ -620,10 +648,21 @@ namespace OtherLoader
                     {
                         ItemSpawnerEntry entry = OtherLoader.SpawnerEntriesByID[__instance.WorkingItemIDs[currentIndex]];
                         __instance.m_displayedItemIds.Add(entry.MainObjectID);
-                        images[m].sprite = entry.EntryIcon;
-                        images[m].gameObject.SetActive(true);
-                        texts[m].text = entry.DisplayName;
-                        texts[m].gameObject.SetActive(true);
+
+                        if (OtherLoader.DoesEntryHaveChildren(entry) || OtherLoader.UnlockSaveData.IsItemUnlocked(entry.MainObjectID))
+                        {
+                            images[m].sprite = entry.EntryIcon;
+                            images[m].gameObject.SetActive(true);
+                            texts[m].text = entry.DisplayName;
+                            texts[m].gameObject.SetActive(true);
+                        }
+                        else
+                        {
+                            images[m].sprite = OtherLoader.LockIcon;
+                            images[m].gameObject.SetActive(true);
+                            texts[m].text = "???";
+                            texts[m].gameObject.SetActive(true);
+                        }
                     }
 
                     currentIndex++;
@@ -857,24 +896,6 @@ namespace OtherLoader
             }
 
             text.text = value;
-        }
-
-
-
-        [HarmonyPatch(typeof(IM), "RegisterItemIntoMetaTagSystem")]
-        [HarmonyPostfix]
-        private static void MetaTagPatch(ItemSpawnerID ID)
-        {
-            //If this IDs items didn't get added, add it to the firearm page
-            if (IM.Instance.PageItemLists.ContainsKey(ItemSpawnerV2.PageMode.Firearms)){
-                if (!IM.Instance.PageItemLists.Any(o => o.Value.Contains(ID.ItemID)) && IM.OD.ContainsKey(ID.MainObject.ItemID) && IM.OD[ID.MainObject.ItemID].IsModContent)
-                {
-                    OtherLogger.Log("Adding misc mod item to meta tag system: " + ID.ItemID, OtherLogger.LogType.Loading);
-
-                    IM.AddMetaTag(ID.Category.ToString(), TagType.Category, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-                    IM.AddMetaTag(ID.SubCategory.ToString(), TagType.SubCategory, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-                }
-            }
         }
 
         [HarmonyPatch(typeof(IM), "GenerateItemDBs")]

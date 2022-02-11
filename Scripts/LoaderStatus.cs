@@ -105,6 +105,7 @@ namespace OtherLoader
             }
 
             ProgressUpdated?.Invoke(progress);
+            OtherLoader.SaveUnlockedItemsData();
             OtherLogger.Log("All Items Loaded! Total Load Time : " + (Time.time - LoadStartTime).ToString("0.000") + " seconds", OtherLogger.LogType.General);
         }
 

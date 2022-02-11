@@ -31,6 +31,15 @@ namespace OtherLoader
             return new Empty();
         }
 
+        public Empty LoadLockIcon(FileSystemInfo handle)
+        {
+            OtherLogger.Log("Loading Lock Icon: " + handle.FullName, OtherLogger.LogType.Loading);
+
+            OtherLoader.LockIcon = LoadSprite(handle);
+
+            return new Empty();
+        }
+
         //Immediate Loaders
         public IEnumerator StartAssetLoadUnordered(FileSystemInfo handle)
         {
@@ -67,6 +76,31 @@ namespace OtherLoader
         {
             return RegisterAssetLoadLate(handle, LoadOrderType.LoadLast);
         }
+
+
+        public static Sprite LoadSprite(FileSystemInfo file)
+        {
+            Texture2D spriteTexture = LoadTexture(file);
+            if (spriteTexture == null) return null;
+            Sprite sprite = Sprite.Create(spriteTexture, new Rect(0, 0, spriteTexture.width, spriteTexture.height), new Vector2(0, 0), 100f);
+            sprite.name = file.Name;
+            return sprite;
+        }
+
+
+        public static Texture2D LoadTexture(FileSystemInfo file)
+        {
+            // Load a PNG or JPG file from disk to a Texture2D
+            // Returns null if load fails
+
+            byte[] fileData = File.ReadAllBytes(file.FullName);
+
+            Texture2D tex2D = new Texture2D(2, 2);
+            if (tex2D.LoadImage(fileData)) return tex2D;
+
+            return null;
+        }
+
 
         public void LoadDirectAssets(CoroutineStarter starter, string folderPath, string guid, string[] dependancies, string[] loadFirst, string[] loadAny, string[] loadLast)
         {
@@ -363,11 +397,15 @@ namespace OtherLoader
             foreach (ItemSpawnerEntry entry in allAssets)
             {
                 OtherLogger.Log("Loading new item spawner entry: " + entry.EntryPath, OtherLogger.LogType.Loading);
+
                 entry.IsModded = true;
+
                 PopulateEntryPaths(entry);
                 OtherLoader.SpawnerEntriesByID[entry.MainObjectID] = entry;
 
+                if (!entry.IsReward && OtherLoader.UnlockSaveData.AutoUnlockNonRewards) OtherLoader.UnlockSaveData.UnlockItem(entry.MainObjectID);
                 RegisterItemIntoMetaTagSystem(entry);
+
                 convertedSpawnerIDs.Add(AddEntryToLegacySpawner(entry));
             }
 
@@ -565,8 +603,10 @@ namespace OtherLoader
                 if(id.MainObject != null)
                 {
                     if (id.UnlockCost == 0) id.UnlockCost = id.MainObject.CreditCost;
+                    if (!id.IsReward && OtherLoader.UnlockSaveData.AutoUnlockNonRewards) OtherLoader.UnlockSaveData.UnlockItem(id.MainObject.ItemID);
 
                     IM.RegisterItemIntoMetaTagSystem(id);
+
                     if (!id.IsDisplayedInMainEntry) HideItemFromCategories(id);
                 }
 

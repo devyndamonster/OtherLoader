@@ -13,21 +13,26 @@ using BepInEx.Configuration;
 using Stratum;
 using System.Collections;
 using Anvil;
+using Newtonsoft.Json;
 
 namespace OtherLoader
 {
-    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.2.6")]
+    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.3.0")]
     [BepInDependency(StratumRoot.GUID, StratumRoot.Version)]
     [BepInDependency(Sodalite.SodaliteConstants.Guid, Sodalite.SodaliteConstants.Version)]
     public class OtherLoader : StratumPlugin
     {
-        public static string MainLegacyDirectory { get; } = Application.dataPath.Replace("/h3vr_Data", "/LegacyVirtualObjects");
+        public static string MainLegacyDirectory;
+        public static string OtherLoaderSaveDirectory;
+        public static string UnlockedItemSaveDataPath;
 
         // A dictionary of asset bundles managed by OtherLoader. The key is the UniqueAssetID, and the value is the path to that file
         public static Dictionary<string, string> ManagedBundles = new Dictionary<string, string>();
 
         public static Dictionary<string, EntryNode> SpawnerEntriesByPath = new Dictionary<string, EntryNode>();
         public static Dictionary<string, ItemSpawnerEntry> SpawnerEntriesByID = new Dictionary<string, ItemSpawnerEntry>();
+        public static UnlockedItemSaveData UnlockSaveData;
+        public static Sprite LockIcon;
 
         private static ConfigEntry<int> MaxActiveLoadersConfig;
         public static ConfigEntry<bool> OptimizeMemory;
@@ -44,13 +49,15 @@ namespace OtherLoader
         private void Awake()
         {
             LoadConfigFile();
+            OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
+
+            InitPaths();
+            InitUnlockSaveData();
 
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerV2Patch));
             Harmony.CreateAndPatchAll(typeof(QuickbeltPanelPatch));
-
-            OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
 
             if (AddUnloadButton.Value)
             {
@@ -58,6 +65,13 @@ namespace OtherLoader
             }
 
             coroutineStarter = StartCoroutine;
+        }
+
+        private void InitPaths()
+        {
+            MainLegacyDirectory = Application.dataPath.Replace("/h3vr_Data", "/LegacyVirtualObjects");
+            OtherLoaderSaveDirectory = Application.dataPath.Replace("/h3vr_Data", "/OtherLoader");
+            UnlockedItemSaveDataPath = Path.Combine(OtherLoaderSaveDirectory, "UnlockedItems.json");
         }
 
         private void Start()
@@ -104,8 +118,58 @@ namespace OtherLoader
                 "When true, and sodalite is installed, you'll have a wristmenu button that unloads all modded asset bundles for testing"
                 );
 
+
             MaxActiveLoaders = MaxActiveLoadersConfig.Value;
         }
+
+
+        private void InitUnlockSaveData()
+        {
+            if (!Directory.Exists(OtherLoaderSaveDirectory))
+            {
+                Directory.CreateDirectory(OtherLoaderSaveDirectory);
+            }
+
+            if (!File.Exists(UnlockedItemSaveDataPath))
+            {
+                UnlockSaveData = new UnlockedItemSaveData();
+                SaveUnlockedItemsData();
+            }
+
+            else
+            {
+                LoadUnlockedItemsData();
+            }
+        }
+
+
+        public static void LoadUnlockedItemsData()
+        {
+            try
+            {
+                string unlockJson = File.ReadAllText(UnlockedItemSaveDataPath);
+                UnlockSaveData = JsonConvert.DeserializeObject<UnlockedItemSaveData>(unlockJson);
+            } 
+            catch (Exception ex)
+            {
+                OtherLogger.LogError("Exception when loading unlocked items!\n" + ex.ToString());
+            }
+        }
+
+
+        public static void SaveUnlockedItemsData()
+        {
+            try
+            {
+                string unlockJson = JsonConvert.SerializeObject(UnlockSaveData, Formatting.Indented);
+                File.WriteAllText(UnlockedItemSaveDataPath, unlockJson);
+            }
+            catch (Exception ex)
+            {
+                OtherLogger.LogError("Exception when saving unlocked items!\n" + ex.ToString());
+            }
+        }
+
 
         public override void OnSetup(IStageContext<Empty> ctx)
         {
@@ -113,6 +177,7 @@ namespace OtherLoader
 
             //Setup Loaders
             ctx.Loaders.Add("assembly", loader.LoadAssembly);
+            ctx.Loaders.Add("icon", loader.LoadLockIcon);
         }
 
         public override IEnumerator OnRuntime(IStageContext<IEnumerator> ctx)
@@ -184,6 +249,11 @@ namespace OtherLoader
                 //Unload the bundle
                 bundleCallback.Result.Unload(false);
             }
+        }
+
+        public static bool DoesEntryHaveChildren(ItemSpawnerEntry entry)
+        {
+            return SpawnerEntriesByPath[entry.EntryPath].childNodes.Count > 0;
         }
 
 
@@ -260,6 +330,46 @@ namespace OtherLoader
                 }
             }
             return true;
+        }
+
+
+        [HarmonyPatch(typeof(FVRPhysicalObject), "BeginInteraction")]
+        [HarmonyPrefix]
+        public static bool UnlockInteractedItem(FVRPhysicalObject __instance)
+        {
+            if(__instance.ObjectWrapper != null)
+            {
+                if (UnlockSaveData.UnlockItem(__instance.ObjectWrapper.ItemID))
+                {
+                    SaveUnlockedItemsData();
+                }
+            }
+
+            return true;
+        }
+
+
+        [HarmonyPatch(typeof(IM), "RegisterItemIntoMetaTagSystem")]
+        [HarmonyPostfix]
+        private static void MetaTagPatch(ItemSpawnerID ID)
+        {
+            //If this item is not a reward, unlock it by default
+            if(UnlockSaveData.AutoUnlockNonRewards && !ID.IsReward && ID.MainObject != null)
+            {
+                UnlockSaveData.UnlockItem(ID.MainObject.ItemID);
+            }
+
+            //If this IDs items didn't get added, add it to the firearm page
+            if (IM.Instance.PageItemLists.ContainsKey(ItemSpawnerV2.PageMode.Firearms))
+            {
+                if (!IM.Instance.PageItemLists.Any(o => o.Value.Contains(ID.ItemID)) && IM.OD.ContainsKey(ID.MainObject.ItemID) && IM.OD[ID.MainObject.ItemID].IsModContent)
+                {
+                    OtherLogger.Log("Adding misc mod item to meta tag system: " + ID.ItemID, OtherLogger.LogType.Loading);
+
+                    IM.AddMetaTag(ID.Category.ToString(), TagType.Category, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);
+                    IM.AddMetaTag(ID.SubCategory.ToString(), TagType.SubCategory, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);
+                }
+            }
         }
 
 
