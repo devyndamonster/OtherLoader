@@ -14,6 +14,7 @@ using Stratum;
 using System.Collections;
 using Anvil;
 using Newtonsoft.Json;
+using RenderHeads.Media.AVProVideo;
 
 namespace OtherLoader
 {
@@ -31,6 +32,7 @@ namespace OtherLoader
 
         public static Dictionary<string, EntryNode> SpawnerEntriesByPath = new Dictionary<string, EntryNode>();
         public static Dictionary<string, ItemSpawnerEntry> SpawnerEntriesByID = new Dictionary<string, ItemSpawnerEntry>();
+        public static Dictionary<string, MediaPath> TutorialBlockVideos = new Dictionary<string, MediaPath>();
         public static UnlockedItemSaveData UnlockSaveData;
         public static Sprite LockIcon;
 
@@ -206,6 +208,7 @@ namespace OtherLoader
         }
 
 
+        
         public static void RegisterDirectLoad(string path, string guid, string dependancies, string loadFirst, string loadAny, string loadLast)
         {
             directLoadMods.Add(new DirectLoadMod()

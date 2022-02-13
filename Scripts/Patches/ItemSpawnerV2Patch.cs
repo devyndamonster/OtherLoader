@@ -170,6 +170,28 @@ namespace OtherLoader
         }
 
 
+        [HarmonyPatch(typeof(ItemSpawnerV2), "BTN_Details_PlayTutorialVideo")]
+        [HarmonyPrefix]
+        private static bool PlayTutorialPatch(ItemSpawnerV2 __instance, int i)
+        {
+            if (!string.IsNullOrEmpty(__instance.m_selectedID))
+            {
+                __instance.Boop(0);
+                __instance.DetailsHelpVideoPlayer.SetActive(true);
+                ItemSpawnerEntry entry = OtherLoader.SpawnerEntriesByID[__instance.m_selectedID];
+                string key = entry.TutorialBlockIDs[i];
+                __instance.VP_DetailsScreen.PlayTutorialBlock(IM.TutorialBlockDic[key]);
+                __instance.VP_DetailsTitle.text = IM.TutorialBlockDic[key].Title;
+            }
+            else
+            {
+                __instance.Boop(2);
+            }
+
+            return false;
+        }
+
+
 
         [HarmonyPatch(typeof(ItemSpawnerV2), "SimpleGoBack")]
         [HarmonyPrefix]

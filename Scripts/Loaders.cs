@@ -13,6 +13,7 @@ using Valve.VR.InteractionSystem;
 using Stratum.Extensions;
 using Stratum;
 using System.Reflection;
+using RenderHeads.Media.AVProVideo;
 
 namespace OtherLoader
 {
@@ -296,7 +297,6 @@ namespace OtherLoader
                 LoaderStatus.RemoveActiveLoader(bundleID, true);
             });
 
-            
             //Log that the bundle is loaded
             if (OtherLoader.LogLoading.Value)
                 OtherLogger.Log($"[{(Time.time - time).ToString("0.000")} s] Completed loading bundle ({bundleID})", OtherLogger.LogType.General);
@@ -324,6 +324,10 @@ namespace OtherLoader
                 yield return afterLoad;
             }
         }
+
+
+
+        
 
 
 
@@ -382,10 +386,37 @@ namespace OtherLoader
             yield return AudioImpactSet;
             LoadAudioImpactSetEntries(AudioImpactSet.allAssets);
 
+            AssetBundleRequest TutorialBlocks = bundle.Result.LoadAllAssetsAsync<TutorialBlock>();
+            yield return TutorialBlocks;
+            LoadTutorialBlocks(TutorialBlocks.allAssets, bundleID);
+
             AssetBundleRequest Quickbelts = bundle.Result.LoadAllAssetsAsync<GameObject>();
             yield return Quickbelts;
             LoadQuickbeltEntries(Quickbelts.allAssets);
 
+        }
+
+
+        private void LoadTutorialBlocks(UnityEngine.Object[] allAssets, string bundleID)
+        {
+            foreach(TutorialBlock tutorialBlock in allAssets)
+            {
+                if (string.IsNullOrEmpty(tutorialBlock.MediaRef.MediaPath.Path))
+                {
+                    string videoPath = Path.Combine(LoaderUtils.GetModPathFromUniqueID(bundleID), tutorialBlock.ID + ".mp4");
+                    tutorialBlock.MediaRef.MediaPath.Path = videoPath;
+
+                    if (!File.Exists(videoPath))
+                    {
+                        OtherLogger.LogError("Tutorial block had no assigned path, and an MP4 file for it could not be found. Attempted path: " + videoPath);
+                        continue;
+                    }
+                }
+
+                IM.TutorialBlockDic[tutorialBlock.ID] = tutorialBlock;
+
+                OtherLogger.Log("Loaded tutorial block with media path: " + tutorialBlock.MediaRef.MediaPath.Path, OtherLogger.LogType.Loading);
+            }
         }
 
 
@@ -400,6 +431,7 @@ namespace OtherLoader
 
                 entry.IsModded = true;
 
+                entry.PopulateIDsFromObj();
                 PopulateEntryPaths(entry);
                 OtherLoader.SpawnerEntriesByID[entry.MainObjectID] = entry;
 

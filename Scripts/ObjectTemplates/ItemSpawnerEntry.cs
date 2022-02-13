@@ -17,11 +17,15 @@ namespace OtherLoader
         public string MainObjectID;
 
         [Tooltip("ItemIDs for items that will spawn alongside the main object")]
-        public List<string> SpawnWithIDs;
+        public List<string> SpawnWithIDs = new List<string>();
 
         [Tooltip("ItemIDs for items that appear in the secondary items section")]
-        public List<string> SecondaryObjectIDs;
+        public List<string> SecondaryObjectIDs = new List<string>();
 
+        [Header("[OPTIONAL] Populate ItemIDs using FVRObjects directly")]
+        public FVRObject MainObjectObj;
+        public List<FVRObject> SpawnWithObjs = new List<FVRObject>();
+        public List<FVRObject> SecondaryObjs = new List<FVRObject>();
 
         [Header("Entry Path Properties")]
         [Tooltip("The path for the entry")]
@@ -57,6 +61,30 @@ namespace OtherLoader
         public bool IsModded;
 
         
+        public void PopulateIDsFromObj()
+        {
+            if(MainObjectObj != null)
+            {
+                MainObjectID = MainObjectObj.ItemID;
+            }
+
+            foreach(FVRObject obj in SpawnWithObjs)
+            {
+                if (!SpawnWithIDs.Contains(obj.ItemID))
+                {
+                    SpawnWithIDs.Add(obj.ItemID);
+                }
+            }
+
+            foreach (FVRObject obj in SecondaryObjs)
+            {
+                if (!SecondaryObjectIDs.Contains(obj.ItemID))
+                {
+                    SecondaryObjectIDs.Add(obj.ItemID);
+                }
+            }
+        }
+
 
         public void LegacyPopulateFromID(ItemSpawnerV2.PageMode Page, ItemSpawnerID ID, bool IsModded)
         {
