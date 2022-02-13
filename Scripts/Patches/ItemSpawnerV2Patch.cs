@@ -729,6 +729,15 @@ namespace OtherLoader
 
         private static Dictionary<FVRObject, ItemSpawnerEntry> GetEntryPairsFromQuery(List<string> itemIDs, Dictionary<TagType, List<string>> tagQuery)
         {
+            /*
+            OtherLogger.Log("Performing Tag Saerch!", OtherLogger.LogType.General);
+
+            foreach (KeyValuePair<TagType, List<string>> pair in tagQuery)
+            {
+                OtherLogger.Log("Tag Type: " + pair.Key.ToString() + ", Values: " + String.Join(",", pair.Value.ToArray()), OtherLogger.LogType.General);
+            }
+            */
+
             //Create a dictionary and populate it with items that have an FVRObject and a spawner entry
             Dictionary<FVRObject, ItemSpawnerEntry> entryDic = new Dictionary<FVRObject, ItemSpawnerEntry>();
             for (int i = 0; i < itemIDs.Count; i++)
@@ -768,8 +777,6 @@ namespace OtherLoader
 
                 else if (item.Category == FVRObject.ObjectCategory.Attachment && !ShouldIncludeAttachment(item, tagQuery)) continue;
 
-                else if (item.Category == FVRObject.ObjectCategory.Magazine && !ShouldIncludeMagazine(item, tagQuery)) continue;
-
                 entryDic[item] = entry;
             }
 
@@ -787,6 +794,14 @@ namespace OtherLoader
 
             if (tagQuery[TagType.ModTag].Count > 0 && !entry.ModTags.Any(o => tagQuery[TagType.ModTag].Contains(o.ToString()))) return false;
 
+            if (tagQuery[TagType.Caliber].Count > 0 && (!item.UsesRoundTypeFlag || !tagQuery[TagType.Caliber].Contains(item.RoundType.ToString()))) return false;
+
+            if (tagQuery[TagType.MagazineType].Count > 0 && !tagQuery[TagType.MagazineType].Contains(item.MagazineType.ToString())) return false;
+
+            if (tagQuery[TagType.CountryOfOrigin].Count > 0 && !tagQuery[TagType.CountryOfOrigin].Contains(item.TagFirearmCountryOfOrigin.ToString())) return false;
+
+            if (tagQuery[TagType.IntroductionYear].Count > 0 && !tagQuery[TagType.IntroductionYear].Contains(item.TagFirearmFirstYear.ToString())) return false;
+
             return true;
         }
 
@@ -798,14 +813,6 @@ namespace OtherLoader
 
             if (tagQuery[TagType.RoundClass].Count > 0 && !tagQuery[TagType.RoundClass].Contains(item.TagFirearmRoundPower.ToString())) return false;
 
-            if (tagQuery[TagType.CountryOfOrigin].Count > 0 && !tagQuery[TagType.CountryOfOrigin].Contains(item.TagFirearmCountryOfOrigin.ToString())) return false;
-
-            if (tagQuery[TagType.IntroductionYear].Count > 0 && !tagQuery[TagType.IntroductionYear].Contains(item.TagFirearmFirstYear.ToString())) return false;
-
-            if (tagQuery[TagType.MagazineType].Count > 0 && !tagQuery[TagType.MagazineType].Contains(item.MagazineType.ToString())) return false;
-
-            if (tagQuery[TagType.Caliber].Count > 0 && (!item.UsesRoundTypeFlag || !tagQuery[TagType.Caliber].Contains(item.RoundType.ToString()))) return false;
-
             if (tagQuery[TagType.FiringMode].Count > 0 && !item.TagFirearmFiringModes.Any(o => tagQuery[TagType.FiringMode].Contains(o.ToString()))) return false;
 
             if (tagQuery[TagType.FeedOption].Count > 0 && !item.TagFirearmFeedOption.Any(o => tagQuery[TagType.FeedOption].Contains(o.ToString()))) return false;
@@ -815,7 +822,6 @@ namespace OtherLoader
             return true;
         }
 
-
         private static bool ShouldIncludeAttachment(FVRObject item, Dictionary<TagType, List<string>> tagQuery)
         {
             if (tagQuery[TagType.AttachmentFeature].Count > 0 && !tagQuery[TagType.AttachmentFeature].Contains(item.TagAttachmentFeature.ToString())) return false;
@@ -824,15 +830,6 @@ namespace OtherLoader
 
             return true;
         }
-
-
-        private static bool ShouldIncludeMagazine(FVRObject item, Dictionary<TagType, List<string>> tagQuery)
-        {
-            if (tagQuery[TagType.MagazineType].Count > 0 && !tagQuery[TagType.MagazineType].Contains(item.MagazineType.ToString())) return false;
-
-            return true;
-        }
-
 
 
 

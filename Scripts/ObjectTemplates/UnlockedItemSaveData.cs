@@ -9,7 +9,20 @@ namespace OtherLoader
     {
         public bool UnlockAll = false;
         public bool AutoUnlockNonRewards = true;
+        public ItemUnlockMode UnlockMode;
         public List<string> UnlockedItemIDs = new List<string>();
+
+        public UnlockedItemSaveData() { }
+
+        public UnlockedItemSaveData(ItemUnlockMode unlockMode)
+        {
+            UnlockMode = unlockMode;
+
+            if(unlockMode == ItemUnlockMode.Unlockathon)
+            {
+                AutoUnlockNonRewards = false;
+            }
+        }
 
         public bool IsItemUnlocked(string itemID)
         {
@@ -26,5 +39,11 @@ namespace OtherLoader
 
             return false;
         }
+    }
+
+    public enum ItemUnlockMode
+    {
+        Normal,
+        Unlockathon
     }
 }

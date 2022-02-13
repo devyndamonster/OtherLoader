@@ -41,6 +41,7 @@ namespace OtherLoader
         public static ConfigEntry<bool> EnableLogging;
         public static ConfigEntry<bool> LogLoading;
         public static ConfigEntry<bool> AddUnloadButton;
+        public static ConfigEntry<ItemUnlockMode> UnlockMode;
 
         public static int MaxActiveLoaders = 0;
 
@@ -120,6 +121,13 @@ namespace OtherLoader
                 "When true, and sodalite is installed, you'll have a wristmenu button that unloads all modded asset bundles for testing"
                 );
 
+            UnlockMode = Config.Bind(
+                "General",
+                "UnlockMode",
+                ItemUnlockMode.Normal,
+                "When set to Unlockathon, all items will start out locked, and you must unlock items by finding them in game"
+                );
+
 
             MaxActiveLoaders = MaxActiveLoadersConfig.Value;
         }
@@ -134,7 +142,8 @@ namespace OtherLoader
 
             if (!File.Exists(UnlockedItemSaveDataPath))
             {
-                UnlockSaveData = new UnlockedItemSaveData();
+                UnlockSaveData = new UnlockedItemSaveData(UnlockMode.Value);
+
                 SaveUnlockedItemsData();
             }
 
@@ -151,6 +160,11 @@ namespace OtherLoader
             {
                 string unlockJson = File.ReadAllText(UnlockedItemSaveDataPath);
                 UnlockSaveData = JsonConvert.DeserializeObject<UnlockedItemSaveData>(unlockJson);
+
+                if(UnlockSaveData.UnlockMode != UnlockMode.Value)
+                {
+                    UnlockSaveData = new UnlockedItemSaveData(UnlockMode.Value);
+                }
             } 
             catch (Exception ex)
             {

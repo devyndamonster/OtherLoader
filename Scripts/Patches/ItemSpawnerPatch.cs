@@ -234,6 +234,102 @@ namespace OtherLoader
         }
 
 
+        [HarmonyPatch(typeof(ItemSpawnerUI), "Draw_Tiles_SubCategory")]
+        [HarmonyPrefix]
+        private static bool DrawTilesSubCategoryPatch(ItemSpawnerID.ESubCategory SubCategory, ItemSpawnerUI __instance)
+        {
+            int num = 0;
+            bool sandboxMode = !GM.CurrentSceneSettings.UsesUnlockSystem;
+            List<ItemSpawnerID> availableInSubCategory = IM.GetAvailableInSubCategory(SubCategory);
+
+            for (int i = __instance.m_curPage * 10; i < availableInSubCategory.Count; i++)
+            {
+                if (num < Mathf.Min(10 + __instance.m_curPage * 10, 10))
+                {
+
+                    //Handle the case where the item is not unlocked globally
+                    if(availableInSubCategory[i].MainObject != null && 
+                        !OtherLoader.UnlockSaveData.IsItemUnlocked(availableInSubCategory[i].MainObject.ItemID))
+                    {
+                        __instance.Tiles_SelectionPage[num].gameObject.SetActive(true);
+                        __instance.Tiles_SelectionPage[num].Image.sprite = OtherLoader.LockIcon;
+                        __instance.Tiles_SelectionPage[num].Text.text = "???";
+                        __instance.Tiles_SelectionPage[num].Item = availableInSubCategory[i];
+
+                        __instance.Tiles_SelectionPage[num].IsSpawnable = false;
+                        __instance.Tiles_SelectionPage[num].LockedCorner.gameObject.SetActive(false);
+
+                    }
+
+                    //If item is unlocked globally, just perform normal logic
+                    else
+                    {
+                        __instance.Tiles_SelectionPage[num].gameObject.SetActive(true);
+                        __instance.Tiles_SelectionPage[num].Image.sprite = availableInSubCategory[i].Sprite;
+                        __instance.Tiles_SelectionPage[num].Text.text = availableInSubCategory[i].DisplayName;
+                        __instance.Tiles_SelectionPage[num].Item = availableInSubCategory[i];
+
+                        if (GM.Omni.OmniUnlocks.IsEquipmentUnlocked(__instance.Tiles_SelectionPage[num].Item, sandboxMode))
+                        {
+                            __instance.Tiles_SelectionPage[num].IsSpawnable = true;
+                            __instance.Tiles_SelectionPage[num].LockedCorner.gameObject.SetActive(false);
+                        }
+                        else
+                        {
+                            __instance.Tiles_SelectionPage[num].IsSpawnable = false;
+                            __instance.Tiles_SelectionPage[num].LockedCorner.gameObject.SetActive(true);
+                        }
+                    }
+
+                    num++;
+                }
+            }
+            for (int j = num; j < __instance.Tiles_SelectionPage.Length; j++)
+            {
+                __instance.Tiles_SelectionPage[j].gameObject.SetActive(false);
+            }
+
+            return false;
+        }
+
+
+
+        [HarmonyPatch(typeof(ItemSpawnerUI), "ButtonPress_SelectionTile")]
+        [HarmonyPrefix]
+        private static bool SelectTilePatch(int i, ItemSpawnerUI __instance)
+        {
+            if (__instance.refireTick > 0f)
+            {
+                return false;
+            }
+            __instance.ButtonPress(0);
+            switch (__instance.m_curMode)
+            {
+                case ItemSpawnerUI.ItemSpawnerPageMode.Home:
+                    __instance.m_curCategory = __instance.Tiles_SelectionPage[i].Category;
+                    __instance.SetMode_Category();
+                    break;
+                case ItemSpawnerUI.ItemSpawnerPageMode.Category:
+                    __instance.m_curSubCategory = __instance.Tiles_SelectionPage[i].SubCategory;
+                    __instance.SetMode_SubCategory();
+                    break;
+                case ItemSpawnerUI.ItemSpawnerPageMode.SubCategory:
+
+                    if(__instance.Tiles_SelectionPage[i].Item.MainObject != null &&
+                        OtherLoader.UnlockSaveData.IsItemUnlocked(__instance.Tiles_SelectionPage[i].Item.MainObject.ItemID))
+                    {
+                        __instance.m_curID = __instance.Tiles_SelectionPage[i].Item;
+                        __instance.m_IDSelectedForSpawn = __instance.Tiles_SelectionPage[i].Item;
+                        __instance.SetMode_Details();
+                    }
+
+                    break;
+            }
+
+            return false;
+        }
+
+
 
         [HarmonyPatch(typeof(ItemSpawnerUI), "ButtonPress_Next")]
         [HarmonyPrefix]
