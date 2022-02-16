@@ -371,7 +371,7 @@ namespace OtherLoader
         private static void MetaTagPatch(ItemSpawnerID ID)
         {
             //If this item is not a reward, unlock it by default
-            if(UnlockSaveData.AutoUnlockNonRewards && !ID.IsReward && ID.MainObject != null)
+            if(UnlockSaveData.ShouldAutoUnlockItem(ID))
             {
                 UnlockSaveData.UnlockItem(ID.MainObject.ItemID);
             }

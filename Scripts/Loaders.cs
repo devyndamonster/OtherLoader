@@ -435,7 +435,7 @@ namespace OtherLoader
                 PopulateEntryPaths(entry);
                 OtherLoader.SpawnerEntriesByID[entry.MainObjectID] = entry;
 
-                if (!entry.IsReward && OtherLoader.UnlockSaveData.AutoUnlockNonRewards) OtherLoader.UnlockSaveData.UnlockItem(entry.MainObjectID);
+                if (OtherLoader.UnlockSaveData.ShouldAutoUnlockItem(entry)) OtherLoader.UnlockSaveData.UnlockItem(entry.MainObjectID);
                 RegisterItemIntoMetaTagSystem(entry);
 
                 convertedSpawnerIDs.Add(AddEntryToLegacySpawner(entry));
@@ -877,11 +877,27 @@ namespace OtherLoader
                         //Now this section below is for legacy support
                         if(spawnerID != null)
                         {
-                            //If this is meatfortress category, do that
-                            if (i == 1 && spawnerID.Category == ItemSpawnerID.EItemCategory.MeatFortress)
+                            //For some legacy categories, we must perform this disgustingly bad search for their icons
+                            if (i == 1 && 
+                                (spawnerID.Category == ItemSpawnerID.EItemCategory.MeatFortress ||
+                                spawnerID.Category == ItemSpawnerID.EItemCategory.Magazine ||
+                                spawnerID.Category == ItemSpawnerID.EItemCategory.Cartridge ||
+                                spawnerID.Category == ItemSpawnerID.EItemCategory.Clip ||
+                                spawnerID.Category == ItemSpawnerID.EItemCategory.Speedloader))
                             {
-                                node.entry.EntryIcon = IM.CDefInfo[ItemSpawnerID.EItemCategory.MeatFortress].Sprite;
-                                node.entry.DisplayName = IM.CDefInfo[ItemSpawnerID.EItemCategory.MeatFortress].DisplayName;
+
+                                foreach (ItemSpawnerCategoryDefinitionsV2.SpawnerPage page in IM.CatDef.Pages)
+                                {
+                                    foreach (ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup tagGroup in page.TagGroups)
+                                    {
+                                        if (tagGroup.TagT == TagType.Category && tagGroup.Tag == spawnerID.Category.ToString())
+                                        {
+                                            node.entry.EntryIcon = tagGroup.Icon;
+                                            node.entry.DisplayName = tagGroup.DisplayName;
+                                        }
+                                    }
+                                }
+
                             }
 
                             //If this is a modded main category, do that

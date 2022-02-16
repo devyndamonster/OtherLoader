@@ -38,7 +38,6 @@ namespace OtherLoader
         }
 
 
-
         private static IEnumerator HandleLoadingText(ItemSpawnerV2 instance)
         {
             //First create the loading text

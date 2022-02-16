@@ -155,8 +155,12 @@ namespace OtherLoader
         {
             string path = Page.ToString();
 
-            //If the category is meatfortress, include it
-            if (ID.Category == ItemSpawnerID.EItemCategory.MeatFortress)
+            //Some categories should still be included in the path
+            if (ID.Category == ItemSpawnerID.EItemCategory.MeatFortress || 
+                ID.Category == ItemSpawnerID.EItemCategory.Magazine || 
+                ID.Category == ItemSpawnerID.EItemCategory.Cartridge || 
+                ID.Category == ItemSpawnerID.EItemCategory.Clip || 
+                ID.Category == ItemSpawnerID.EItemCategory.Speedloader)
             {
                 path += "/" + ID.Category.ToString();
             }

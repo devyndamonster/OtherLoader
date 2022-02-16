@@ -1,4 +1,5 @@
-﻿using System;
+﻿using FistVR;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -38,6 +39,33 @@ namespace OtherLoader
             }
 
             return false;
+        }
+
+        public bool ShouldAutoUnlockItem(ItemSpawnerID spawnerID)
+        {
+            return spawnerID.MainObject == null || ShouldAutoUnlockItem(spawnerID.MainObject, spawnerID.IsReward);
+        }
+
+        public bool ShouldAutoUnlockItem(ItemSpawnerEntry spawnerEntry)
+        {
+            FVRObject item;
+            IM.OD.TryGetValue(spawnerEntry.MainObjectID, out item);
+
+            return item == null || ShouldAutoUnlockItem(item, spawnerEntry.IsReward);
+        }
+
+        public bool ShouldAutoUnlockItem(FVRObject item, bool isReward)
+        {
+            if(isReward || 
+                (!AutoUnlockNonRewards && 
+                (item.Category == FVRObject.ObjectCategory.Firearm || 
+                item.Category == FVRObject.ObjectCategory.Thrown || 
+                item.Category == FVRObject.ObjectCategory.MeleeWeapon)))
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 
