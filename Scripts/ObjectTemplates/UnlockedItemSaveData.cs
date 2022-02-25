@@ -56,7 +56,7 @@ namespace OtherLoader
 
         public bool ShouldAutoUnlockItem(FVRObject item, bool isReward)
         {
-            if(isReward || 
+            if(!IsVanillaUnlocked(item.ItemID) || 
                 (!AutoUnlockNonRewards && 
                 (item.Category == FVRObject.ObjectCategory.Firearm || 
                 item.Category == FVRObject.ObjectCategory.Thrown || 
@@ -66,6 +66,14 @@ namespace OtherLoader
             }
 
             return true;
+        }
+
+        public bool IsVanillaUnlocked(string itemID)
+        {
+            ItemSpawnerID spawnerID;
+            IM.Instance.SpawnerIDDic.TryGetValue(itemID, out spawnerID);
+
+            return spawnerID == null || GM.Rewards.RewardUnlocks.IsRewardUnlocked(spawnerID);
         }
     }
 

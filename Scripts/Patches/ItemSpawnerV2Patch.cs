@@ -898,7 +898,6 @@ namespace OtherLoader
         }
 
 
-
         private static void CategoricalSetText(Text text, string value, TagType tagType)
         {
             if (tagType == TagType.Category && !Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), value))
@@ -915,6 +914,7 @@ namespace OtherLoader
 
             text.text = value;
         }
+
 
         [HarmonyPatch(typeof(IM), "GenerateItemDBs")]
         [HarmonyPostfix]
