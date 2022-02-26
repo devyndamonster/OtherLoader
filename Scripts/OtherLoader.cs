@@ -33,6 +33,7 @@ namespace OtherLoader
         public static Dictionary<string, EntryNode> SpawnerEntriesByPath = new Dictionary<string, EntryNode>();
         public static Dictionary<string, ItemSpawnerEntry> SpawnerEntriesByID = new Dictionary<string, ItemSpawnerEntry>();
         public static Dictionary<string, MediaPath> TutorialBlockVideos = new Dictionary<string, MediaPath>();
+        public static Dictionary<string, ItemSpawnerID> SpawnerIDsByMainObject = new Dictionary<string, ItemSpawnerID>();
         public static UnlockedItemSaveData UnlockSaveData;
         public static Sprite LockIcon;
 
@@ -367,13 +368,18 @@ namespace OtherLoader
 
 
         [HarmonyPatch(typeof(IM), "RegisterItemIntoMetaTagSystem")]
-        [HarmonyPostfix]
+        [HarmonyPostfix] 
         private static void MetaTagPatch(ItemSpawnerID ID)
         {
             //If this item is not a reward, unlock it by default
-            if(UnlockSaveData.ShouldAutoUnlockItem(ID))
+            if (ID.MainObject != null)
             {
-                UnlockSaveData.UnlockItem(ID.MainObject.ItemID);
+                SpawnerIDsByMainObject[ID.MainObject.ItemID] = ID;
+
+                if (UnlockSaveData.ShouldAutoUnlockItem(ID))
+                {
+                    UnlockSaveData.UnlockItem(ID.MainObject.ItemID);
+                }
             }
 
             //If this IDs items didn't get added, add it to the firearm page

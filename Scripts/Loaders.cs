@@ -1005,6 +1005,7 @@ namespace OtherLoader
                 IM.CD[itemSpawnerID.Category].Add(itemSpawnerID);
                 IM.SCD[itemSpawnerID.SubCategory].Add(itemSpawnerID);
                 IM.Instance.SpawnerIDDic[itemSpawnerID.MainObject.ItemID] = itemSpawnerID;
+                OtherLoader.SpawnerIDsByMainObject[itemSpawnerID.MainObject.ItemID] = itemSpawnerID;
 
                 return itemSpawnerID;
             }

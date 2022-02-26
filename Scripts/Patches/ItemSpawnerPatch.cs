@@ -37,6 +37,25 @@ namespace OtherLoader
             return true;
         }
 
+        [HarmonyPatch(typeof(IM), "GetAvailableCountInSubCategory")]
+        [HarmonyPrefix]
+        private static bool SubCatCountPatch(ItemSpawnerUI __instance, ItemSpawnerID.ESubCategory subcat, ref int __result)
+        {
+            __result = IM.SCD[subcat].Count;
+
+            return false;
+        }
+
+        [HarmonyPatch(typeof(IM), "GetAvailableInSubCategory")]
+        [HarmonyPrefix]
+        private static bool SubCatPatch(ItemSpawnerUI __instance, ItemSpawnerID.ESubCategory subcat, ref List<ItemSpawnerID> __result)
+        {
+            __result = new List<ItemSpawnerID>();
+            __result.AddRange(IM.SCD[subcat]);
+
+            return false;
+        }
+
 
 
         [HarmonyPatch(typeof(ItemSpawnerUI), "SetMode_Home")]

@@ -406,10 +406,7 @@ namespace OtherLoader
                     }
 
                     ItemSpawnerEntry secondary = OtherLoader.SpawnerEntriesByID[entry.SecondaryObjectIDs[m]];
-                    if(!secondary.IsReward || GM.Rewards.RewardUnlocks.Rewards.Contains(secondary.MainObjectID))
-                    {
-                        secondaryEntries.Add(secondary);
-                    }
+                    secondaryEntries.Add(secondary);
                 }
 
 
@@ -865,7 +862,31 @@ namespace OtherLoader
             //Now add our new call for setting the text
             c.Emit(OpCodes.Call, ((Action<Text, string, TagType>)CategoricalSetText).Method);
         }
-        
+
+
+
+        [HarmonyPatch(typeof(IM), "GenerateItemDBs")]
+        [HarmonyILManipulator]
+        private static void DisableRewardCheckPatch(ILContext ctx, MethodBase orig)
+        {
+            ILCursor c = new ILCursor(ctx);
+
+            c.GotoNext(
+                i => i.MatchLdfld(AccessTools.Field(typeof(ItemSpawnerID), "MainObject"))
+            );
+
+            c.RemoveRange(17);
+
+            c.Emit(OpCodes.Call, ((Action<ItemSpawnerID>)RegisterItemSpawnerID).Method);
+
+            c.GotoNext(
+                i => i.MatchLdstr("SosigEnemyTemplates")
+            );
+
+            c.Emit(OpCodes.Call, ((Action)PopulateSpawnerEntries).Method);
+
+        }
+
 
 
         private static IEnumerator SpawnItems(ItemSpawnerV2 instance, ItemSpawnerEntry entry)
@@ -915,9 +936,15 @@ namespace OtherLoader
             text.text = value;
         }
 
+        private static void RegisterItemSpawnerID(ItemSpawnerID spawnerID)
+        {
+            if(spawnerID.MainObject != null)
+            {
+                IM.RegisterItemIntoMetaTagSystem(spawnerID);
+            }
+        }
 
-        [HarmonyPatch(typeof(IM), "GenerateItemDBs")]
-        [HarmonyPostfix]
+
         private static void PopulateSpawnerEntries()
         {
             foreach(KeyValuePair<ItemSpawnerV2.PageMode,List<string>> PageLists in IM.Instance.PageItemLists)

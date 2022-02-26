@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace OtherLoader
 {
@@ -13,7 +14,12 @@ namespace OtherLoader
         public ItemUnlockMode UnlockMode;
         public List<string> UnlockedItemIDs = new List<string>();
 
-        public UnlockedItemSaveData() { }
+        private RewardSystem rewardSystem = new RewardSystem();
+
+        public UnlockedItemSaveData() 
+        {
+            rewardSystem.InitializeFromSaveFile();
+        }
 
         public UnlockedItemSaveData(ItemUnlockMode unlockMode)
         {
@@ -23,6 +29,8 @@ namespace OtherLoader
             {
                 AutoUnlockNonRewards = false;
             }
+
+            rewardSystem.InitializeFromSaveFile();
         }
 
         public bool IsItemUnlocked(string itemID)
@@ -43,7 +51,8 @@ namespace OtherLoader
 
         public bool ShouldAutoUnlockItem(ItemSpawnerID spawnerID)
         {
-            return spawnerID.MainObject == null || ShouldAutoUnlockItem(spawnerID.MainObject, spawnerID.IsReward);
+            return spawnerID.MainObject == null || 
+                ShouldAutoUnlockItem(spawnerID.MainObject, spawnerID.IsReward);
         }
 
         public bool ShouldAutoUnlockItem(ItemSpawnerEntry spawnerEntry)
@@ -56,7 +65,7 @@ namespace OtherLoader
 
         public bool ShouldAutoUnlockItem(FVRObject item, bool isReward)
         {
-            if(!IsVanillaUnlocked(item.ItemID) || 
+            if((isReward && !IsVanillaUnlocked(item)) || 
                 (!AutoUnlockNonRewards && 
                 (item.Category == FVRObject.ObjectCategory.Firearm || 
                 item.Category == FVRObject.ObjectCategory.Thrown || 
@@ -68,12 +77,13 @@ namespace OtherLoader
             return true;
         }
 
-        public bool IsVanillaUnlocked(string itemID)
+        public bool IsVanillaUnlocked(FVRObject item)
         {
             ItemSpawnerID spawnerID;
-            IM.Instance.SpawnerIDDic.TryGetValue(itemID, out spawnerID);
+            OtherLoader.SpawnerIDsByMainObject.TryGetValue(item.ItemID, out spawnerID);
 
-            return spawnerID == null || GM.Rewards.RewardUnlocks.IsRewardUnlocked(spawnerID);
+            //We must use our own version of reward system here because the GM does not always perform Awake before the IM
+            return spawnerID == null || rewardSystem.RewardUnlocks.IsRewardUnlocked(spawnerID.ItemID);
         }
     }
 
