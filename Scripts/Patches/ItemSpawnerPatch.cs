@@ -41,7 +41,7 @@ namespace OtherLoader
         [HarmonyPrefix]
         private static bool SubCatCountPatch(ItemSpawnerUI __instance, ItemSpawnerID.ESubCategory subcat, ref int __result)
         {
-            __result = IM.SCD[subcat].Count;
+            __result = IM.SCD[subcat].Where(o => o.IsDisplayedInMainEntry).Count();
 
             return false;
         }
@@ -51,7 +51,7 @@ namespace OtherLoader
         private static bool SubCatPatch(ItemSpawnerUI __instance, ItemSpawnerID.ESubCategory subcat, ref List<ItemSpawnerID> __result)
         {
             __result = new List<ItemSpawnerID>();
-            __result.AddRange(IM.SCD[subcat]);
+            __result.AddRange(IM.SCD[subcat].Where(o => o.IsDisplayedInMainEntry));
 
             return false;
         }
