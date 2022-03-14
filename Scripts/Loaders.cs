@@ -14,6 +14,7 @@ using Stratum.Extensions;
 using Stratum;
 using System.Reflection;
 using RenderHeads.Media.AVProVideo;
+using OtherLoader.Loaders;
 
 namespace OtherLoader
 {
@@ -334,15 +335,11 @@ namespace OtherLoader
 
         private IEnumerator ApplyLoadedAssetBundleAsync(AnvilCallback<AssetBundle> bundle, string bundleID)
         {
-            //Load the mechanical accuracy entries
-            AssetBundleRequest accuracyCharts = bundle.Result.LoadAllAssetsAsync<FVRFireArmMechanicalAccuracyChart>();
-            yield return accuracyCharts;
-            LoadMechanicalAccuracyEntries(accuracyCharts.allAssets);
+            MechanicalAccuracyLoader mechanicalAccuracyLoader = new MechanicalAccuracyLoader();
+            yield return mechanicalAccuracyLoader.LoadAssetsFromBundle<FVRFireArmMechanicalAccuracyChart>(bundle.Result, bundleID);
 
-            //Load all the FVRObjects
-            AssetBundleRequest fvrObjects = bundle.Result.LoadAllAssetsAsync<FVRObject>();
-            yield return fvrObjects;
-            LoadFVRObjects(bundleID, fvrObjects.allAssets);
+            FVRObjectLoader fvrObjectLoader = new FVRObjectLoader();
+            yield return fvrObjectLoader.LoadAssetsFromBundle<FVRObject>(bundle.Result, bundleID);
 
             //Now all the FVRObjects are loaded, we can load the bullet data
             AssetBundleRequest bulletData = bundle.Result.LoadAllAssetsAsync<FVRFireArmRoundDisplayData>();
@@ -386,39 +383,13 @@ namespace OtherLoader
             yield return AudioImpactSet;
             LoadAudioImpactSetEntries(AudioImpactSet.allAssets);
 
-            AssetBundleRequest TutorialBlocks = bundle.Result.LoadAllAssetsAsync<TutorialBlock>();
-            yield return TutorialBlocks;
-            LoadTutorialBlocks(TutorialBlocks.allAssets, bundleID);
+            TutorialBlockLoader tutorialBlockLoader = new TutorialBlockLoader();
+            yield return tutorialBlockLoader.LoadAssetsFromBundle<TutorialBlock>(bundle.Result, bundleID);
 
             AssetBundleRequest Quickbelts = bundle.Result.LoadAllAssetsAsync<GameObject>();
             yield return Quickbelts;
             LoadQuickbeltEntries(Quickbelts.allAssets);
-
         }
-
-
-        private void LoadTutorialBlocks(UnityEngine.Object[] allAssets, string bundleID)
-        {
-            foreach(TutorialBlock tutorialBlock in allAssets)
-            {
-                if (string.IsNullOrEmpty(tutorialBlock.MediaRef.MediaPath.Path))
-                {
-                    string videoPath = Path.Combine(LoaderUtils.GetModPathFromUniqueID(bundleID), tutorialBlock.ID + ".mp4");
-                    tutorialBlock.MediaRef.MediaPath.Path = videoPath;
-
-                    if (!File.Exists(videoPath))
-                    {
-                        OtherLogger.LogError("Tutorial block had no assigned path, and an MP4 file for it could not be found. Attempted path: " + videoPath);
-                        continue;
-                    }
-                }
-
-                IM.TutorialBlockDic[tutorialBlock.ID] = tutorialBlock;
-
-                OtherLogger.Log("Loaded tutorial block with media path: " + tutorialBlock.MediaRef.MediaPath.Path, OtherLogger.LogType.Loading);
-            }
-        }
-
 
 
         private void LoadSpawnerEntries(UnityEngine.Object[] allAssets)
@@ -517,27 +488,6 @@ namespace OtherLoader
                 }
             }
         }
-
-
-        private void LoadMechanicalAccuracyEntries(UnityEngine.Object[] allAssets)
-        {
-            foreach(FVRFireArmMechanicalAccuracyChart chart in allAssets)
-            {
-                foreach(FVRFireArmMechanicalAccuracyChart.MechanicalAccuracyEntry entry in chart.Entries)
-                {
-                    OtherLogger.Log("Loading new mechanical accuracy entry: " + entry.Class, OtherLogger.LogType.Loading);
-
-                    if (!AM.SMechanicalAccuracyDic.ContainsKey(entry.Class)){
-                        AM.SMechanicalAccuracyDic.Add(entry.Class, entry);
-                    }
-                    else
-                    {
-                        OtherLogger.LogError("Duplicate mechanical accuracy class found, will not use one of them! Make sure you're using unique mechanical accuracy classes!");
-                    }
-                }
-            }
-        }
-
 
         private void LoadSpawnerCategories(UnityEngine.Object[] allAssets)
         {
@@ -707,109 +657,11 @@ namespace OtherLoader
 
 
 
-        private void LoadFVRObjects(string bundleID, UnityEngine.Object[] allAssets)
-        {
-            foreach (FVRObject item in allAssets)
-            {
-                if (item == null) continue;
-
-                OtherLogger.Log("Loading FVRObject: " + item.ItemID, OtherLogger.LogType.Loading);
-
-                if (IM.OD.ContainsKey(item.ItemID))
-                {
-                    OtherLogger.LogError("The ItemID of FVRObject is already used! Item will not be loaded! ItemID: " + item.ItemID);
-                    continue;
-                }
-                item.m_anvilPrefab.Bundle = bundleID;
-
-                if(item.CreditCost == 0) item.CalcCreditCost(); //calculate credit cost if not set
-                
-                IM.OD.Add(item.ItemID, item);
-                ManagerSingleton<IM>.Instance.odicTagCategory.AddOrCreate(item.Category).Add(item);
-                ManagerSingleton<IM>.Instance.odicTagFirearmEra.AddOrCreate(item.TagEra).Add(item);
-                ManagerSingleton<IM>.Instance.odicTagFirearmSize.AddOrCreate(item.TagFirearmSize).Add(item);
-                ManagerSingleton<IM>.Instance.odicTagFirearmAction.AddOrCreate(item.TagFirearmAction).Add(item);
-                ManagerSingleton<IM>.Instance.odicTagAttachmentMount.AddOrCreate(item.TagAttachmentMount).Add(item);
-                ManagerSingleton<IM>.Instance.odicTagAttachmentFeature.AddOrCreate(item.TagAttachmentFeature).Add(item);
-                item.IsModContent = true;
-
-                foreach (FVRObject.OTagFirearmFiringMode mode in item.TagFirearmFiringModes)
-                {
-                    ManagerSingleton<IM>.Instance.odicTagFirearmFiringMode.AddOrCreate(mode).Add(item);
-                }
-                foreach (FVRObject.OTagFirearmFeedOption feed in item.TagFirearmFeedOption)
-                {
-                    ManagerSingleton<IM>.Instance.odicTagFirearmFeedOption.AddOrCreate(feed).Add(item);
-                }
-                foreach (FVRObject.OTagFirearmMount mount in item.TagFirearmMounts)
-                {
-                    ManagerSingleton<IM>.Instance.odicTagFirearmMount.AddOrCreate(mount).Add(item);
-                }
-            }
-        }
-
-
-
         private void LoadBulletData(UnityEngine.Object[] allAssets)
         {
             foreach (FVRFireArmRoundDisplayData data in allAssets)
             {
-                if (data == null) continue;
-
-                OtherLogger.Log("Loading ammo type: " + data.Type, OtherLogger.LogType.Loading);
-
-                if (!AM.STypeDic.ContainsKey(data.Type))
-                {
-                    OtherLogger.Log("This is a new ammo type! Adding it to dictionary", OtherLogger.LogType.Loading);
-                    AM.STypeDic.Add(data.Type, new Dictionary<FireArmRoundClass, FVRFireArmRoundDisplayData.DisplayDataClass>());
-                }
-                else
-                {
-                    OtherLogger.Log("This is an existing ammo type, will add subclasses to this type", OtherLogger.LogType.Loading);
-                }
-
-                if (!AM.STypeList.Contains(data.Type))
-                {
-                    AM.STypeList.Add(data.Type);
-                }
-
-                if (!AM.SRoundDisplayDataDic.ContainsKey(data.Type))
-                {
-                    AM.SRoundDisplayDataDic.Add(data.Type, data);
-                }
-
-                //If this Display Data already exists, then we should add our classes to the existing display data class list
-                else
-                {
-                    List<FVRFireArmRoundDisplayData.DisplayDataClass> classes = new List<FVRFireArmRoundDisplayData.DisplayDataClass>(AM.SRoundDisplayDataDic[data.Type].Classes);
-                    classes.AddRange(data.Classes);
-                    AM.SRoundDisplayDataDic[data.Type].Classes = classes.ToArray();
-                }
-
-                if (!AM.STypeClassLists.ContainsKey(data.Type))
-                {
-                    AM.STypeClassLists.Add(data.Type, new List<FireArmRoundClass>());
-                }
-
-                foreach (FVRFireArmRoundDisplayData.DisplayDataClass roundClass in data.Classes)
-                {
-                    OtherLogger.Log("Loading ammo class: " + roundClass.Class, OtherLogger.LogType.Loading);
-                    if (!AM.STypeDic[data.Type].ContainsKey(roundClass.Class))
-                    {
-                        OtherLogger.Log("This is a new ammo class! Adding it to dictionary", OtherLogger.LogType.Loading);
-                        AM.STypeDic[data.Type].Add(roundClass.Class, roundClass);
-                    }
-                    else
-                    {
-                        OtherLogger.LogError("Ammo class already exists for bullet type! Bullet will not be loaded! Type: " + data.Type + ", Class: " + roundClass.Class);
-                        return;
-                    }
-
-                    if (!AM.STypeClassLists[data.Type].Contains(roundClass.Class))
-                    {
-                        AM.STypeClassLists[data.Type].Add(roundClass.Class);
-                    }
-                }
+                
             }
         }
 
