@@ -11,14 +11,16 @@ namespace OtherLoader.Loaders
     public abstract class BaseAssetLoader
     {
 
-        public IEnumerator LoadAssetsFromBundle<T>(AssetBundle assetBundle, string bundleId)
+        public abstract IEnumerator LoadAssetsFromBundle(AssetBundle assetBundle, string bundleId);
+
+        protected IEnumerator LoadAssetsFromBundle<T>(AssetBundle assetBundle, string bundleId)
         {
             AssetBundleRequest bundleRequest = assetBundle.LoadAllAssetsAsync<T>();
             yield return bundleRequest;
             LoadAssets(bundleRequest.allAssets, bundleId);
         }
 
-        public void LoadAssets(UnityEngine.Object[] assets, string bundleId)
+        protected void LoadAssets(UnityEngine.Object[] assets, string bundleId)
         {
             foreach (UnityEngine.Object asset in assets)
             {
@@ -26,7 +28,7 @@ namespace OtherLoader.Loaders
             }
         }
 
-        public void TryLoadAsset(UnityEngine.Object asset, string bundleId)
+        protected void TryLoadAsset(UnityEngine.Object asset, string bundleId)
         {
             try
             {
@@ -39,6 +41,8 @@ namespace OtherLoader.Loaders
         }
 
         protected abstract void LoadAsset(UnityEngine.Object asset, string bundleId);
+
+        
 
 
     }

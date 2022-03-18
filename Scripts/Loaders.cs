@@ -336,20 +336,17 @@ namespace OtherLoader
         private IEnumerator ApplyLoadedAssetBundleAsync(AnvilCallback<AssetBundle> bundle, string bundleID)
         {
             MechanicalAccuracyLoader mechanicalAccuracyLoader = new MechanicalAccuracyLoader();
-            yield return mechanicalAccuracyLoader.LoadAssetsFromBundle<FVRFireArmMechanicalAccuracyChart>(bundle.Result, bundleID);
+            yield return mechanicalAccuracyLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
             FVRObjectLoader fvrObjectLoader = new FVRObjectLoader();
-            yield return fvrObjectLoader.LoadAssetsFromBundle<FVRObject>(bundle.Result, bundleID);
+            yield return fvrObjectLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
-            //Now all the FVRObjects are loaded, we can load the bullet data
-            AssetBundleRequest bulletData = bundle.Result.LoadAllAssetsAsync<FVRFireArmRoundDisplayData>();
-            yield return bulletData;
-            LoadBulletData(bulletData.allAssets);
+            RoundDisplayDataLoader roundDisplayDataLoader = new RoundDisplayDataLoader();
+            yield return roundDisplayDataLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
             //Before we load the spawnerIDs, we must add any new spawner category definitions
-            AssetBundleRequest spawnerCats = bundle.Result.LoadAllAssetsAsync<ItemSpawnerCategoryDefinitions>();
-            yield return spawnerCats;
-            LoadSpawnerCategories(spawnerCats.allAssets);
+            CategoryDefintionLoader categoryDefinitionLoader = new CategoryDefintionLoader();
+            yield return categoryDefinitionLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
             //Load the legacy spawner IDs
             AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
@@ -384,7 +381,7 @@ namespace OtherLoader
             LoadAudioImpactSetEntries(AudioImpactSet.allAssets);
 
             TutorialBlockLoader tutorialBlockLoader = new TutorialBlockLoader();
-            yield return tutorialBlockLoader.LoadAssetsFromBundle<TutorialBlock>(bundle.Result, bundleID);
+            yield return tutorialBlockLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
             AssetBundleRequest Quickbelts = bundle.Result.LoadAllAssetsAsync<GameObject>();
             yield return Quickbelts;
@@ -489,181 +486,19 @@ namespace OtherLoader
             }
         }
 
-        private void LoadSpawnerCategories(UnityEngine.Object[] allAssets)
-        {
-            foreach (ItemSpawnerCategoryDefinitions newLoadedCats in allAssets)
-            {
-                foreach (ItemSpawnerCategoryDefinitions.Category newCategory in newLoadedCats.Categories)
-                {
-                    OtherLogger.Log("Loading New ItemSpawner Category! Name (" + newCategory.DisplayName + "), Value (" + newCategory.Cat + ")", OtherLogger.LogType.Loading);
-
-
-                    //If the loaded categories already contains this new category, we want to add subcategories
-                    if (IM.CDefs.Categories.Any(o => o.Cat == newCategory.Cat))
-                    {
-                        OtherLogger.Log("Category already exists! Adding subcategories", OtherLogger.LogType.Loading);
-
-                        foreach (ItemSpawnerCategoryDefinitions.Category currentCat in IM.CDefs.Categories)
-                        {
-                            if(currentCat.Cat == newCategory.Cat)
-                            {
-                                foreach(ItemSpawnerCategoryDefinitions.SubCategory newSubCat in newCategory.Subcats)
-                                {
-                                    //Only add this new subcategory if it is unique
-                                    if(!IM.CDefSubInfo.ContainsKey(newSubCat.Subcat))
-                                    {
-                                        OtherLogger.Log("Adding subcategory: " + newSubCat.DisplayName, OtherLogger.LogType.Loading);
-
-                                        List<ItemSpawnerCategoryDefinitions.SubCategory> currSubCatList = currentCat.Subcats.ToList();
-                                        currSubCatList.Add(newSubCat);
-                                        currentCat.Subcats = currSubCatList.ToArray();
-
-                                        IM.CDefSubs[currentCat.Cat].Add(newSubCat);
-
-                                        if (!IM.CDefSubInfo.ContainsKey(newSubCat.Subcat)) IM.CDefSubInfo.Add(newSubCat.Subcat, newSubCat);
-                                        if (!IM.SCD.ContainsKey(newSubCat.Subcat)) IM.SCD.Add(newSubCat.Subcat, new List<ItemSpawnerID>());
-                                    }
-
-                                    else
-                                    {
-                                        OtherLogger.LogWarning("SubCategory type is already being used, and SubCategory will not be added! Make sure your subcategory is using a unique type! SubCategory Type: " + newSubCat.Subcat);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    //If new category, we can just add the whole thing
-                    else
-                    {
-                        OtherLogger.Log("This is a new primary category", OtherLogger.LogType.Loading);
-
-                        List<ItemSpawnerCategoryDefinitions.Category> currentCatsList = IM.CDefs.Categories.ToList();
-                        currentCatsList.Add(newCategory);
-                        IM.CDefs.Categories = currentCatsList.ToArray();
-
-                        OtherLogger.Log("Num CDefs: " + IM.CDefs.Categories.Length, OtherLogger.LogType.Loading);
-
-                        if (!IM.CDefSubs.ContainsKey(newCategory.Cat)) IM.CDefSubs.Add(newCategory.Cat, new List<ItemSpawnerCategoryDefinitions.SubCategory>());
-                        if (!IM.CDefInfo.ContainsKey(newCategory.Cat)) IM.CDefInfo.Add(newCategory.Cat, newCategory);
-                        if (!IM.CD.ContainsKey(newCategory.Cat)) IM.CD.Add(newCategory.Cat, new List<ItemSpawnerID>());
-
-                        foreach(ItemSpawnerCategoryDefinitions.SubCategory newSubCat in newCategory.Subcats)
-                        {
-                            IM.CDefSubs[newCategory.Cat].Add(newSubCat);
-
-                            if (!IM.CDefSubInfo.ContainsKey(newSubCat.Subcat)) IM.CDefSubInfo.Add(newSubCat.Subcat, newSubCat);
-                            if (!IM.SCD.ContainsKey(newSubCat.Subcat)) IM.SCD.Add(newSubCat.Subcat, new List<ItemSpawnerID>());
-                        }
-                    }
-                }
-            }
-        }
 
 
         private void LoadSpawnerIDs(UnityEngine.Object[] allAssets)
         {
             foreach (ItemSpawnerID id in allAssets)
             {
-                OtherLogger.Log("Adding Itemspawner ID! Category: " + id.Category + ", SubCategory: " + id.SubCategory, OtherLogger.LogType.Loading);
-
-                //Try to set the main object of this ID as a secondary if the main is null (so that it gets tagged properly)
-                if (id.MainObject == null && id.Secondaries.Length > 0)
-                {
-                    id.MainObject = id.Secondaries.Select(o => o.MainObject).FirstOrDefault(o => o != null);
-                    if (id.MainObject == null)
-                    {
-                        OtherLogger.Log("Could not select a secondary object for ItemSpawnerID, it will not appear in spawner: Display Name: " + id.DisplayName, OtherLogger.LogType.Loading);
-                    }
-                    else
-                    {
-                        id.ItemID = id.MainObject.ItemID;
-                    }
-                }
-
-
-                if(id.MainObject != null)
-                {
-                    if (id.UnlockCost == 0) id.UnlockCost = id.MainObject.CreditCost;
-                    if (!id.IsReward && OtherLoader.UnlockSaveData.AutoUnlockNonRewards) OtherLoader.UnlockSaveData.UnlockItem(id.MainObject.ItemID);
-
-                    IM.RegisterItemIntoMetaTagSystem(id);
-
-                    if (!id.IsDisplayedInMainEntry) HideItemFromCategories(id);
-                }
-
-                
-                if (IM.CD.ContainsKey(id.Category) && IM.SCD.ContainsKey(id.SubCategory)) {
-                    IM.CD[id.Category].Add(id);
-                    IM.SCD[id.SubCategory].Add(id);
-
-                    if (!ManagerSingleton<IM>.Instance.SpawnerIDDic.ContainsKey(id.ItemID))
-                    {
-                        ManagerSingleton<IM>.Instance.SpawnerIDDic[id.ItemID] = id;
-
-                        //Now we will try to convert this SpawnerID into a spawner entry
-                        ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
-
-                        //If the category is defined, we can try to add it based on what page it was given
-                        if (Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), id.Category))
-                        {
-                            //TODO this should be done without having to loop through potentially all spawner entries, I bet this could become expensive
-                            bool added = false;
-                            foreach (KeyValuePair<ItemSpawnerV2.PageMode, List<string>> pageItems in IM.Instance.PageItemLists)
-                            {
-                                if (pageItems.Value.Contains(id.ItemID))
-                                {
-                                    OtherLogger.Log("Adding SpawnerID to spawner entry tree", OtherLogger.LogType.Loading);
-                                    SpawnerEntry.LegacyPopulateFromID(pageItems.Key, id, true);
-                                    PopulateEntryPaths(SpawnerEntry, id);
-                                    added = true;
-
-                                    break;
-                                }
-                            }
-
-                            if (added) continue;
-
-                            //If we make it to this point, we failed to add the entry to the tree structure, but should still populate the entries data
-                            OtherLogger.Log("ItemSpawnerID could not be converted for new spawner because of metadata issues! ItemID: " + id.ItemID, OtherLogger.LogType.Loading);
-                            SpawnerEntry.LegacyPopulateFromID(ItemSpawnerV2.PageMode.Firearms, id, true);
-                        }
-
-                        //Otherwise, all custom category items go under the firearms page
-                        else
-                        {
-                            OtherLogger.Log("Adding SpawnerID to spawner entry tree under custom category", OtherLogger.LogType.Loading);
-                            SpawnerEntry.LegacyPopulateFromID(ItemSpawnerV2.PageMode.Firearms, id, true);
-                            PopulateEntryPaths(SpawnerEntry, id);
-                        }
-                    }
-                }
-
-                else
-                {
-                    OtherLogger.LogError("ItemSpawnerID could not be added, because either the main category or subcategory were not loaded! Item will not appear in the itemspawner! Item Display Name: " + id.DisplayName);
-                }
-            }
-        }
-
-
-        private void HideItemFromCategories(ItemSpawnerID ID)
-        {
-            foreach(List<string> pageItems in IM.Instance.PageItemLists.Values)
-            {
-                pageItems.Remove(ID.MainObject.ItemID);
-            }
-        }
-
-
-
-        private void LoadBulletData(UnityEngine.Object[] allAssets)
-        {
-            foreach (FVRFireArmRoundDisplayData data in allAssets)
-            {
                 
             }
         }
+
+
+        
+
 
 
 
@@ -672,112 +507,7 @@ namespace OtherLoader
         /// </summary>
         /// <param name="Page"></param>
         /// <param name="ID"></param>
-        public static void PopulateEntryPaths(ItemSpawnerEntry entry, ItemSpawnerID spawnerID = null)
-        {
-            string[] pathSegments = entry.EntryPath.Split('/');
-            string currentPath = "";
-
-            for(int i = 0; i < pathSegments.Length; i++)
-            {
-                //If we are at the full path length for this entry, we can just assign the entry
-                if(i == pathSegments.Length - 1)
-                {
-                    EntryNode previousNode = OtherLoader.SpawnerEntriesByPath[currentPath];
-                    currentPath += (i == 0 ? "" : "/") + pathSegments[i];
-
-                    //If there is already an node at this path, we should just update it. Otherwise, add it as a new node
-                    EntryNode node;
-                    if (OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
-                    {
-                        node = OtherLoader.SpawnerEntriesByPath[currentPath];
-                        node.entry = entry;
-                    }
-                    else
-                    {
-                        node = new EntryNode(entry);
-                        OtherLoader.SpawnerEntriesByPath[currentPath] = node;
-                        previousNode.childNodes.Add(node);
-                    }
-                }
-
-
-                //If we are at the page level, just check to see if we need to add a page node
-                else if(i == 0)
-                {
-                    currentPath += (i == 0 ? "" : "/") + pathSegments[i];
-
-                    if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
-                    {
-                        EntryNode pageNode = new EntryNode();
-                        pageNode.entry.EntryPath = currentPath;
-                        OtherLoader.SpawnerEntriesByPath[currentPath] = pageNode;
-                    }
-                }
-
-                //If these are just custom categories of any depth, just add the ones that aren't already loaded
-                else
-                {
-                    EntryNode previousNode = OtherLoader.SpawnerEntriesByPath[currentPath];
-                    currentPath += (i == 0 ? "" : "/") + pathSegments[i];
-
-                    if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
-                    {
-                        EntryNode node = new EntryNode();
-                        node.entry.EntryPath = currentPath;
-                        node.entry.IsDisplayedInMainEntry = true;
-
-                        //Now this section below is for legacy support
-                        if(spawnerID != null)
-                        {
-                            //For some legacy categories, we must perform this disgustingly bad search for their icons
-                            if (i == 1 && 
-                                (spawnerID.Category == ItemSpawnerID.EItemCategory.MeatFortress ||
-                                spawnerID.Category == ItemSpawnerID.EItemCategory.Magazine ||
-                                spawnerID.Category == ItemSpawnerID.EItemCategory.Cartridge ||
-                                spawnerID.Category == ItemSpawnerID.EItemCategory.Clip ||
-                                spawnerID.Category == ItemSpawnerID.EItemCategory.Speedloader))
-                            {
-
-                                foreach (ItemSpawnerCategoryDefinitionsV2.SpawnerPage page in IM.CatDef.Pages)
-                                {
-                                    foreach (ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup tagGroup in page.TagGroups)
-                                    {
-                                        if (tagGroup.TagT == TagType.Category && tagGroup.Tag == spawnerID.Category.ToString())
-                                        {
-                                            node.entry.EntryIcon = tagGroup.Icon;
-                                            node.entry.DisplayName = tagGroup.DisplayName;
-                                        }
-                                    }
-                                }
-
-                            }
-
-                            //If this is a modded main category, do that
-                            else if (i == 1 && !Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerID.Category))
-                            {
-                                if (IM.CDefInfo.ContainsKey(spawnerID.Category))
-                                {
-                                    node.entry.EntryIcon = IM.CDefInfo[spawnerID.Category].Sprite;
-                                    node.entry.DisplayName = IM.CDefInfo[spawnerID.Category].DisplayName;
-                                }
-                            }
-
-                            //If this is a subcategory (modded or not), do that
-                            else if (IM.CDefSubInfo.ContainsKey(spawnerID.SubCategory))
-                            {
-                                node.entry.EntryIcon = IM.CDefSubInfo[spawnerID.SubCategory].Sprite;
-                                node.entry.DisplayName = IM.CDefSubInfo[spawnerID.SubCategory].DisplayName;
-                            }
-
-                            node.entry.IsModded = IM.OD[spawnerID.MainObject.ItemID].IsModContent;
-                        }
-                        
-                        previousNode.childNodes.Add(node);
-                        OtherLoader.SpawnerEntriesByPath[currentPath] = node;
-                    }
-                }
-            }
-        }
+        
 
 
 

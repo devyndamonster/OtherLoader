@@ -1,11 +1,18 @@
 ﻿using FistVR;
 using System;
+using System.Collections;
 using System.IO;
+using UnityEngine;
 
 namespace OtherLoader.Loaders
 {
     public class MechanicalAccuracyLoader : BaseAssetLoader
     {
+        public override IEnumerator LoadAssetsFromBundle(AssetBundle assetBundle, string bundleId)
+        {
+            return LoadAssetsFromBundle<FVRFireArmMechanicalAccuracyChart>(assetBundle, bundleId);
+        }
+
         protected override void LoadAsset(UnityEngine.Object asset, string bundleId)
         {
             FVRFireArmMechanicalAccuracyChart chart = asset as FVRFireArmMechanicalAccuracyChart;
