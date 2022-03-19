@@ -101,9 +101,15 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Scripts\Loaders\AudioImpactSetLoader.cs" />
     <Compile Include="Scripts\Loaders\CategoryDefinitionLoader.cs" />
+    <Compile Include="Scripts\Loaders\HandlingGrabSetLoader.cs" />
+    <Compile Include="Scripts\Loaders\HandlingReleaseSetLoader.cs" />
+    <Compile Include="Scripts\Loaders\HandlingSlotSetLoader.cs" />
+    <Compile Include="Scripts\Loaders\BulletImpactSetLoader.cs" />
     <Compile Include="Scripts\Loaders\ItemSpawnerIdLoader.cs" />
     <Compile Include="Scripts\Loaders\LoaderUtils\SpawnerEntryPathBuilder.cs" />
+    <Compile Include="Scripts\Loaders\QuickbeltLoader.cs" />
     <Compile Include="Scripts\Loaders\RoundDisplayDataLoader.cs" />
     <Compile Include="Scripts\Loaders\FVRObjectLoader.cs" />
     <Compile Include="Scripts\Loaders\MechanicalAccuracyLoader.cs" />

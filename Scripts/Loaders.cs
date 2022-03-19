@@ -327,12 +327,6 @@ namespace OtherLoader
         }
 
 
-
-        
-
-
-
-
         private IEnumerator ApplyLoadedAssetBundleAsync(AnvilCallback<AssetBundle> bundle, string bundleID)
         {
             MechanicalAccuracyLoader mechanicalAccuracyLoader = new MechanicalAccuracyLoader();
@@ -356,34 +350,26 @@ namespace OtherLoader
             yield return spawnerEntries;
             LoadSpawnerEntries(spawnerEntries.allAssets);
 
-            //handle handling grab/release/slot sets
-            AssetBundleRequest HandlingGrabSet = bundle.Result.LoadAllAssetsAsync<HandlingGrabSet>();
-            yield return HandlingGrabSet;
-            LoadHandlingGrabSetEntries(HandlingGrabSet.allAssets);
+            HandlingGrabSetLoader handlingGrabSetLoader = new HandlingGrabSetLoader();
+            yield return handlingGrabSetLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
-            AssetBundleRequest HandlingReleaseSet = bundle.Result.LoadAllAssetsAsync<HandlingReleaseSet>();
-            yield return HandlingReleaseSet;
-            LoadHandlingReleaseSetEntries(HandlingReleaseSet.allAssets);
+            HandlingReleaseSetLoader handlingReleaseSetLoader = new HandlingReleaseSetLoader();
+            yield return handlingReleaseSetLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
-            AssetBundleRequest HandlingSlotSet = bundle.Result.LoadAllAssetsAsync<HandlingReleaseIntoSlotSet>();
-            yield return HandlingSlotSet;
-            LoadHandlingSlotSetEntries(HandlingSlotSet.allAssets);
+            HandlingSlotSetLoader handlingSlotSetLoader = new HandlingSlotSetLoader();
+            yield return handlingSlotSetLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
-            //audio bullet impact sets; handled similarly to the ones above
-            AssetBundleRequest BulletImpactSet = bundle.Result.LoadAllAssetsAsync<AudioBulletImpactSet>();
-            yield return BulletImpactSet;
-            LoadImpactSetEntries(BulletImpactSet.allAssets);
+            BulletImpactSetLoader bulletImpactSetLoader = new BulletImpactSetLoader();
+            yield return bulletImpactSetLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
-            AssetBundleRequest AudioImpactSet = bundle.Result.LoadAllAssetsAsync<AudioImpactSet>();
-            yield return AudioImpactSet;
-            LoadAudioImpactSetEntries(AudioImpactSet.allAssets);
+            AudioImpactSetLoader audioImpactSetLoader = new AudioImpactSetLoader();
+            yield return audioImpactSetLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
             TutorialBlockLoader tutorialBlockLoader = new TutorialBlockLoader();
             yield return tutorialBlockLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
-            AssetBundleRequest Quickbelts = bundle.Result.LoadAllAssetsAsync<GameObject>();
-            yield return Quickbelts;
-            LoadQuickbeltEntries(Quickbelts.allAssets);
+            QuickbeltLoader quickbeltLoader = new QuickbeltLoader();
+            yield return quickbeltLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
         }
 
 
@@ -413,77 +399,6 @@ namespace OtherLoader
             }
         }
 
-        private void LoadHandlingGrabSetEntries(UnityEngine.Object[] allAssets)
-        {
-            foreach (HandlingGrabSet grabSet in allAssets)
-            {
-                OtherLogger.Log("Loading new handling grab set entry: " + grabSet.name, OtherLogger.LogType.Loading);
-                ManagerSingleton<SM>.Instance.m_handlingGrabDic.Add(grabSet.Type, grabSet);
-            }
-        }
-
-        private void LoadHandlingReleaseSetEntries(UnityEngine.Object[] allAssets)
-        {
-            foreach (HandlingReleaseSet releaseSet in allAssets)
-            {
-                OtherLogger.Log("Loading new handling release set entry: " + releaseSet.name, OtherLogger.LogType.Loading);
-                ManagerSingleton<SM>.Instance.m_handlingReleaseDic.Add(releaseSet.Type, releaseSet);
-            }
-        }
-
-        private void LoadHandlingSlotSetEntries(UnityEngine.Object[] allAssets)
-        {
-            foreach (HandlingReleaseIntoSlotSet slotSet in allAssets)
-            {
-                OtherLogger.Log("Loading new handling QB slot set entry: " + slotSet.name, OtherLogger.LogType.Loading);
-                ManagerSingleton<SM>.Instance.m_handlingReleaseIntoSlotDic.Add(slotSet.Type, slotSet);
-            }
-        }
-
-        private void LoadImpactSetEntries(UnityEngine.Object[] allAssets)
-        {
-            foreach (AudioBulletImpactSet impactSet in allAssets)
-            {
-                OtherLogger.Log("Loading new bullet impact set entry: " + impactSet.name, OtherLogger.LogType.Loading);
-                //this is probably the stupidest workaround, but it works and it's short. it just adds impactset to the impact sets
-                ManagerSingleton<SM>.Instance.AudioBulletImpactSets.Concat(new AudioBulletImpactSet[] {impactSet});
-                ManagerSingleton<SM>.Instance.m_bulletHitDic.Add(impactSet.Type, impactSet);
-            }
-        }
-
-        private void LoadAudioImpactSetEntries(UnityEngine.Object[] allAssets)
-        {
-            foreach (AudioImpactSet AIS in allAssets)
-            {
-                //resize SM's AIS list to its length + 1, insert AIS into list
-                OtherLogger.Log("Loading new Audio Impact Set: " + AIS.name, OtherLogger.LogType.Loading);
-                Array.Resize(ref ManagerSingleton<SM>.Instance.AudioImpactSets, ManagerSingleton<SM>.Instance.AudioImpactSets.Length + 1);
-                ManagerSingleton<SM>.Instance.AudioImpactSets[ManagerSingleton<SM>.Instance.AudioImpactSets.Length - 1] = AIS;
-                //clears impactdic
-                ManagerSingleton<SM>.Instance.m_impactDic = new Dictionary<ImpactType, Dictionary<MatSoundType, Dictionary<AudioImpactIntensity, AudioEvent>>>();
-                //remakes impactdic
-                ManagerSingleton<SM>.Instance.generateImpactDictionary(); //TODO: this is an inefficient method. pls dont remake
-                //the dictionary every time a new one is added! oh well. it works
-            }
-        }
-
-        private void LoadQuickbeltEntries(UnityEngine.Object[] allAssets)
-        {
-            foreach (GameObject quickbelt in allAssets)
-            {
-                string[] QBnameSplit = quickbelt.name.Split('_');
-                if (QBnameSplit.Length > 1)
-                {
-                    if (QBnameSplit[QBnameSplit.Length - 2] == "QuickBelt")
-                    {
-                        OtherLogger.Log("Adding QuickBelt " + quickbelt.name, OtherLogger.LogType.Loading);
-                        Array.Resize(ref GM.Instance.QuickbeltConfigurations, GM.Instance.QuickbeltConfigurations.Length + 1);
-                        GM.Instance.QuickbeltConfigurations[GM.Instance.QuickbeltConfigurations.Length - 1] = quickbelt;
-                    }
-                }
-            }
-        }
-        
 
         private void RegisterItemIntoMetaTagSystem(ItemSpawnerEntry entry)
         {
