@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace OtherLoader.Loaders
 {
-    public class CategoryDefintionLoader : BaseAssetLoader
+    public class CategoryDefinitionLoader : BaseAssetLoader
     {
         public override IEnumerator LoadAssetsFromBundle(AssetBundle assetBundle, string bundleId)
         {

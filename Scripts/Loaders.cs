@@ -345,13 +345,11 @@ namespace OtherLoader
             yield return roundDisplayDataLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
             //Before we load the spawnerIDs, we must add any new spawner category definitions
-            CategoryDefintionLoader categoryDefinitionLoader = new CategoryDefintionLoader();
+            CategoryDefinitionLoader categoryDefinitionLoader = new CategoryDefinitionLoader();
             yield return categoryDefinitionLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
-            //Load the legacy spawner IDs
-            AssetBundleRequest spawnerIDs = bundle.Result.LoadAllAssetsAsync<ItemSpawnerID>();
-            yield return spawnerIDs;
-            LoadSpawnerIDs(spawnerIDs.allAssets);
+            ItemSpawnerIdLoader itemSpawnerIdLoader = new ItemSpawnerIdLoader();
+            yield return itemSpawnerIdLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
             //Load the spawner entries for the new spawner
             AssetBundleRequest spawnerEntries = bundle.Result.LoadAllAssetsAsync<ItemSpawnerEntry>();
@@ -485,31 +483,7 @@ namespace OtherLoader
                 }
             }
         }
-
-
-
-        private void LoadSpawnerIDs(UnityEngine.Object[] allAssets)
-        {
-            foreach (ItemSpawnerID id in allAssets)
-            {
-                
-            }
-        }
-
-
         
-
-
-
-
-        /// <summary>
-        /// Pop 
-        /// </summary>
-        /// <param name="Page"></param>
-        /// <param name="ID"></param>
-        
-
-
 
         private void RegisterItemIntoMetaTagSystem(ItemSpawnerEntry entry)
         {

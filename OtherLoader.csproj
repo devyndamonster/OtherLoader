@@ -103,6 +103,7 @@
   <ItemGroup>
     <Compile Include="Scripts\Loaders\CategoryDefinitionLoader.cs" />
     <Compile Include="Scripts\Loaders\ItemSpawnerIdLoader.cs" />
+    <Compile Include="Scripts\Loaders\LoaderUtils\SpawnerEntryPathBuilder.cs" />
     <Compile Include="Scripts\Loaders\RoundDisplayDataLoader.cs" />
     <Compile Include="Scripts\Loaders\FVRObjectLoader.cs" />
     <Compile Include="Scripts\Loaders\MechanicalAccuracyLoader.cs" />
