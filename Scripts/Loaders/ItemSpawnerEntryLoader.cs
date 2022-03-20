@@ -34,7 +34,12 @@ namespace OtherLoader.Loaders
             {
                 UpdateUnlockStatusForItem(spawnerEntry);
                 RegisterItemIntoMetaTagSystem(spawnerEntry);
-                convertedSpawnerIDs.Add(AddEntryToLegacySpawner(spawnerEntry));
+
+                ItemSpawnerID convertedSpawnerId = AddEntryToLegacySpawner(spawnerEntry);
+                if(convertedSpawnerId != null)
+                {
+                    convertedSpawnerIDs.Add(convertedSpawnerId);
+                }
             }
         }
 

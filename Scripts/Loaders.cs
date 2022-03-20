@@ -103,6 +103,12 @@ namespace OtherLoader
             return null;
         }
 
+        private string BuildBundleID(string bundlePath, string bundleName)
+        {
+            string directoryPath = Path.GetDirectoryName(bundlePath) + "\\";
+            return directoryPath + " : " + bundleName;
+        }
+
 
         public void LoadDirectAssets(CoroutineStarter starter, string folderPath, string guid, string[] dependancies, string[] loadFirst, string[] loadAny, string[] loadLast)
         {
@@ -136,7 +142,7 @@ namespace OtherLoader
         {
             FileInfo file = handle.ConsumeFile();
 
-            string bundleID = file.FullName.Replace(file.Name, "") + " : " + file.Name;
+            string bundleID = BuildBundleID(file.FullName, file.Name);
 
             return LoadAssetsFromPathAsync(file.FullName, bundleID, "", new string[] { }, loadOrder, allowUnload).TryCatch(e =>
             {
@@ -155,7 +161,7 @@ namespace OtherLoader
             string bundlePath = Path.Combine(folderPath, bundleName);
             string lateName = "late_" + bundleName;
             string latePath = Path.Combine(folderPath, lateName);
-            string bundleID = bundlePath.Replace(bundleName, "") + " : " + bundleName;
+            string bundleID = BuildBundleID(bundlePath, bundleName);
             IEnumerator afterLoad = null;
 
             if (File.Exists(latePath))
@@ -184,7 +190,8 @@ namespace OtherLoader
         public IEnumerator RegisterAssetLoadLate(string bundlePath, string bundleName, LoadOrderType loadOrder)
         {
             //In order to get this bundle to load later, we want to replace the file path for the already loaded FVRObject
-            string bundleID = bundlePath.Replace(bundleName, "") + " : " + bundleName.Replace("late_", "");
+            string originalBundleName = bundleName.Replace("late_", "");
+            string bundleID = BuildBundleID(bundlePath, originalBundleName);
             OtherLoader.ManagedBundles[bundleID] = bundlePath;
             LoaderStatus.TrackLoader(bundleID, loadOrder);
 
@@ -208,6 +215,7 @@ namespace OtherLoader
             else
             {
                 OtherLogger.LogError("Tried to register bundle to load later, but pre-bundle had not yet been loaded! (" + bundleID + ")");
+                Debug.Log("Bundles: " + string.Join(", ", AnvilManager.m_bundles.m_lookup.Keys.ToArray()));
             }
 
             yield return null;
@@ -235,7 +243,8 @@ namespace OtherLoader
                         continue;
                     }
 
-                    string bundleID = bundlePath.Replace(Path.GetFileName(bundlePath), "") + " : " + Path.GetFileName(bundlePath);
+                    string bundleName = Path.GetFileName(bundlePath);
+                    string bundleID = BuildBundleID(bundlePath, bundleName);
 
                     IEnumerator routine = LoadAssetsFromPathAsync(bundlePath, bundleID, "", new string[] { }, LoadOrderType.LoadUnordered, true).TryCatch<Exception>(e =>
                     {
@@ -314,6 +323,7 @@ namespace OtherLoader
             else
             {
                 AnvilManager.m_bundles.Add(bundleID, bundle);
+                Debug.Log("Added bundle to anvil: " + bundleID);
             }
 
             OtherLoader.ManagedBundles.Add(bundleID, path);
