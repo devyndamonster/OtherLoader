@@ -114,6 +114,7 @@
     <Compile Include="Scripts\Loaders\FVRObjectLoader.cs" />
     <Compile Include="Scripts\Loaders\MechanicalAccuracyLoader.cs" />
     <Compile Include="Scripts\Loaders\BaseAssetLoader.cs" />
+    <Compile Include="Scripts\Loaders\ItemSpawnerEntryLoader.cs" />
     <Compile Include="Scripts\Loaders\TutorialBlockLoader.cs" />
     <Compile Include="Scripts\ObjectTemplates\EntryNode.cs" />
     <Compile Include="Scripts\ObjectTemplates\ItemSpawnerData.cs" />

@@ -26,6 +26,8 @@ namespace OtherLoader.Loaders
             {
                 TryLoadAsset(asset, bundleId);
             }
+
+            AfterLoad();
         }
 
         protected void TryLoadAsset(UnityEngine.Object asset, string bundleId)
@@ -39,6 +41,8 @@ namespace OtherLoader.Loaders
                 OtherLogger.LogError("Failed to load asset! Exception: \n" + ex.ToString());
             }
         }
+
+        protected virtual void AfterLoad() { }
 
         protected abstract void LoadAsset(UnityEngine.Object asset, string bundleId);
 

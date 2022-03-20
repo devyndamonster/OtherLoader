@@ -2,6 +2,7 @@
 using HarmonyLib;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using OtherLoader.Loaders;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -947,6 +948,8 @@ namespace OtherLoader
 
         private static void PopulateSpawnerEntries()
         {
+            SpawnerEntryPathBuilder pathBuilder = new SpawnerEntryPathBuilder();
+
             foreach(KeyValuePair<ItemSpawnerV2.PageMode,List<string>> PageLists in IM.Instance.PageItemLists)
             {
                 foreach(string ItemID in PageLists.Value)
@@ -955,7 +958,7 @@ namespace OtherLoader
 
                     ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
                     SpawnerEntry.LegacyPopulateFromID(PageLists.Key, SpawnerID, false);
-                    ItemLoader.PopulateEntryPaths(SpawnerEntry, SpawnerID);
+                    pathBuilder.PopulateEntryPaths(SpawnerEntry, SpawnerID);
                 }
             }
         }

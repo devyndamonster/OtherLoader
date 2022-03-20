@@ -58,6 +58,11 @@ namespace OtherLoader.Loaders
                 OtherLoader.SpawnerEntriesByPath[currentPath] = finalNode;
                 previousNode.childNodes.Add(finalNode);
             }
+
+            if (!entry.IsCategoryEntry())
+            {
+                OtherLoader.SpawnerEntriesByID[entry.MainObjectID] = entry;
+            }
         }
 
 
