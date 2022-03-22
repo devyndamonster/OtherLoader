@@ -21,6 +21,24 @@ namespace OtherLoader
     public class ItemLoader
     {
 
+        private static BaseAssetLoader[] assetLoaders = new BaseAssetLoader[] 
+        {
+            new MechanicalAccuracyLoader(),
+            new FVRObjectLoader(),
+            new RoundDisplayDataLoader(),
+            new CategoryDefinitionLoader(),
+            new ItemSpawnerIdLoader(),
+            new ItemSpawnerEntryLoader(),
+            new HandlingGrabSetLoader(),
+            new HandlingReleaseSetLoader(),
+            new HandlingSlotSetLoader(),
+            new BulletImpactSetLoader(),
+            new AudioImpactSetLoader(),
+            new TutorialBlockLoader(),
+            new QuickbeltLoader()
+        };
+
+
         //Anatomy of a BundleID
         // [Mod Path] : [Bundle Name]
         // Combining these two gives you the path to the asset bundle
@@ -215,7 +233,6 @@ namespace OtherLoader
             else
             {
                 OtherLogger.LogError("Tried to register bundle to load later, but pre-bundle had not yet been loaded! (" + bundleID + ")");
-                Debug.Log("Bundles: " + string.Join(", ", AnvilManager.m_bundles.m_lookup.Keys.ToArray()));
             }
 
             yield return null;
@@ -260,75 +277,23 @@ namespace OtherLoader
         }
 
 
-        
-
-
         private IEnumerator LoadAssetsFromPathAsync(string path, string bundleID, string guid, string[] dependancies, LoadOrderType loadOrder, bool allowUnload, IEnumerator afterLoad = null)
         {
             //Start tracking this bundle and then wait a frame for everything else to be tracked
             LoaderStatus.TrackLoader(bundleID, loadOrder);
             yield return null;
 
-            //If there are many active loaders at once, we should wait our turn
-            bool overTime = false;
-            while (!LoaderStatus.CanOrderedModLoad(bundleID))
-            {
-                if(!overTime && Time.time - LoaderStatus.LastLoadEventTime > 30)
-                {
-                    OtherLogger.Log("Bundle has been waiting a long time to load! (" + bundleID + ")", OtherLogger.LogType.General);
-                    LoaderStatus.PrintWaitingBundles(bundleID);
-                    overTime = true;
-                }
+            yield return LoaderUtils.WaitUntilBundleCanLoad(bundleID);
 
-                yield return null;
-            }
-
-            //Begin the loading process
-            LoaderStatus.AddActiveLoader(bundleID);
-
-            if (OtherLoader.LogLoading.Value)
-                OtherLogger.Log("Beginning async loading of asset bundle (" + bundleID + ")", OtherLogger.LogType.General);
-
-
-            //Load the bundle and apply it's contents
-            float time = Time.time;
-            LoaderStatus.UpdateProgress(bundleID, UnityEngine.Random.Range(.1f, .3f));
+            float loadingTime = Time.time;
+            BeginActiveLoading(bundleID);
 
             AnvilCallback<AssetBundle> bundle = LoaderUtils.LoadAssetBundle(path);
             yield return bundle;
 
-            LoaderStatus.UpdateProgress(bundleID, 0.9f);
-
-            yield return ApplyLoadedAssetBundleAsync(bundle, bundleID).TryCatch(e =>
-            {
-                OtherLogger.LogError("Failed to load mod (" + bundleID + ")");
-                OtherLogger.LogError(e.ToString());
-                LoaderStatus.UpdateProgress(bundleID, 1);
-                LoaderStatus.RemoveActiveLoader(bundleID, true);
-            });
-
-            //Log that the bundle is loaded
-            if (OtherLoader.LogLoading.Value)
-                OtherLogger.Log($"[{(Time.time - time).ToString("0.000")} s] Completed loading bundle ({bundleID})", OtherLogger.LogType.General);
-            else
-                OtherLogger.Log($"[{(Time.time - time).ToString("0.000")} s] Completed loading bundle ({LoaderUtils.GetBundleNameFromUniqueID(bundleID)})", OtherLogger.LogType.General);
-
-
-
-            if (allowUnload && OtherLoader.OptimizeMemory.Value)
-            {
-                OtherLogger.Log("Unloading asset bundle (Optimize Memory is true)", OtherLogger.LogType.Loading);
-                bundle.Result.Unload(false);
-            }
-            else
-            {
-                AnvilManager.m_bundles.Add(bundleID, bundle);
-                Debug.Log("Added bundle to anvil: " + bundleID);
-            }
-
-            OtherLoader.ManagedBundles.Add(bundleID, path);
-            LoaderStatus.UpdateProgress(bundleID, 1);
-            LoaderStatus.RemoveActiveLoader(bundleID, !(OtherLoader.OptimizeMemory.Value && allowUnload));
+            yield return ApplyLoadedAssetBundleAsync(bundle, bundleID).TryCatch(exception => { HandleApplyBundleFailed(exception, bundleID); });
+            
+            FinishActiveLoading(bundle, bundleID, path, allowUnload, loadingTime);
 
             if(afterLoad != null)
             {
@@ -339,45 +304,79 @@ namespace OtherLoader
 
         private IEnumerator ApplyLoadedAssetBundleAsync(AnvilCallback<AssetBundle> bundle, string bundleID)
         {
-            MechanicalAccuracyLoader mechanicalAccuracyLoader = new MechanicalAccuracyLoader();
-            yield return mechanicalAccuracyLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
+            foreach(BaseAssetLoader loader in assetLoaders)
+            {
+                IEnumerator loadEnumerator = loader.LoadAssetsFromBundle(bundle.Result, bundleID);
+                yield return loadEnumerator.TryCatch(exception => { HandleLoadFromBundleFailed(exception, loader, bundleID); });
+            }
+        }
 
-            FVRObjectLoader fvrObjectLoader = new FVRObjectLoader();
-            yield return fvrObjectLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
-            RoundDisplayDataLoader roundDisplayDataLoader = new RoundDisplayDataLoader();
-            yield return roundDisplayDataLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
+        private void HandleApplyBundleFailed(Exception exception, string bundleId)
+        {
+            OtherLogger.LogError("Failed to load mod (" + bundleId + ")");
+            OtherLogger.LogError(exception.ToString());
+            LoaderStatus.UpdateProgress(bundleId, 1);
+            LoaderStatus.RemoveActiveLoader(bundleId, true);
+        }
 
-            //Before we load the spawnerIDs, we must add any new spawner category definitions
-            CategoryDefinitionLoader categoryDefinitionLoader = new CategoryDefinitionLoader();
-            yield return categoryDefinitionLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
+        private void HandleLoadFromBundleFailed(Exception exception, BaseAssetLoader loader, string bundleId)
+        {
+            OtherLogger.LogError("Failed to load assets in bundle (" + bundleId + ") with loader type (" + loader.GetType().ToString() + ")");
+            OtherLogger.LogError(exception.ToString());
+        }
 
-            ItemSpawnerIdLoader itemSpawnerIdLoader = new ItemSpawnerIdLoader();
-            yield return itemSpawnerIdLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
+        private void BeginActiveLoading(string bundleId)
+        {
+            LoaderStatus.AddActiveLoader(bundleId);
+            LogLoadingStart(bundleId);
+            LoaderStatus.UpdateProgress(bundleId, UnityEngine.Random.Range(.1f, .3f));
+        }
 
-            ItemSpawnerEntryLoader itemSpawnerEntryLoader = new ItemSpawnerEntryLoader();
-            yield return itemSpawnerEntryLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
+        private void FinishActiveLoading(AnvilCallback<AssetBundle> bundle, string bundleId, string path, bool allowUnload, float loadingTime)
+        {
+            LogLoadingDone(bundleId, loadingTime);
+            HandleOptimizeMemory(bundle, bundleId, allowUnload);
 
-            HandlingGrabSetLoader handlingGrabSetLoader = new HandlingGrabSetLoader();
-            yield return handlingGrabSetLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
+            OtherLoader.ManagedBundles.Add(bundleId, path);
+            LoaderStatus.UpdateProgress(bundleId, 1);
+            LoaderStatus.RemoveActiveLoader(bundleId, !(OtherLoader.OptimizeMemory.Value && allowUnload));
+        }
 
-            HandlingReleaseSetLoader handlingReleaseSetLoader = new HandlingReleaseSetLoader();
-            yield return handlingReleaseSetLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
+        private void LogLoadingStart(string bundleId)
+        {
+            if (OtherLoader.LogLoading.Value)
+            {
+                OtherLogger.Log("Beginning async loading of asset bundle (" + bundleId + ")", OtherLogger.LogType.General);
+            }
+        }
 
-            HandlingSlotSetLoader handlingSlotSetLoader = new HandlingSlotSetLoader();
-            yield return handlingSlotSetLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
-            BulletImpactSetLoader bulletImpactSetLoader = new BulletImpactSetLoader();
-            yield return bulletImpactSetLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
+        private void LogLoadingDone(string bundleId, float loadingTime)
+        {
+            if (OtherLoader.LogLoading.Value)
+            {
+                OtherLogger.Log($"[{(Time.time - loadingTime).ToString("0.000")} s] Completed loading bundle ({bundleId})", OtherLogger.LogType.General);
+            }
 
-            AudioImpactSetLoader audioImpactSetLoader = new AudioImpactSetLoader();
-            yield return audioImpactSetLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
+            else
+            {
+                OtherLogger.Log($"[{(Time.time - loadingTime).ToString("0.000")} s] Completed loading bundle ({LoaderUtils.GetBundleNameFromUniqueID(bundleId)})", OtherLogger.LogType.General);
+            }
+        }
 
-            TutorialBlockLoader tutorialBlockLoader = new TutorialBlockLoader();
-            yield return tutorialBlockLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
 
-            QuickbeltLoader quickbeltLoader = new QuickbeltLoader();
-            yield return quickbeltLoader.LoadAssetsFromBundle(bundle.Result, bundleID);
+        private void HandleOptimizeMemory(AnvilCallback<AssetBundle> bundle, string bundleId, bool allowUnload)
+        {
+            if (allowUnload && OtherLoader.OptimizeMemory.Value)
+            {
+                OtherLogger.Log("Unloading asset bundle (Optimize Memory is true)", OtherLogger.LogType.Loading);
+                bundle.Result.Unload(false);
+            }
+            else
+            {
+                AnvilManager.m_bundles.Add(bundleId, bundle);
+            }
         }
     }
 

@@ -18,7 +18,7 @@ using RenderHeads.Media.AVProVideo;
 
 namespace OtherLoader
 {
-    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.3.0")]
+    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.3.4")]
     [BepInDependency(StratumRoot.GUID, StratumRoot.Version)]
     [BepInDependency(Sodalite.SodaliteConstants.Guid, Sodalite.SodaliteConstants.Version)]
     public class OtherLoader : StratumPlugin

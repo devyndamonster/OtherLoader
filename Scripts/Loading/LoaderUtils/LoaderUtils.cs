@@ -55,5 +55,22 @@ namespace OtherLoader
         }
 
 
+        public static IEnumerator WaitUntilBundleCanLoad(string bundleId)
+        {
+            bool overTime = false;
+            while (!LoaderStatus.CanOrderedModLoad(bundleId))
+            {
+                if (!overTime && Time.time - LoaderStatus.LastLoadEventTime > 30)
+                {
+                    OtherLogger.Log("Bundle has been waiting a long time to load! (" + bundleId + ")", OtherLogger.LogType.General);
+                    LoaderStatus.PrintWaitingBundles(bundleId);
+                    overTime = true;
+                }
+
+                yield return null;
+            }
+        }
+
+
     }
 }

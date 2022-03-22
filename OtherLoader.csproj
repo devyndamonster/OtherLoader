@@ -101,21 +101,21 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Scripts\Loaders\AudioImpactSetLoader.cs" />
-    <Compile Include="Scripts\Loaders\CategoryDefinitionLoader.cs" />
-    <Compile Include="Scripts\Loaders\HandlingGrabSetLoader.cs" />
-    <Compile Include="Scripts\Loaders\HandlingReleaseSetLoader.cs" />
-    <Compile Include="Scripts\Loaders\HandlingSlotSetLoader.cs" />
-    <Compile Include="Scripts\Loaders\BulletImpactSetLoader.cs" />
-    <Compile Include="Scripts\Loaders\ItemSpawnerIdLoader.cs" />
-    <Compile Include="Scripts\Loaders\LoaderUtils\SpawnerEntryPathBuilder.cs" />
-    <Compile Include="Scripts\Loaders\QuickbeltLoader.cs" />
-    <Compile Include="Scripts\Loaders\RoundDisplayDataLoader.cs" />
-    <Compile Include="Scripts\Loaders\FVRObjectLoader.cs" />
-    <Compile Include="Scripts\Loaders\MechanicalAccuracyLoader.cs" />
-    <Compile Include="Scripts\Loaders\BaseAssetLoader.cs" />
-    <Compile Include="Scripts\Loaders\ItemSpawnerEntryLoader.cs" />
-    <Compile Include="Scripts\Loaders\TutorialBlockLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\AudioImpactSetLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\CategoryDefinitionLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\HandlingGrabSetLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\HandlingReleaseSetLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\HandlingSlotSetLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\BulletImpactSetLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\ItemSpawnerIdLoader.cs" />
+    <Compile Include="Scripts\Loading\LoaderUtils\SpawnerEntryPathBuilder.cs" />
+    <Compile Include="Scripts\Loading\Loaders\QuickbeltLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\RoundDisplayDataLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\FVRObjectLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\MechanicalAccuracyLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\BaseAssetLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\ItemSpawnerEntryLoader.cs" />
+    <Compile Include="Scripts\Loading\Loaders\TutorialBlockLoader.cs" />
     <Compile Include="Scripts\ObjectTemplates\EntryNode.cs" />
     <Compile Include="Scripts\ObjectTemplates\ItemSpawnerData.cs" />
     <Compile Include="Scripts\ObjectTemplates\ItemSpawnerEntry.cs" />
@@ -124,9 +124,9 @@
     <Compile Include="Scripts\Patches\QuickbeltPanelPatch.cs" />
     <Compile Include="Scripts\Extensions.cs" />
     <Compile Include="Scripts\Patches\ItemSpawnerPatch.cs" />
-    <Compile Include="Scripts\Loaders.cs" />
-    <Compile Include="Scripts\LoaderStatus.cs" />
-    <Compile Include="Scripts\LoaderUtils.cs" />
+    <Compile Include="Scripts\Loading\Loaders.cs" />
+    <Compile Include="Scripts\Loading\LoaderStatus.cs" />
+    <Compile Include="Scripts\Loading\LoaderUtils\LoaderUtils.cs" />
     <Compile Include="Scripts\OtherLoader.cs" />
     <Compile Include="Scripts\OtherLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
