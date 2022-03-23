@@ -22,24 +22,33 @@ namespace OtherLoader.Loaders
         {
             ItemSpawnerID spawnerId = asset as ItemSpawnerID;
 
-            OtherLogger.Log("Adding Itemspawner ID! Category: " + spawnerId.Category + ", SubCategory: " + spawnerId.SubCategory, OtherLogger.LogType.Loading);
+            OtherLogger.Log("Adding Itemspawner ID! Display Name: " + spawnerId.DisplayName + ", ItemID: " + spawnerId.ItemID + ", Category: " + spawnerId.Category + ", SubCategory: " + spawnerId.SubCategory, OtherLogger.LogType.Loading);
 
-            if (CategoriesExistForSpawnerId(spawnerId) && IsSpawnerIdUnique(spawnerId))
+            PopulateMissingMainObject(spawnerId);
+
+            if(spawnerId.MainObject != null)
             {
-                PopulateMissingMainObject(spawnerId);
                 UpdateUnlockCostForItem(spawnerId);
                 UpdateUnlockStatusForItem(spawnerId);
                 IM.RegisterItemIntoMetaTagSystem(spawnerId);
                 UpdateVisibilityForItem(spawnerId);
-                AddSpawnerIdToGlobalDictionaries(spawnerId);
-                AddSpawnerIdToNewSpawner(spawnerId);
             }
 
+            if (CategoriesExistForSpawnerId(spawnerId))
+            {
+                AddSpawnerIdToGlobalDictionaries(spawnerId);
+
+                if (IsSpawnerIdAlreadyUsed(spawnerId))
+                {
+                    IM.Instance.SpawnerIDDic[spawnerId.ItemID] = spawnerId;
+                    AddSpawnerIdToNewSpawner(spawnerId);
+                }
+            }
             else
             {
-                OtherLogger.LogError("ItemSpawnerID could not be added, item will not appear in the itemspawner! Item Display Name: " + spawnerId.DisplayName + ", Do categories exist: " + CategoriesExistForSpawnerId(spawnerId) + ", Is SpawnerId unique: " + IsSpawnerIdUnique(spawnerId));
+                OtherLogger.LogError("ItemSpawnerID could not be added, item will not appear in the itemspawner! Item Display Name: " + spawnerId.DisplayName + ", Item ID: " + spawnerId.ItemID);
+                return;
             }
-
         }
 
 
@@ -68,7 +77,7 @@ namespace OtherLoader.Loaders
             return IM.CD.ContainsKey(spawnerId.Category) && IM.SCD.ContainsKey(spawnerId.SubCategory);
         }
 
-        private bool IsSpawnerIdUnique(ItemSpawnerID spawnerId)
+        private bool IsSpawnerIdAlreadyUsed(ItemSpawnerID spawnerId)
         {
             return !IM.Instance.SpawnerIDDic.ContainsKey(spawnerId.ItemID);
         }
@@ -121,7 +130,6 @@ namespace OtherLoader.Loaders
         {
             IM.CD[spawnerId.Category].Add(spawnerId);
             IM.SCD[spawnerId.SubCategory].Add(spawnerId);
-            IM.Instance.SpawnerIDDic[spawnerId.ItemID] = spawnerId;
         }
 
 
