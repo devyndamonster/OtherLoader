@@ -51,8 +51,14 @@ namespace OtherLoader
 
         public bool ShouldAutoUnlockItem(ItemSpawnerID spawnerID)
         {
-            return spawnerID.MainObject == null || 
-                ShouldAutoUnlockItem(spawnerID.MainObject, spawnerID.IsReward);
+            if (spawnerID.MainObject == null) return true;
+
+            if ((spawnerID.IsReward && !IsVanillaUnlocked(spawnerID.MainObject)) || !ShouldAutoUnlockItem(spawnerID.MainObject))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         public bool ShouldAutoUnlockItem(ItemSpawnerEntry spawnerEntry)
@@ -60,21 +66,22 @@ namespace OtherLoader
             FVRObject item;
             IM.OD.TryGetValue(spawnerEntry.MainObjectID, out item);
 
-            return item == null || ShouldAutoUnlockItem(item, spawnerEntry.IsReward);
-        }
+            if (item == null) return true;
 
-        public bool ShouldAutoUnlockItem(FVRObject item, bool isReward)
-        {
-            if((isReward && !IsVanillaUnlocked(item)) || 
-                (!AutoUnlockNonRewards && 
-                (item.Category == FVRObject.ObjectCategory.Firearm || 
-                item.Category == FVRObject.ObjectCategory.Thrown || 
-                item.Category == FVRObject.ObjectCategory.MeleeWeapon)))
+            if (spawnerEntry.IsReward || !ShouldAutoUnlockItem(item))
             {
                 return false;
             }
 
             return true;
+        }
+
+        public bool ShouldAutoUnlockItem(FVRObject item)
+        {
+            return AutoUnlockNonRewards ||
+                    (item.Category != FVRObject.ObjectCategory.Firearm &&
+                    item.Category != FVRObject.ObjectCategory.Thrown &&
+                    item.Category != FVRObject.ObjectCategory.MeleeWeapon);
         }
 
         public bool IsVanillaUnlocked(FVRObject item)
