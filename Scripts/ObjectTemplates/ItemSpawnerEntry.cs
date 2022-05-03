@@ -223,6 +223,7 @@ namespace OtherLoader
             itemSpawnerID.Sprite = EntryIcon;
             itemSpawnerID.UsesLargeSpawnPad = UsesLargeSpawnPad;
             itemSpawnerID.IsReward = IsReward;
+            itemSpawnerID.TutorialBlocks = TutorialBlockIDs;
 
             return itemSpawnerID;
         }
