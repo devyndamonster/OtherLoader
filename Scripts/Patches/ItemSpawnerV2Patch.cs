@@ -29,11 +29,11 @@ namespace OtherLoader
             __instance.TXT_Detail.resizeTextMaxSize = __instance.TXT_Detail.fontSize;
             __instance.TXT_Detail.resizeTextMinSize = 2;
             __instance.TXT_Detail.verticalOverflow = VerticalWrapMode.Truncate;
-            __instance.TXT_Detail.rectTransform.anchoredPosition = new Vector2(390, 500);
-            __instance.TXT_Detail.rectTransform.sizeDelta = new Vector2(310, 390);
+            //__instance.TXT_Detail.rectTransform.anchoredPosition = new Vector2(390, 500);
+            //__instance.TXT_Detail.rectTransform.sizeDelta = new Vector2(310, 390);
 
-            Image backing = __instance.TXT_Detail.transform.GetComponentInChildren<Image>();
-            backing.rectTransform.anchoredPosition = new Vector2(0, 10);
+            //Image backing = __instance.TXT_Detail.transform.GetComponentInChildren<Image>();
+            //backing.rectTransform.anchoredPosition = new Vector2(0, 10);
 
             return true;
         }
@@ -509,8 +509,10 @@ namespace OtherLoader
             data.VisibleEntries.Clear();
 
             List<EntryNode> entries = OtherLoader.SpawnerEntriesByPath[data.CurrentPath].childNodes.Where(o => o.entry.IsDisplayedInMainEntry).ToList();
+            string childNodePaths = String.Join("\n", OtherLoader.SpawnerEntriesByPath[data.CurrentPath].childNodes.Select(o => "Display?: " + o.entry.IsDisplayedInMainEntry + ", Path: " + o.entry.EntryPath).ToArray());
 
-            OtherLogger.Log($"Got {entries.Count} entries for path: {data.CurrentPath}", OtherLogger.LogType.General);
+            OtherLogger.Log($"Logging all possible child entries: {childNodePaths}", OtherLogger.LogType.Loading);
+            OtherLogger.Log($"Got {entries.Count} entries for path: {OtherLoader.SpawnerEntriesByPath[data.CurrentPath].childNodes}", OtherLogger.LogType.Loading);
 
             entries = entries.OrderBy(o => o.entry.DisplayName).OrderBy(o => o.entry.IsModded?1:0).OrderBy(o => o.childNodes.Count > 0?0:1).ToList();
 

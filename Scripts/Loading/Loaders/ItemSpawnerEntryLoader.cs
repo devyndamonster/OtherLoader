@@ -25,6 +25,7 @@ namespace OtherLoader.Loaders
             ItemSpawnerEntry spawnerEntry = asset as ItemSpawnerEntry;
 
             OtherLogger.Log("Loading new item spawner entry: " + spawnerEntry.EntryPath, OtherLogger.LogType.Loading);
+            OtherLogger.Log("Is Displayed in menu?: " + spawnerEntry.IsDisplayedInMainEntry, OtherLogger.LogType.Loading);
 
             spawnerEntry.IsModded = true;
             spawnerEntry.PopulateIDsFromObj();
@@ -32,6 +33,8 @@ namespace OtherLoader.Loaders
 
             if (!spawnerEntry.IsCategoryEntry())
             {
+                OtherLogger.Log("Spawner Entry is not a category", OtherLogger.LogType.Loading);
+
                 UpdateUnlockStatusForItem(spawnerEntry);
                 RegisterItemIntoMetaTagSystem(spawnerEntry);
 
@@ -40,6 +43,10 @@ namespace OtherLoader.Loaders
                 {
                     convertedSpawnerIDs.Add(convertedSpawnerId);
                 }
+            }
+            else
+            {
+                OtherLogger.Log("Spawner Entry is a category", OtherLogger.LogType.Loading);
             }
         }
 

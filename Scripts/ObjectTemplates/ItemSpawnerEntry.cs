@@ -66,6 +66,7 @@ namespace OtherLoader
             if(MainObjectObj != null)
             {
                 MainObjectID = MainObjectObj.ItemID;
+                OtherLogger.Log("Assigning ItemID from MainObject: " + MainObjectID, OtherLogger.LogType.Loading);
             }
 
             foreach(FVRObject obj in SpawnWithObjs)
