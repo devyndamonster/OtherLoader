@@ -15,6 +15,7 @@ using System.Collections;
 using Anvil;
 using Newtonsoft.Json;
 using RenderHeads.Media.AVProVideo;
+using OtherLoader.Patches;
 
 namespace OtherLoader
 {
@@ -62,6 +63,7 @@ namespace OtherLoader
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerV2Patch));
             Harmony.CreateAndPatchAll(typeof(QuickbeltPanelPatch));
+            Harmony.CreateAndPatchAll(typeof(DetailsPanelPatches));
 
             if (AddUnloadButton.Value)
             {

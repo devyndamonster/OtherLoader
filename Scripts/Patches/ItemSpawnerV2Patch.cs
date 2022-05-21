@@ -135,13 +135,11 @@ namespace OtherLoader
                 __instance.Boop(1);
 
                 ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
-                AnvilManager.Run(SpawnItems(__instance, data.VisibleSecondaryEntries[i]));
-            }
+                ItemSpawnerEntry secondaryEntry = data.VisibleSecondaryEntries[i];
 
-            //Otherwise try to use legacy spawner ID
-            else if (IM.HasSpawnedID(__instance.m_selectedID))
-            {
-                return true;
+                __instance.AddToSelectionQueue(secondaryEntry.MainObjectID);
+                __instance.SetSelectedID(secondaryEntry.MainObjectID);
+                __instance.RedrawDetailsCanvas();
             }
 
             else
@@ -243,76 +241,6 @@ namespace OtherLoader
         }
 
 
-
-        [HarmonyPatch(typeof(ItemSpawnerV2), "GetDetailText")]
-        [HarmonyPrefix]
-        private static bool DetailTextPatch(ItemSpawnerV2 __instance, string id, ref string __result)
-        {
-            FVRObject fvrObj;
-            string spawnerCat;
-            string spawnerSubcat;
-
-            if (IM.Instance.SpawnerIDDic.ContainsKey(id))
-            {
-                OtherLogger.Log("Getting ID from spawnerID", OtherLogger.LogType.General);
-
-                ItemSpawnerID spawnerID = IM.Instance.SpawnerIDDic[id];
-                fvrObj = IM.OD[spawnerID.MainObject.ItemID];
-
-                spawnerCat = spawnerID.Category.ToString();
-                if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerID.Category) && IM.CDefInfo.ContainsKey(spawnerID.Category))
-                    spawnerCat = IM.CDefInfo[spawnerID.Category].DisplayName;
-
-                spawnerSubcat = spawnerID.SubCategory.ToString();
-                if (!Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), spawnerID.SubCategory) && IM.CDefSubInfo.ContainsKey(spawnerID.SubCategory))
-                    spawnerSubcat = IM.CDefSubInfo[spawnerID.SubCategory].DisplayName;
-            }
-
-            else if (OtherLoader.SpawnerEntriesByID.ContainsKey(id))
-            {
-                OtherLogger.Log("Getting ID from otherloader", OtherLogger.LogType.General);
-
-                spawnerCat = "None";
-                spawnerSubcat = "None";
-
-                fvrObj = IM.OD[id];
-            }
-
-            else
-            {
-                OtherLogger.LogError($"The ItemID was not found to have spawner entry! ItemID: {id}");
-                __result = "";
-                return false;
-            }
-
-            
-            string text = 
-                "Spawner Category: " + spawnerCat + "\n" +
-                "Spawner Subcategory: " + spawnerSubcat + "\n" +
-                "Object Category: " + fvrObj.Category.ToString() + "\n" +
-                "Set: " + fvrObj.TagSet.ToString() + "\n" +
-                "Size: " + fvrObj.TagFirearmSize.ToString() + "\n" +
-                "Era: " + fvrObj.TagEra.ToString() + "\n" +
-                "Action: " + fvrObj.TagFirearmAction.ToString() + "\n" +
-                "Round Power: " + fvrObj.TagFirearmRoundPower.ToString() + "\n" +
-                "Country: " + fvrObj.TagFirearmCountryOfOrigin.ToString() + "\n" +
-                "Introduction Year: " + fvrObj.TagFirearmFirstYear.ToString() + "\n" +
-                "Magazine Type: " + fvrObj.MagazineType.ToString() + "\n" +
-                "Round Type: " + fvrObj.RoundType.ToString() + "\n" +
-                "Firing Modes: " + string.Join(",", fvrObj.TagFirearmFiringModes.Select(o => o.ToString()).ToArray()) + "\n" +
-                "Feed Options: " + string.Join(",", fvrObj.TagFirearmFeedOption.Select(o => o.ToString()).ToArray()) + "\n" +
-                "Mounts: " + string.Join(",", fvrObj.TagFirearmMounts.Select(o => o.ToString()).ToArray()) + "\n" +
-                "Attachment Mount: " + fvrObj.TagAttachmentMount.ToString() + "\n" +
-                "Attachment Feature: " + fvrObj.TagAttachmentFeature.ToString();
-
-            __result = text;
-
-            return false;
-        }
-
-
-
-
         [HarmonyPatch(typeof(ItemSpawnerV2), "SimpleSelectTile")]
         [HarmonyPrefix]
         private static bool SimpleButtonPatch(ItemSpawnerV2 __instance, int i)
@@ -353,146 +281,6 @@ namespace OtherLoader
                 __instance.SetSelectedID(__instance.m_displayedItemIds[i]);
                 __instance.RedrawDetailsCanvas();
             }
-
-            return false;
-        }
-
-
-
-        /// <summary>
-        /// This method adapts the code for drawing the details canvas to use the new spawner entry system
-        /// </summary>
-        /// <param name="__instance"></param>
-        [HarmonyPatch(typeof(ItemSpawnerV2), "RedrawDetailsCanvas")]
-        [HarmonyPrefix]
-        private static bool RedrawDetailsCanvasPatch(ItemSpawnerV2 __instance)
-        {
-            OtherLogger.Log("Selected ID: " + __instance.m_selectedID, OtherLogger.LogType.General);
-
-            //If there is no spawner entry for the selected ID, set everything to blank
-            if (!OtherLoader.SpawnerEntriesByID.ContainsKey(__instance.m_selectedID))
-            {
-                return true;
-            }
-
-
-            else
-            {
-                ItemSpawnerEntry entry = OtherLoader.SpawnerEntriesByID[__instance.m_selectedID];
-                ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
-
-                OtherLogger.Log("We found an entry for it!", OtherLogger.LogType.General);
-
-                //First, fill activate some of the detail and populate it with info
-                for (int l = 0; l < __instance.IM_FavButtons.Count; l++)
-                {
-                    __instance.IM_FavButtons[l].gameObject.SetActive(true);
-                }
-
-                __instance.IM_Detail.gameObject.SetActive(true);
-                __instance.IM_Detail.sprite = entry.EntryIcon;
-                __instance.TXT_Title.text = entry.DisplayName;
-                __instance.BTN_SpawnSelectedObject.SetActive(true);
-                __instance.TXT_Detail.text = __instance.GetDetailText(__instance.m_selectedID);
-
-
-
-                //Now get all the secondary entries
-                List<ItemSpawnerEntry> secondaryEntries = new List<ItemSpawnerEntry>();
-                for (int m = 0; m < entry.SecondaryObjectIDs.Count; m++)
-                {
-                    if (!OtherLoader.SpawnerEntriesByID.ContainsKey(entry.SecondaryObjectIDs[m])){
-                        OtherLogger.LogWarning($"Secondary ID for ({entry.MainObjectID}) was not in entry dictionary! It will not appear! Secondary ID ({entry.SecondaryObjectIDs[m]})");
-                        continue;
-                    }
-
-                    ItemSpawnerEntry secondary = OtherLoader.SpawnerEntriesByID[entry.SecondaryObjectIDs[m]];
-                    secondaryEntries.Add(secondary);
-                }
-
-
-                //Now we create the secondaries page
-                //Start by drawing the tiles
-                data.VisibleSecondaryEntries.Clear();
-                int startIndex = __instance.m_selectedIDRelatedPage * __instance.IM_DetailRelated.Count;
-                for (int i = 0; i < __instance.IM_DetailRelated.Count; i++)
-                {
-                    if (startIndex + i < secondaryEntries.Count)
-                    {
-                        ItemSpawnerEntry secondaryEntry = secondaryEntries[startIndex + i];
-                        data.VisibleSecondaryEntries.Add(secondaryEntry);
-
-                        __instance.IM_DetailRelated[i].gameObject.SetActive(true);
-                        __instance.IM_DetailRelated[i].sprite = secondaryEntry.EntryIcon;
-                    }
-                    else
-                    {
-                        __instance.IM_DetailRelated[i].gameObject.SetActive(false);
-                    }
-                }
-
-                //Now handle the page selectors
-                int numPages = (int)Math.Ceiling((double)secondaryEntries.Count / __instance.IM_DetailRelated.Count);
-                __instance.TXT_DetailsRelatedPageNum.gameObject.SetActive(true);
-                __instance.TXT_DetailsRelatedPageNum.text = (__instance.m_selectedIDRelatedPage + 1).ToString() + " / " + numPages.ToString();
-                
-                if (__instance.m_selectedIDRelatedPage > 0)
-                {
-                    __instance.BTN_DetailsRelatedPrevPage.SetActive(true);
-                }
-                else
-                {
-                    __instance.BTN_DetailsRelatedPrevPage.SetActive(false);
-                }
-
-                if (__instance.m_selectedIDRelatedPage < numPages - 1)
-                {
-                    __instance.BTN_DetailsRelatedNextPage.SetActive(true);
-                }
-                else
-                {
-                    __instance.BTN_DetailsRelatedNextPage.SetActive(false);
-                }
-
-
-
-                //Setup the tutorials panel
-                for (int i = 0; i < __instance.BTNS_DetailTutorial.Count; i++)
-                {
-                    if (i < entry.TutorialBlockIDs.Count)
-                    {
-                        if (IM.TutorialBlockDic.ContainsKey(entry.TutorialBlockIDs[i]))
-                        {
-                            __instance.BTNS_DetailTutorial[i].gameObject.SetActive(true);
-                            __instance.BTNS_DetailTutorial[i].text = IM.TutorialBlockDic[entry.TutorialBlockIDs[i]].Title;
-                        }
-                        else
-                        {
-                            __instance.BTNS_DetailTutorial[i].gameObject.SetActive(false);
-                        }
-                    }
-                    else
-                    {
-                        __instance.BTNS_DetailTutorial[i].gameObject.SetActive(false);
-                    }
-                }
-
-
-
-                //Setup the favorites icons
-                for (int i = 0; i < __instance.IM_FavButtons.Count; i++)
-                {
-                    if (ManagerSingleton<IM>.Instance.ItemMetaDic.ContainsKey(__instance.m_selectedID) && ManagerSingleton<IM>.Instance.ItemMetaDic[__instance.m_selectedID].ContainsKey(TagType.Favorites) && ManagerSingleton<IM>.Instance.ItemMetaDic[__instance.m_selectedID][TagType.Favorites].Contains(__instance.FaveTags[i]))
-                    {
-                        __instance.IM_FavButtons[i].sprite = __instance.IM_FavButton_Faved[i];
-                    }
-                    else
-                    {
-                        __instance.IM_FavButtons[i].sprite = __instance.IM_FavButton_UnFaved[i];
-                    }
-                }
-            }
-
 
             return false;
         }
