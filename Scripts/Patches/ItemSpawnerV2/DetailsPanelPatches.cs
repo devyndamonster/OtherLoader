@@ -211,14 +211,14 @@ namespace OtherLoader.Patches
 
             for (int i = 0; i < pageSize; i++)
             {
-                if (startIndex + i > entry.TutorialBlockIDs.Count)
+                if (startIndex + i < entry.TutorialBlockIDs.Count)
                 {
-                    __instance.BTNS_DetailTutorial[i].gameObject.SetActive(false);
+                    __instance.BTNS_DetailTutorial[i].gameObject.SetActive(true);
+                    __instance.BTNS_DetailTutorial[i].text = IM.TutorialBlockDic[entry.TutorialBlockIDs[startIndex + i]].Title;
                 }
                 else
                 {
-                    __instance.BTNS_DetailTutorial[i].gameObject.SetActive(true);
-                    __instance.BTNS_DetailTutorial[i].text = IM.TutorialBlockDic[entry.TutorialBlockIDs[i]].Title;
+                    __instance.BTNS_DetailTutorial[i].gameObject.SetActive(false);
                 }
             }
 
@@ -245,8 +245,12 @@ namespace OtherLoader.Patches
             int pageSize = __instance.BTNS_DetailTutorial.Count;
             int numPages = GetNumberOfPagesRequired(__instance.relatedVaultFiles.Count, pageSize);
 
+            OtherLogger.Log("Number of pages for vault: " + numPages, OtherLogger.LogType.General);
+            OtherLogger.Log("Selected page: " + __instance.m_selectedIDVaultPage, OtherLogger.LogType.General);
+
             if (__instance.m_selectedIDVaultPage >= numPages)
             {
+                OtherLogger.Log("Reducing!", OtherLogger.LogType.General);
                 __instance.m_selectedIDVaultPage = numPages - 1;
             }
 
@@ -254,14 +258,14 @@ namespace OtherLoader.Patches
 
             for (int i = 0; i < pageSize; i++)
             {
-                if (startIndex + i > __instance.relatedVaultFiles.Count)
+                if (startIndex + i < __instance.relatedVaultFiles.Count)
                 {
-                    __instance.BTNS_DetailTutorial[i].gameObject.SetActive(false);
+                    __instance.BTNS_DetailTutorial[i].gameObject.SetActive(true);
+                    __instance.BTNS_DetailTutorial[i].text = __instance.relatedVaultFiles[startIndex + i];
                 }
                 else
                 {
-                    __instance.BTNS_DetailTutorial[i].gameObject.SetActive(true);
-                    __instance.BTNS_DetailTutorial[i].text = __instance.relatedVaultFiles[i];
+                    __instance.BTNS_DetailTutorial[i].gameObject.SetActive(false);
                 }
             }
 

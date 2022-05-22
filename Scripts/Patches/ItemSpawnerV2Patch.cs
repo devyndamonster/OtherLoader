@@ -253,7 +253,7 @@ namespace OtherLoader
                 data.CurrentPath = data.VisibleEntries[i].EntryPath;
                 data.CurrentDepth += 1;
                 data.SavedPagePositions[__instance.PMode][data.CurrentDepth] = 0;
-                
+
                 __instance.RedrawSimpleCanvas();
             }
 
@@ -262,9 +262,9 @@ namespace OtherLoader
             {
                 OtherLogger.Log("Setting selected id to: " + data.VisibleEntries[i].MainObjectID, OtherLogger.LogType.General);
 
+                __instance.AddToSelectionQueue(data.VisibleEntries[i].MainObjectID);
                 __instance.SetSelectedID(data.VisibleEntries[i].MainObjectID);
                 __instance.RedrawDetailsCanvas();
-
             }
 
             return false;
