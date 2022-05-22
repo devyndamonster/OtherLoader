@@ -28,7 +28,9 @@ namespace OtherLoader.Loaders
 
             if(spawnerId.MainObject != null)
             {
-                UpdateUnlockCostForItem(spawnerId);
+				OtherLogger.Log("MainObjectID for spawnerID: " + spawnerId.MainObject.ItemID, OtherLogger.LogType.Loading);
+
+				UpdateUnlockCostForItem(spawnerId);
                 UpdateUnlockStatusForItem(spawnerId);
                 RegisterSpawnerIDIntoTagSystem(spawnerId);
                 
@@ -156,7 +158,8 @@ namespace OtherLoader.Loaders
                     throw new NullReferenceException("Could not select a secondary object for ItemSpawnerID, it will not appear in spawner: Display Name: " + spawnerId.DisplayName);
                 }
 
-                spawnerId.ItemID = spawnerId.MainObject.ItemID;
+				OtherLogger.Log("Assigning itemID from secondary object: " + spawnerId.MainObject.ItemID, OtherLogger.LogType.Loading);
+				spawnerId.ItemID = spawnerId.MainObject.ItemID;
             }
         }
 

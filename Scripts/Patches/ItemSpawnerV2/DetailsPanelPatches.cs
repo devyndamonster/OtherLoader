@@ -245,12 +245,8 @@ namespace OtherLoader.Patches
             int pageSize = __instance.BTNS_DetailTutorial.Count;
             int numPages = GetNumberOfPagesRequired(__instance.relatedVaultFiles.Count, pageSize);
 
-            OtherLogger.Log("Number of pages for vault: " + numPages, OtherLogger.LogType.General);
-            OtherLogger.Log("Selected page: " + __instance.m_selectedIDVaultPage, OtherLogger.LogType.General);
-
             if (__instance.m_selectedIDVaultPage >= numPages)
             {
-                OtherLogger.Log("Reducing!", OtherLogger.LogType.General);
                 __instance.m_selectedIDVaultPage = numPages - 1;
             }
 
