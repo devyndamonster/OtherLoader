@@ -13,13 +13,13 @@ using BepInEx.Configuration;
 using Stratum;
 using System.Collections;
 using Anvil;
-using Newtonsoft.Json;
 using RenderHeads.Media.AVProVideo;
 using OtherLoader.Patches;
+using Valve.Newtonsoft.Json;
 
 namespace OtherLoader
 {
-    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.3.6")]
+    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.3.7")]
     [BepInDependency(StratumRoot.GUID, StratumRoot.Version)]
     [BepInDependency(Sodalite.SodaliteConstants.Guid, Sodalite.SodaliteConstants.Version)]
     public class OtherLoader : StratumPlugin
@@ -64,6 +64,7 @@ namespace OtherLoader
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerV2Patch));
             Harmony.CreateAndPatchAll(typeof(QuickbeltPanelPatch));
             Harmony.CreateAndPatchAll(typeof(DetailsPanelPatches));
+            Harmony.CreateAndPatchAll(typeof(ItemSpawningPatches));
 
             if (AddUnloadButton.Value)
             {

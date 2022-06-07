@@ -93,41 +93,9 @@ namespace OtherLoader
         }
 
 
-        [HarmonyPatch(typeof(ItemSpawnerV2), "BTN_Details_Spawn")]
-        [HarmonyPrefix]
-        private static bool SpawnItemDetails(ItemSpawnerV2 __instance)
-        {
-            OtherLogger.Log("Trying to spawn: " + __instance.m_selectedID, OtherLogger.LogType.General);
-
-            //If the selected item has a spawner entry, use that
-            if (OtherLoader.SpawnerEntriesByID.ContainsKey(__instance.m_selectedID))
-            {
-                OtherLogger.Log("Using normal spawn", OtherLogger.LogType.General);
-
-                __instance.Boop(1);
-                AnvilManager.Run(SpawnItems(__instance, OtherLoader.SpawnerEntriesByID[__instance.m_selectedID]));
-            }
-            
-            //Otherwise try to use legacy spawner ID
-            else if (IM.HasSpawnedID(__instance.m_selectedID))
-            {
-                OtherLogger.Log("Using legacy spawn", OtherLogger.LogType.General);
-
-                return true;
-            }
-
-            else
-            {
-                __instance.Boop(2);
-            }
-
-            return false;
-        }
-
-
         [HarmonyPatch(typeof(ItemSpawnerV2), "BTN_Details_SpawnRelated")]
         [HarmonyPrefix]
-        private static bool SpawnItemRelated(ItemSpawnerV2 __instance, int i)
+        private static bool SelectRelatedItem(ItemSpawnerV2 __instance, int i)
         {
             //If the selected item has a spawner entry, use that
             if (OtherLoader.SpawnerEntriesByID.ContainsKey(__instance.m_selectedID))
@@ -678,36 +646,7 @@ namespace OtherLoader
 
         }
 
-
-
-        private static IEnumerator SpawnItems(ItemSpawnerV2 instance, ItemSpawnerEntry entry)
-        {
-            List<AnvilCallback<GameObject>> itemsToSpawn = new List<AnvilCallback<GameObject>>();
-
-            itemsToSpawn.Add(IM.OD[entry.MainObjectID].GetGameObjectAsync());
-            itemsToSpawn.AddRange(entry.SpawnWithIDs.Select(o => IM.OD[o].GetGameObjectAsync()));
-
-            for(int i = 0; i < itemsToSpawn.Count; i++)
-            {
-                yield return itemsToSpawn[i];
-
-                if (i == 0 && entry.UsesLargeSpawnPad)
-                {
-                    UnityEngine.Object.Instantiate(itemsToSpawn[i].Result, instance.SpawnPoint_Large.position, instance.SpawnPoint_Large.rotation);
-                }
-                else
-                {
-                    if (instance.m_curSmallPos >= instance.SpawnPoints_Small.Count)
-                    {
-                        instance.m_curSmallPos = 0;
-                    }
-
-                    UnityEngine.Object.Instantiate(itemsToSpawn[i].Result, instance.SpawnPoints_Small[instance.m_curSmallPos].position, instance.SpawnPoints_Small[instance.m_curSmallPos].rotation);
-
-                    instance.m_curSmallPos += 1;
-                }
-            }
-        }
+        
 
 
         private static void CategoricalSetText(Text text, string value, TagType tagType)

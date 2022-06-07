@@ -165,7 +165,7 @@ namespace OtherLoader.Loaders
 
 		private void TagFirearm(ItemSpawnerID spawnerID)
         {
-			OtherLogger.Log("Tagging firerm!", OtherLogger.LogType.Loading);
+			OtherLogger.Log("Tagging for page Firearms!", OtherLogger.LogType.Loading);
 			IM.AddMetaTag(spawnerID.Category.ToString(), TagType.Category, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
 			IM.AddMetaTag(spawnerID.SubCategory.ToString(), TagType.SubCategory, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
 			IM.AddMetaTag(spawnerID.MainObject.TagSet.ToString(), TagType.Set, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
@@ -212,7 +212,7 @@ namespace OtherLoader.Loaders
 
 		private void TagMisc(ItemSpawnerID spawnerID, ItemSpawnerV2.PageMode page)
         {
-			OtherLogger.Log("Tagging misc on page: " + page, OtherLogger.LogType.Loading);
+			OtherLogger.Log("Tagging misc for page " + page, OtherLogger.LogType.Loading);
 			IM.AddMetaTag(spawnerID.Category.ToString(), TagType.Category, spawnerID.ItemID, page);
 			IM.AddMetaTag(spawnerID.SubCategory.ToString(), TagType.SubCategory, spawnerID.ItemID, page);
 			for (int num17 = 0; num17 < spawnerID.ModTags.Count; num17++)
@@ -234,7 +234,7 @@ namespace OtherLoader.Loaders
 
 		private void TagAttachment(ItemSpawnerID spawnerID)
         {
-			OtherLogger.Log("Tagging attachment!", OtherLogger.LogType.Loading);
+			OtherLogger.Log("Tagging for page Attachments!", OtherLogger.LogType.Loading);
 			IM.AddMetaTag(spawnerID.SubCategory.ToString(), TagType.SubCategory, spawnerID.ItemID, ItemSpawnerV2.PageMode.Attachments);
 			IM.AddMetaTag(spawnerID.MainObject.TagAttachmentFeature.ToString(), TagType.AttachmentFeature, spawnerID.ItemID, ItemSpawnerV2.PageMode.Attachments);
 			IM.AddMetaTag(spawnerID.MainObject.TagAttachmentMount.ToString(), TagType.AttachmentMount, spawnerID.ItemID, ItemSpawnerV2.PageMode.Attachments);
@@ -257,7 +257,7 @@ namespace OtherLoader.Loaders
 
 		private void TagAmmo(ItemSpawnerID spawnerID)
         {
-			OtherLogger.Log("Tagging ammo!", OtherLogger.LogType.Loading);
+			OtherLogger.Log("Tagging for page Ammo!", OtherLogger.LogType.Loading);
 			IM.AddMetaTag(spawnerID.Category.ToString(), TagType.Category, spawnerID.ItemID, ItemSpawnerV2.PageMode.Ammo);
 			IM.AddMetaTag(spawnerID.MainObject.TagSet.ToString(), TagType.Set, spawnerID.ItemID, ItemSpawnerV2.PageMode.Ammo);
 			if (spawnerID.MainObject.UsesRoundTypeFlag)
@@ -285,6 +285,7 @@ namespace OtherLoader.Loaders
 
         private void RegisterSpawnerIDIntoTagSystem(ItemSpawnerID spawnerID)
         {
+			OtherLogger.Log($"Attempting to tag {spawnerID.MainObject.ItemID}", OtherLogger.LogType.Loading);
 			if (spawnerID.Category == ItemSpawnerID.EItemCategory.MeatFortress)
 			{
 				if (spawnerID.MainObject.Category == FVRObject.ObjectCategory.Firearm)
@@ -303,30 +304,36 @@ namespace OtherLoader.Loaders
 				{
 					TagAttachment(spawnerID);
 				}
+				OtherLogger.Log($"Reason for page selection: Category = {spawnerID.Category} & ObjectCategory = {spawnerID.MainObject.Category}", OtherLogger.LogType.Loading);
 			}
 			else if (spawnerID.MainObject.Category == FVRObject.ObjectCategory.Firearm)
 			{
 				TagFirearm(spawnerID);
+				OtherLogger.Log($"Reason for page selection: ObjectCategory = {spawnerID.MainObject.Category}", OtherLogger.LogType.Loading);
 			}
 			else if (spawnerID.Category == ItemSpawnerID.EItemCategory.Magazine || spawnerID.Category == ItemSpawnerID.EItemCategory.Clip || spawnerID.Category == ItemSpawnerID.EItemCategory.Speedloader || spawnerID.Category == ItemSpawnerID.EItemCategory.Cartridge)
 			{
 				TagAmmo(spawnerID);
+				OtherLogger.Log($"Reason for page selection: Category = {spawnerID.Category}", OtherLogger.LogType.Loading);
 			}
 			else if (spawnerID.Category == ItemSpawnerID.EItemCategory.Melee)
 			{
 				TagMisc(spawnerID, ItemSpawnerV2.PageMode.Melee);
+				OtherLogger.Log($"Reason for page selection: Category = {spawnerID.Category}", OtherLogger.LogType.Loading);
 			}
 			else if (spawnerID.MainObject.Category == FVRObject.ObjectCategory.Attachment)
 			{
 				TagAttachment(spawnerID);
+				OtherLogger.Log($"Reason for page selection: ObjectCategory = {spawnerID.MainObject.Category}", OtherLogger.LogType.Loading);
 			}
 			else if (spawnerID.SubCategory == ItemSpawnerID.ESubCategory.Grenade || spawnerID.SubCategory == ItemSpawnerID.ESubCategory.RemoteExplosives || spawnerID.Category == ItemSpawnerID.EItemCategory.Misc)
 			{
 				TagMisc(spawnerID, ItemSpawnerV2.PageMode.ToolsToys);
+				OtherLogger.Log($"Reason for page selection: SubCategory = Grenade or  SubCategory = RemoteExplosives or Category = Misc", OtherLogger.LogType.Loading);
 			}
 			else if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerID.Category))
             {
-				OtherLogger.Log("Could not tag item, but it exists in custom category, so we'll put it in firearms", OtherLogger.LogType.Loading);
+				OtherLogger.Log("Could not tag item, but it has a custom category, so we'll put it in firearms", OtherLogger.LogType.Loading);
 				TagMisc(spawnerID, ItemSpawnerV2.PageMode.Firearms);
             }
             else

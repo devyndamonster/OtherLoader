@@ -55,6 +55,7 @@ namespace OtherLoader
 
         [Header("Misc Properties")]
         public bool UsesLargeSpawnPad;
+        public bool UsesHugeSpawnPad;
         public bool IsReward;
 
         [HideInInspector]
@@ -142,6 +143,7 @@ namespace OtherLoader
 
             IsDisplayedInMainEntry = ID.IsDisplayedInMainEntry;
             UsesLargeSpawnPad = ID.UsesLargeSpawnPad;
+            UsesHugeSpawnPad = ID.UsesHugeSpawnPad;
             this.IsModded = IsModded;
 
             TutorialBlockIDs = new List<string>();
@@ -223,6 +225,7 @@ namespace OtherLoader
             itemSpawnerID.Secondaries = new ItemSpawnerID[] { };
             itemSpawnerID.Sprite = EntryIcon;
             itemSpawnerID.UsesLargeSpawnPad = UsesLargeSpawnPad;
+            itemSpawnerID.UsesHugeSpawnPad = UsesHugeSpawnPad;
             itemSpawnerID.IsReward = IsReward;
             itemSpawnerID.TutorialBlocks = TutorialBlockIDs;
 
