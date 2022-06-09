@@ -173,6 +173,11 @@ namespace OtherLoader
             catch (Exception ex)
             {
                 OtherLogger.LogError("Exception when loading unlocked items!\n" + ex.ToString());
+
+                OtherLogger.LogError("Attempting to create new unlock file");
+                File.Delete(UnlockedItemSaveDataPath);
+                UnlockSaveData = new UnlockedItemSaveData(UnlockMode.Value);
+                SaveUnlockedItemsData();
             }
         }
 
