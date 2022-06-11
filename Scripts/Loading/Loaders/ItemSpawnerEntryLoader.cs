@@ -171,14 +171,24 @@ namespace OtherLoader.Loaders
         {
             if (!entry.IsCategoryEntry() && IM.OD.ContainsKey(entry.MainObjectID))
             {
+                OtherLogger.Log("Adding spawner entry to legacy spawner", OtherLogger.LogType.Loading);
+
                 ItemSpawnerID itemSpawnerID = entry.ConvertEntryToSpawnerID();
 
                 if (itemSpawnerID == null) return null;
 
-                IM.CD[itemSpawnerID.Category].Add(itemSpawnerID);
-                IM.SCD[itemSpawnerID.SubCategory].Add(itemSpawnerID);
                 IM.Instance.SpawnerIDDic[itemSpawnerID.MainObject.ItemID] = itemSpawnerID;
                 OtherLoader.SpawnerIDsByMainObject[itemSpawnerID.MainObject.ItemID] = itemSpawnerID;
+
+                if (itemSpawnerID.SubCategory != ItemSpawnerID.ESubCategory.None)
+                {
+                    IM.CD[itemSpawnerID.Category].Add(itemSpawnerID);
+                    IM.SCD[itemSpawnerID.SubCategory].Add(itemSpawnerID);
+                }
+                else
+                {
+                    OtherLogger.Log("Created ItemSpawnerID will not appear in legacy spawner because subcategory could not be found", OtherLogger.LogType.Loading);
+                }
 
                 return itemSpawnerID;
             }

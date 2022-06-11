@@ -199,7 +199,7 @@ namespace OtherLoader
         {
             ItemSpawnerID.ESubCategory subcategory = GetSpawnerSubcategory();
 
-            if (subcategory == ItemSpawnerID.ESubCategory.None || !IM.OD.ContainsKey(MainObjectID) || IsCategoryEntry())
+            if (!IM.OD.ContainsKey(MainObjectID) || IsCategoryEntry())
             {
                 return null;
             }
