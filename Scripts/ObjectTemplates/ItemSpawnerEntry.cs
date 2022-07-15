@@ -232,7 +232,7 @@ namespace OtherLoader
             return itemSpawnerID;
         }
 
-        private ItemSpawnerID.ESubCategory GetSpawnerSubcategory()
+        public ItemSpawnerID.ESubCategory GetSpawnerSubcategory()
         {
             return EntryPath
                 .Split('/')

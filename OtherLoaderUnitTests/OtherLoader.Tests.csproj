@@ -9,7 +9,7 @@
     <ProjectGuid>{E36DAA96-7AE5-4D40-9CDF-3C3CAFF61F6C}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OtherLoaderUnitTests</RootNamespace>
+    <RootNamespace>OtherLoader.Tests</RootNamespace>
     <AssemblyName>OtherLoaderUnitTests</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -65,8 +65,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ItemSpawnerEntryTests.cs" />
+    <Compile Include="Tests\ItemSpawnerEntryTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utilities\ItemSpawnerEntrySampleBuilder.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
