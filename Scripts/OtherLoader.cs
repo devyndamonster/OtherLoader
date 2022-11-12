@@ -65,6 +65,7 @@ namespace OtherLoader
             Harmony.CreateAndPatchAll(typeof(QuickbeltPanelPatch));
             Harmony.CreateAndPatchAll(typeof(DetailsPanelPatches));
             Harmony.CreateAndPatchAll(typeof(ItemSpawningPatches));
+            Harmony.CreateAndPatchAll(typeof(SimpleCanvasePatches));
 
             if (AddUnloadButton.Value)
             {

@@ -37,6 +37,19 @@ namespace OtherLoader
 
             return true;
         }
+        
+        [HarmonyPatch(typeof(ItemSpawnerV2), "SelectItem")]
+        [HarmonyPrefix]
+        private static bool SelectItemPatch(ItemSpawnerV2 __instance, int i)
+        {
+            if (i < __instance.m_displayedItemIds.Count && OtherLoader.UnlockSaveData.IsItemUnlocked(__instance.m_displayedItemIds[i]))
+            {
+                __instance.SetSelectedID(__instance.m_displayedItemIds[i]);
+                __instance.RedrawDetailsCanvas();
+            }
+
+            return false;
+        }
 
 
         private static IEnumerator HandleLoadingText(ItemSpawnerV2 instance)
@@ -156,190 +169,7 @@ namespace OtherLoader
 
             return false;
         }
-
-
-
-        [HarmonyPatch(typeof(ItemSpawnerV2), "SimpleGoBack")]
-        [HarmonyPrefix]
-        private static bool GoBackPatch(ItemSpawnerV2 __instance)
-        {
-            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
-            if (!data.CurrentPath.Contains("/")) return false;
-
-            data.CurrentPath = data.CurrentPath.Substring(0, data.CurrentPath.LastIndexOf("/"));
-            data.SavedPagePositions[__instance.PMode][data.CurrentDepth] = 0;
-            data.CurrentDepth -= 1;
-
-            OtherLogger.Log("Going back to path: " + data.CurrentPath, OtherLogger.LogType.General);
-            __instance.RedrawSimpleCanvas();
-
-            return false;
-        }
-
-
-        [HarmonyPatch(typeof(ItemSpawnerV2), "SimpleNextPage")]
-        [HarmonyPrefix]
-        private static bool NextPagePatch(ItemSpawnerV2 __instance)
-        {
-            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
-            
-            if(OtherLoader.SpawnerEntriesByPath[data.CurrentPath].childNodes.Count / __instance.IMG_SimpleTiles.Count > data.SavedPagePositions[__instance.PMode][data.CurrentDepth])
-            {
-                data.SavedPagePositions[__instance.PMode][data.CurrentDepth] += 1;
-                __instance.RedrawSimpleCanvas();
-            }
-
-            return false;
-        }
-
-
-        [HarmonyPatch(typeof(ItemSpawnerV2), "SimplePrevage")]
-        [HarmonyPrefix]
-        private static bool PrevPagePatch(ItemSpawnerV2 __instance)
-        {
-            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
-
-            if (data.SavedPagePositions[__instance.PMode][data.CurrentDepth] > 0)
-            {
-                data.SavedPagePositions[__instance.PMode][data.CurrentDepth] -= 1;
-                __instance.RedrawSimpleCanvas();
-            }
-
-            return false;
-        }
-
-
-        [HarmonyPatch(typeof(ItemSpawnerV2), "SimpleSelectTile")]
-        [HarmonyPrefix]
-        private static bool SimpleButtonPatch(ItemSpawnerV2 __instance, int i)
-        {
-            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
-
-            //If the entry that was selected has child entries, we should display the child entries
-            if (OtherLoader.DoesEntryHaveChildren(data.VisibleEntries[i]))
-            {
-                data.CurrentPath = data.VisibleEntries[i].EntryPath;
-                data.CurrentDepth += 1;
-                data.SavedPagePositions[__instance.PMode][data.CurrentDepth] = 0;
-
-                __instance.RedrawSimpleCanvas();
-            }
-
-            //If the item is unlocked, allow it to be selected
-            else if (OtherLoader.UnlockSaveData.IsItemUnlocked(data.VisibleEntries[i].MainObjectID))
-            {
-                OtherLogger.Log("Setting selected id to: " + data.VisibleEntries[i].MainObjectID, OtherLogger.LogType.General);
-
-                __instance.AddToSelectionQueue(data.VisibleEntries[i].MainObjectID);
-                __instance.SetSelectedID(data.VisibleEntries[i].MainObjectID);
-                __instance.RedrawDetailsCanvas();
-            }
-
-            return false;
-        }
-
-
-
-        [HarmonyPatch(typeof(ItemSpawnerV2), "SelectItem")]
-        [HarmonyPrefix]
-        private static bool SelectItemPatch(ItemSpawnerV2 __instance, int i)
-        {
-            if (i < __instance.m_displayedItemIds.Count && OtherLoader.UnlockSaveData.IsItemUnlocked(__instance.m_displayedItemIds[i]))
-            {
-                __instance.SetSelectedID(__instance.m_displayedItemIds[i]);
-                __instance.RedrawDetailsCanvas();
-            }
-
-            return false;
-        }
-
-
-
-        [HarmonyPatch(typeof(ItemSpawnerV2), "RedrawSimpleCanvas")]
-        [HarmonyPrefix]
-        private static bool RedrawSimplePatch(ItemSpawnerV2 __instance)
-        {
-            if (__instance.PMode == ItemSpawnerV2.PageMode.MainMenu) return false;
-
-            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
-            data.VisibleEntries.Clear();
-
-            List<EntryNode> entries = OtherLoader.SpawnerEntriesByPath[data.CurrentPath].childNodes.Where(o => o.entry.IsDisplayedInMainEntry).ToList();
-            string childNodePaths = String.Join("\n", OtherLoader.SpawnerEntriesByPath[data.CurrentPath].childNodes.Select(o => "Display?: " + o.entry.IsDisplayedInMainEntry + ", Path: " + o.entry.EntryPath).ToArray());
-
-            OtherLogger.Log($"Logging all possible child entries: {childNodePaths}", OtherLogger.LogType.Loading);
-            OtherLogger.Log($"Got {entries.Count} entries for path: {OtherLoader.SpawnerEntriesByPath[data.CurrentPath].childNodes}", OtherLogger.LogType.Loading);
-
-            entries = entries.OrderBy(o => o.entry.DisplayName).OrderBy(o => o.entry.IsModded?1:0).OrderBy(o => o.childNodes.Count > 0?0:1).ToList();
-
-            int currPage = data.SavedPagePositions[__instance.PMode][data.CurrentDepth];
-            int startIndex = currPage * __instance.IMG_SimpleTiles.Count;
-            for (int i = 0; i < __instance.IMG_SimpleTiles.Count; i++)
-            {
-                if(startIndex + i < entries.Count)
-                {
-                    ItemSpawnerEntry entry = entries[startIndex + i].entry;
-                    data.VisibleEntries.Add(entry);
-
-                    if (OtherLoader.DoesEntryHaveChildren(entry) || OtherLoader.UnlockSaveData.IsItemUnlocked(entry.MainObjectID))
-                    {
-                        __instance.IMG_SimpleTiles[i].gameObject.SetActive(true);
-                        __instance.TXT_SimpleTiles[i].gameObject.SetActive(true);
-                        __instance.IMG_SimpleTiles[i].sprite = entry.EntryIcon;
-                        __instance.TXT_SimpleTiles[i].text = entry.DisplayName;
-                    }
-                    else
-                    {
-                        __instance.IMG_SimpleTiles[i].gameObject.SetActive(true);
-                        __instance.TXT_SimpleTiles[i].gameObject.SetActive(true);
-                        __instance.IMG_SimpleTiles[i].sprite = OtherLoader.LockIcon;
-                        __instance.TXT_SimpleTiles[i].text = "???";
-                    }
-                }
-                else
-                {
-                    __instance.IMG_SimpleTiles[i].gameObject.SetActive(false);
-                    __instance.TXT_SimpleTiles[i].gameObject.SetActive(false);
-                }
-            }
-
-            int numPages = (int) Math.Ceiling((double) entries.Count / __instance.IMG_SimpleTiles.Count);
-
-            OtherLogger.Log($"There are {numPages} pages for this entry", OtherLogger.LogType.General);
-
-            __instance.TXT_SimpleTiles_PageNumber.text = (currPage + 1) + " / " + (numPages);
-            __instance.TXT_SimpleTiles_Showing.text = 
-                "Showing " + 
-                (currPage * __instance.IMG_SimpleTiles.Count) + 
-                " - " + 
-                (currPage * __instance.IMG_SimpleTiles.Count + data.VisibleEntries.Count) +
-                " Of " +
-                entries.Count;
-
-
-            if(currPage > 0)
-            {
-                __instance.GO_SimpleTiles_PrevPage.SetActive(true);
-            }
-            else
-            {
-                __instance.GO_SimpleTiles_PrevPage.SetActive(false);
-            }
-
-            if(currPage < numPages - 1)
-            {
-                __instance.GO_SimpleTiles_NextPage.SetActive(true);
-            }
-            else
-            {
-                __instance.GO_SimpleTiles_NextPage.SetActive(false);
-            }
-
-            return false;
-        }
-
-
-
+        
         [HarmonyPatch(typeof(ItemSpawnerV2), "RedrawListCanvas")]
         [HarmonyPrefix]
         private static bool RedrawListPatch(ItemSpawnerV2 __instance)
