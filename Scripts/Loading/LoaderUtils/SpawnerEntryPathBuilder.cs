@@ -105,43 +105,47 @@ namespace OtherLoader.Loaders
 
         private void PopulateNodeFromSpawnerId(ItemSpawnerID spawnerId, EntryNode node)
         {
-            if (IsCategorySegment() && RequiresCategorySearch(spawnerId))
+            if (IsCategorySegment() && IsModdedCategory(spawnerId.Category))
             {
-                PopulateNodeFromCategorySearch(spawnerId, node);
+                PopulateNodeFromLegacyCategory(spawnerId, node);
             }
 
-            else if (IsCategorySegment() && IsModdedCategory(spawnerId.Category))
+            if (IsCategorySegment() && RequiresCategorySearch(spawnerId))
             {
                 PopulateNodeFromCategory(spawnerId, node);
             }
 
-            else 
+            else
             {
-                PopulateNodeFromSubcategory(spawnerId, node);
+                PopulateNodeFromSubCategory(spawnerId, node);
             }
 
             node.entry.IsModded = IM.OD[spawnerId.MainObject.ItemID].IsModContent;
         }
 
-
-        private void PopulateNodeFromCategorySearch(ItemSpawnerID spawnerId, EntryNode node)
+        
+        private void PopulateNodeFromCategory(ItemSpawnerID spawnerId, EntryNode node)
         {
-            //For some legacy categories, we must perform this disgustingly bad search for their icons
-            foreach (ItemSpawnerCategoryDefinitionsV2.SpawnerPage page in IM.CatDef.Pages)
+            ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup tagGroup;
+            if(OtherLoader.TagGroupsByTag.TryGetValue(spawnerId.Category.ToString(), out tagGroup))
             {
-                foreach (ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup tagGroup in page.TagGroups)
-                {
-                    if (tagGroup.TagT == TagType.Category && tagGroup.Tag == spawnerId.Category.ToString())
-                    {
-                        node.entry.EntryIcon = tagGroup.Icon;
-                        node.entry.DisplayName = tagGroup.DisplayName;
-                    }
-                }
+                node.entry.EntryIcon = tagGroup.Icon;
+                node.entry.DisplayName = tagGroup.DisplayName;
+            }
+        }
+
+        private void PopulateNodeFromSubCategory(ItemSpawnerID spawnerId, EntryNode node)
+        {
+            ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup tagGroup;
+            if (OtherLoader.TagGroupsByTag.TryGetValue(spawnerId.Category.ToString(), out tagGroup))
+            {
+                node.entry.EntryIcon = tagGroup.Icon;
+                node.entry.DisplayName = tagGroup.DisplayName;
             }
         }
 
 
-        private void PopulateNodeFromCategory(ItemSpawnerID spawnerId, EntryNode node)
+        private void PopulateNodeFromLegacyCategory(ItemSpawnerID spawnerId, EntryNode node)
         {
             if (IM.CDefInfo.ContainsKey(spawnerId.Category))
             {
@@ -149,17 +153,7 @@ namespace OtherLoader.Loaders
                 node.entry.DisplayName = IM.CDefInfo[spawnerId.Category].DisplayName;
             }
         }
-
-        private void PopulateNodeFromSubcategory(ItemSpawnerID spawnerId, EntryNode node)
-        {
-            if (IM.CDefSubInfo.ContainsKey(spawnerId.SubCategory))
-            {
-                node.entry.EntryIcon = IM.CDefSubInfo[spawnerId.SubCategory].Sprite;
-                node.entry.DisplayName = IM.CDefSubInfo[spawnerId.SubCategory].DisplayName;
-            }
-        }
-
-
+        
         private bool RequiresCategorySearch(ItemSpawnerID spawnerId)
         {
             return spawnerId.Category == ItemSpawnerID.EItemCategory.MeatFortress ||

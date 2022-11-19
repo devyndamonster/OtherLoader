@@ -29,12 +29,13 @@ namespace OtherLoader
         public static string UnlockedItemSaveDataPath;
 
         // A dictionary of asset bundles managed by OtherLoader. The key is the UniqueAssetID, and the value is the path to that file
-        public static Dictionary<string, string> ManagedBundles = new Dictionary<string, string>();
+        public static Dictionary<string, string> ManagedBundles = new();
 
-        public static Dictionary<string, EntryNode> SpawnerEntriesByPath = new Dictionary<string, EntryNode>();
-        public static Dictionary<string, ItemSpawnerEntry> SpawnerEntriesByID = new Dictionary<string, ItemSpawnerEntry>();
-        public static Dictionary<string, MediaPath> TutorialBlockVideos = new Dictionary<string, MediaPath>();
-        public static Dictionary<string, ItemSpawnerID> SpawnerIDsByMainObject = new Dictionary<string, ItemSpawnerID>();
+        public static Dictionary<string, EntryNode> SpawnerEntriesByPath = new();
+        public static Dictionary<string, ItemSpawnerEntry> SpawnerEntriesByID = new();
+        public static Dictionary<string, MediaPath> TutorialBlockVideos = new();
+        public static Dictionary<string, ItemSpawnerID> SpawnerIDsByMainObject = new();
+        public static Dictionary<string, ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup> TagGroupsByTag = new();
         public static UnlockedItemSaveData UnlockSaveData;
         public static Sprite LockIcon;
 
@@ -66,6 +67,7 @@ namespace OtherLoader
             Harmony.CreateAndPatchAll(typeof(DetailsPanelPatches));
             Harmony.CreateAndPatchAll(typeof(ItemSpawningPatches));
             Harmony.CreateAndPatchAll(typeof(SimpleCanvasePatches));
+            Harmony.CreateAndPatchAll(typeof(ItemDataLoadingPatches));
 
             if (AddUnloadButton.Value)
             {
@@ -374,37 +376,7 @@ namespace OtherLoader
 
             return true;
         }
-
-
-        [HarmonyPatch(typeof(IM), "RegisterItemIntoMetaTagSystem")]
-        [HarmonyPostfix] 
-        private static void MetaTagPatch(ItemSpawnerID ID)
-        {
-            //If this item is not a reward, unlock it by default
-            if (ID.MainObject != null)
-            {
-                SpawnerIDsByMainObject[ID.MainObject.ItemID] = ID;
-
-                if (UnlockSaveData.ShouldAutoUnlockItem(ID))
-                {
-                    UnlockSaveData.UnlockItem(ID.MainObject.ItemID);
-                }
-            }
-
-            //If this IDs items didn't get added, add it to the firearm page
-            if (IM.Instance.PageItemLists.ContainsKey(ItemSpawnerV2.PageMode.Firearms))
-            {
-                if (!IM.Instance.PageItemLists.Any(o => o.Value.Contains(ID.ItemID)) && IM.OD.ContainsKey(ID.MainObject.ItemID) && IM.OD[ID.MainObject.ItemID].IsModContent)
-                {
-                    OtherLogger.Log("Adding misc mod item to meta tag system: " + ID.ItemID, OtherLogger.LogType.Loading);
-
-                    IM.AddMetaTag(ID.Category.ToString(), TagType.Category, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-                    IM.AddMetaTag(ID.SubCategory.ToString(), TagType.SubCategory, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-                }
-            }
-        }
-
-
+        
         private class DirectLoadMod
         {
             public string path;

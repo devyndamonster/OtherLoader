@@ -118,6 +118,7 @@
     <Compile Include="Scripts\ObjectTemplates\ItemSpawnerData.cs" />
     <Compile Include="Scripts\ObjectTemplates\ItemSpawnerEntry.cs" />
     <Compile Include="Scripts\ObjectTemplates\UnlockedItemSaveData.cs" />
+    <Compile Include="Scripts\Patches\ItemDataLoadingPatches.cs" />
     <Compile Include="Scripts\Patches\ItemSpawnerV2Patch.cs" />
     <Compile Include="Scripts\Patches\ItemSpawnerV2\DetailsPanelPatches.cs" />
     <Compile Include="Scripts\Patches\ItemSpawnerV2\ItemSpawningPatches.cs" />
@@ -131,6 +132,9 @@
     <Compile Include="Scripts\OtherLoader.cs" />
     <Compile Include="Scripts\OtherLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scripts\Services\ISpawnerEntryLoadingService.cs" />
+    <Compile Include="Scripts\Services\ISpawnerIdLoadingService.cs" />
+    <Compile Include="Scripts\Services\SpawnerIdLoadingService.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

@@ -28,7 +28,7 @@ namespace OtherLoader
             LogLoading = logLoading;
         }
 
-        public static void Log(string log, LogType type)
+        public static void Log(string log, LogType type = LogType.General)
         {
             if (AllowLogging)
             {

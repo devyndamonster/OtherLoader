@@ -415,11 +415,7 @@ namespace OtherLoader
 
             return true;
         }
-
-
-
-
-
+        
         [HarmonyPatch(typeof(ItemSpawnerV2), "RedrawTagsCanvas")]
         [HarmonyILManipulator]
         private static void TagNamingPatch(ILContext ctx, MethodBase orig)
@@ -451,34 +447,7 @@ namespace OtherLoader
             //Now add our new call for setting the text
             c.Emit(OpCodes.Call, ((Action<Text, string, TagType>)CategoricalSetText).Method);
         }
-
-
-
-        [HarmonyPatch(typeof(IM), "GenerateItemDBs")]
-        [HarmonyILManipulator]
-        private static void DisableRewardCheckPatch(ILContext ctx, MethodBase orig)
-        {
-            ILCursor c = new ILCursor(ctx);
-
-            c.GotoNext(
-                i => i.MatchLdfld(AccessTools.Field(typeof(ItemSpawnerID), "MainObject"))
-            );
-
-            c.RemoveRange(17);
-
-            c.Emit(OpCodes.Call, ((Action<ItemSpawnerID>)RegisterItemSpawnerID).Method);
-
-            c.GotoNext(
-                i => i.MatchLdstr("SosigEnemyTemplates")
-            );
-
-            c.Emit(OpCodes.Call, ((Action)PopulateSpawnerEntries).Method);
-
-        }
-
         
-
-
         private static void CategoricalSetText(Text text, string value, TagType tagType)
         {
             if (tagType == TagType.Category && !Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), value))
@@ -495,32 +464,5 @@ namespace OtherLoader
 
             text.text = value;
         }
-
-        private static void RegisterItemSpawnerID(ItemSpawnerID spawnerID)
-        {
-            if(spawnerID.MainObject != null)
-            {
-                IM.RegisterItemIntoMetaTagSystem(spawnerID);
-            }
-        }
-
-
-        private static void PopulateSpawnerEntries()
-        {
-            SpawnerEntryPathBuilder pathBuilder = new SpawnerEntryPathBuilder();
-
-            foreach(KeyValuePair<ItemSpawnerV2.PageMode,List<string>> PageLists in IM.Instance.PageItemLists)
-            {
-                foreach(string ItemID in PageLists.Value)
-                {
-                    ItemSpawnerID SpawnerID = IM.Instance.SpawnerIDDic[ItemID];
-
-                    ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
-                    SpawnerEntry.LegacyPopulateFromID(PageLists.Key, SpawnerID, false);
-                    pathBuilder.PopulateEntryPaths(SpawnerEntry, SpawnerID);
-                }
-            }
-        }
-
     }
 }

@@ -8,21 +8,18 @@ namespace OtherLoader
 {
     public class EntryNode
     {
-
         public ItemSpawnerEntry entry;
 
         public List<EntryNode> childNodes = new List<EntryNode>();
 
-        public EntryNode(ItemSpawnerEntry entry = null)
+        public EntryNode()
         {
-            if(entry == null)
-            {
-                this.entry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
-            }
-            else
-            {
-                this.entry = entry;
-            }
+            this.entry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
+        }
+
+        public EntryNode(ItemSpawnerEntry entry)
+        {
+            this.entry = entry;
         }
 
     }
