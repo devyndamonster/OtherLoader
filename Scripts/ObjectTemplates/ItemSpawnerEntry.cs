@@ -62,6 +62,13 @@ namespace OtherLoader
         public bool IsModded;
 
         
+        public static ItemSpawnerEntry CreateEmpty(string path)
+        {
+            var entry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
+            entry.EntryPath = path;
+            return entry;
+        }
+
         public void PopulateIDsFromObj()
         {
             if(MainObjectObj != null)

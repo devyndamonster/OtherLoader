@@ -1,86 +1,62 @@
 ﻿using FistVR;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace OtherLoader.Scripts.Services
+namespace OtherLoader.Services
 {
     public class SpawnerIdLoadingService : ISpawnerIdLoadingService
     {
-        private readonly ISpawnerEntryLoadingService _spawnerEntryLoadingService;
-
-        public SpawnerIdLoadingService(ISpawnerEntryLoadingService spawnerEntryLoadingService)
+        private readonly IPathService _pathService;
+        
+        public SpawnerIdLoadingService(IPathService pathService)
         {
-            _spawnerEntryLoadingService = spawnerEntryLoadingService;
-        }
-
-        public void PopulateEntriesFromSpawnerId(ItemSpawnerID spawnerId)
-        {
-            var spawnerEntry = _spawnerEntryLoadingService.GetSpawnerEntryFromSpawnerId(spawnerId);
-            PopulateEntryForPage(spawnerEntry);
-            PopulateEntryForCategory(spawnerEntry);
-            PopulateEntryForSpawnerId(spawnerEntry);
+            _pathService = pathService;
         }
         
-        private void PopulateEntryForPage(ItemSpawnerEntry spawnerEntry)
+        public IEnumerable<ItemSpawnerEntry> GenerateRequiredSpawnerEntriesForSpawnerId(ItemSpawnerID spawnerId)
         {
-            var page = GetPage(spawnerEntry);
-            if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(page))
-            {
-                var pageNode = new EntryNode();
-                pageNode.entry.EntryPath = page;
-                OtherLoader.SpawnerEntriesByPath[page] = pageNode;
-            }
+            var spawnerEntries = new List<ItemSpawnerEntry>();
+            var spawnerEntry = GenerateSpawnerEntryFromSpawnerId(spawnerId);
+            var parentEntries = GenerateParentSpawnerEntries(spawnerEntry);
+
+            spawnerEntries.AddRange(parentEntries);
+            spawnerEntries.Add(spawnerEntry);
+            return spawnerEntries;
         }
-        
-        private void PopulateEntryForCategory(ItemSpawnerEntry spawnerEntry)
+
+        public IEnumerable<ItemSpawnerEntry> GenerateParentSpawnerEntries(ItemSpawnerEntry spawnerEntry)
         {
-            var page = GetPage(spawnerEntry);
-            var category = GetCategory(spawnerEntry);
-            var path = page + "/" + category;
-            var pageNode = OtherLoader.SpawnerEntriesByPath[page];
+            var spawnerEntries = new List<ItemSpawnerEntry>();
+            var pagePath = _pathService.GetRootPath(spawnerEntry.EntryPath);
+            var middlePaths = _pathService
+                .GetSpreadOfPath(_pathService.GetParentPath(spawnerEntry.EntryPath))
+                .Skip(1);
+
+            spawnerEntries.Add(ItemSpawnerEntry.CreateEmpty(pagePath));
             
-            if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(path))
+            foreach(var middlePath in middlePaths)
             {
-                if (OtherLoader.TagGroupsByTag.TryGetValue(category, out var tagGroup))
+                var middleEntry = ItemSpawnerEntry.CreateEmpty(middlePath);
+                var pathEnding = _pathService.GetEndOfPath(middlePath);
+
+                if (OtherLoader.TagGroupsByTag.TryGetValue(pathEnding, out var tagGroup))
                 {
-                    var categoryNode = new EntryNode();
-                    categoryNode.entry.EntryIcon = tagGroup.Icon;
-                    categoryNode.entry.DisplayName = tagGroup.DisplayName;
-                    pageNode.childNodes.Add(categoryNode);
-                    OtherLoader.SpawnerEntriesByPath[path] = categoryNode;
+                    middleEntry.EntryIcon = tagGroup.Icon;
+                    middleEntry.DisplayName = tagGroup.DisplayName;
                 }
+
+                spawnerEntries.Add(middleEntry);
             }
-        }
-        
-        private void PopulateEntryForSpawnerId(ItemSpawnerEntry spawnerEntry)
-        {
-            var page = GetPage(spawnerEntry);
-            var category = GetCategory(spawnerEntry);
-            var categoryPath = page + "/" + category;
-            var categoryNode = OtherLoader.SpawnerEntriesByPath[categoryPath];
-            
-            if (OtherLoader.SpawnerEntriesByPath.ContainsKey(spawnerEntry.EntryPath))
-            {
-                OtherLoader.SpawnerEntriesByPath[spawnerEntry.EntryPath].entry = spawnerEntry;
-            }
-            else
-            {
-                var itemNode = new EntryNode(spawnerEntry);
-                OtherLoader.SpawnerEntriesByPath[spawnerEntry.EntryPath] = itemNode;
-                categoryNode.childNodes.Add(itemNode);
-            }
+
+            return spawnerEntries;
         }
 
-        private string GetPage(ItemSpawnerEntry spawnerEntry)
+        public ItemSpawnerEntry GenerateSpawnerEntryFromSpawnerId(ItemSpawnerID spawnerId)
         {
-            return spawnerEntry.EntryPath.Split('/').First();
-        }
-
-        private string GetCategory(ItemSpawnerEntry spawnerEntry)
-        {
-            return spawnerEntry.EntryPath.Split('/').Skip(1).First();
+            throw new NotImplementedException();
         }
     }
 }

@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace OtherLoader.Scripts.Services
+namespace OtherLoader.Services
 {
     public interface ISpawnerEntryLoadingService
     {
-        public ItemSpawnerEntry GetSpawnerEntryFromSpawnerId(ItemSpawnerID spawnerId);
+        public void AddItemSpawnerEntryToPaths(ItemSpawnerEntry spawnerEntry);
+
+        public void AddItemSpawnerEntriesToPaths(IEnumerable<ItemSpawnerEntry> spawnerEntries);
     }
 }
