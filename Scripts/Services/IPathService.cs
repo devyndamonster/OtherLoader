@@ -13,6 +13,8 @@ namespace OtherLoader.Services
 
         public string GetEndOfPath(string path);
 
-        public IEnumerable<string> GetSpreadOfPath(string path);
+        public IEnumerable<string> GetChildPaths(string path);
+
+        public bool HasParent(string path);
     }
 }

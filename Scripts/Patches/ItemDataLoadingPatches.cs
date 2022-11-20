@@ -3,6 +3,7 @@ using HarmonyLib;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using OtherLoader.Loaders;
+using OtherLoader.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,8 +13,12 @@ using UnityEngine;
 
 namespace OtherLoader.Patches
 {
-    public class ItemDataLoadingPatches
+    public static class ItemDataLoadingPatches
     {
+        public static ISpawnerIdLoadingService _spawnerIdLoadingService;
+        public static ISpawnerEntryLoadingService _spawnerEntryLoadingService;
+
+        
         [HarmonyPatch(typeof(IM), "RegisterItemIntoMetaTagSystem")]
         [HarmonyPostfix]
         private static void MetaTagPatch(ItemSpawnerID ID)
@@ -66,8 +71,6 @@ namespace OtherLoader.Patches
 
         private static void PopulateSpawnerEntries()
         {
-            SpawnerEntryPathBuilder pathBuilder = new SpawnerEntryPathBuilder();
-
             foreach (var page in IM.CatDef.Pages)
             {
                 foreach (var tagGroup in page.TagGroups)
@@ -76,15 +79,13 @@ namespace OtherLoader.Patches
                 }
             }
             
-            foreach (KeyValuePair<ItemSpawnerV2.PageMode, List<string>> PageLists in IM.Instance.PageItemLists)
+            foreach (KeyValuePair<ItemSpawnerV2.PageMode, List<string>> pageLists in IM.Instance.PageItemLists)
             {
-                foreach (string ItemID in PageLists.Value)
+                foreach (string itemId in pageLists.Value)
                 {
-                    ItemSpawnerID SpawnerID = IM.Instance.SpawnerIDDic[ItemID];
-
-                    ItemSpawnerEntry SpawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
-                    SpawnerEntry.LegacyPopulateFromID(PageLists.Key, SpawnerID, false);
-                    pathBuilder.PopulateEntryPaths(SpawnerEntry, SpawnerID);
+                    ItemSpawnerID spawnerId = IM.Instance.SpawnerIDDic[itemId];
+                    var spawnerEntries = _spawnerIdLoadingService.GenerateRequiredSpawnerEntriesForSpawnerId(spawnerId);
+                    _spawnerEntryLoadingService.AddItemSpawnerEntriesToPaths(spawnerEntries);
                 }
             }
         }

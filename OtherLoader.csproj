@@ -132,6 +132,7 @@
     <Compile Include="Scripts\OtherLoader.cs" />
     <Compile Include="Scripts\OtherLogger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scripts\Services\IMetaDataService.cs" />
     <Compile Include="Scripts\Services\IPathService.cs" />
     <Compile Include="Scripts\Services\ISpawnerEntryLoadingService.cs" />
     <Compile Include="Scripts\Services\ISpawnerIdLoadingService.cs" />

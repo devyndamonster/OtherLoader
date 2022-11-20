@@ -1,4 +1,5 @@
 ﻿using FistVR;
+using OtherLoader.Services;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,8 +11,9 @@ namespace OtherLoader.Loaders
 {
     public class ItemSpawnerEntryLoader : BaseAssetLoader
     {
+        private readonly ISpawnerEntryLoadingService _spawnerEntryLoadingService;
+
         private List<ItemSpawnerID> convertedSpawnerIDs;
-        private SpawnerEntryPathBuilder entryPathBuilder = new SpawnerEntryPathBuilder();
 
         public override IEnumerator LoadAssetsFromBundle(AssetBundle assetBundle, string bundleId)
         {
@@ -29,7 +31,7 @@ namespace OtherLoader.Loaders
 
             spawnerEntry.IsModded = true;
             spawnerEntry.PopulateIDsFromObj();
-            entryPathBuilder.PopulateEntryPaths(spawnerEntry);
+            _spawnerEntryLoadingService.AddItemSpawnerEntryToPaths(spawnerEntry);
 
             if (!spawnerEntry.IsCategoryEntry())
             {

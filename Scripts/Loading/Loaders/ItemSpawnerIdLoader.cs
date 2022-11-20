@@ -1,4 +1,5 @@
 ﻿using FistVR;
+using OtherLoader.Services;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,14 +11,15 @@ namespace OtherLoader.Loaders
 {
     public class ItemSpawnerIdLoader : BaseAssetLoader
     {
-        private SpawnerEntryPathBuilder entryPathBuilder = new SpawnerEntryPathBuilder();
+        private readonly ISpawnerIdLoadingService _spawnerIdLoadingService;
+		private readonly ISpawnerEntryLoadingService _spawnerEntryLoadingService;
+		private readonly IMetaDataService _metaDataService;
 
         public override IEnumerator LoadAssetsFromBundle(AssetBundle assetBundle, string bundleId)
         {
             return LoadAssetsFromBundle<ItemSpawnerID>(assetBundle, bundleId);
         }
-
-
+        
         protected override void LoadAsset(UnityEngine.Object asset, string bundleId)
         {
             ItemSpawnerID spawnerId = asset as ItemSpawnerID;
@@ -32,7 +34,7 @@ namespace OtherLoader.Loaders
 
 				UpdateUnlockCostForItem(spawnerId);
                 UpdateUnlockStatusForItem(spawnerId);
-                RegisterSpawnerIDIntoTagSystem(spawnerId);
+				_metaDataService.RegisterSpawnerIDIntoTagSystem(spawnerId);
                 
                 if(GetPageForSpawnerId(spawnerId) == ItemSpawnerV2.PageMode.MainMenu)
                 {
@@ -63,28 +65,13 @@ namespace OtherLoader.Loaders
 				UpdateVisibilityForItem(spawnerId);
 			}
         }
-
-
+        
         private void AddSpawnerIdToNewSpawner(ItemSpawnerID spawnerId)
         {
-            ItemSpawnerEntry spawnerEntry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
-
-            if (IsCustomCategory(spawnerId.Category))
-            {
-                OtherLogger.Log("Adding SpawnerID to spawner entry tree under custom category", OtherLogger.LogType.Loading);
-                spawnerEntry.LegacyPopulateFromID(ItemSpawnerV2.PageMode.Firearms, spawnerId, true);
-                entryPathBuilder.PopulateEntryPaths(spawnerEntry, spawnerId);
-            }
-            
-            else
-            {
-                OtherLogger.Log("Adding SpawnerID under vanilla category", OtherLogger.LogType.Loading);
-                ItemSpawnerV2.PageMode spawnerPage = GetPageForSpawnerId(spawnerId);
-                spawnerEntry.LegacyPopulateFromID(spawnerPage, spawnerId, true);
-                entryPathBuilder.PopulateEntryPaths(spawnerEntry, spawnerId);
-                OtherLogger.Log("Converted spawner entry path: " + spawnerEntry.EntryPath, OtherLogger.LogType.Loading);
-            }
-        }
+			OtherLogger.Log("Adding SpawnerID to spawner entry tree", OtherLogger.LogType.Loading);
+			var spawnerEntries = _spawnerIdLoadingService.GenerateRequiredSpawnerEntriesForSpawnerId(spawnerId);
+			_spawnerEntryLoadingService.AddItemSpawnerEntriesToPaths(spawnerEntries);
+		}
 
         private bool CategoriesExistForSpawnerId(ItemSpawnerID spawnerId)
         {
@@ -95,13 +82,7 @@ namespace OtherLoader.Loaders
         {
             return IM.Instance.SpawnerIDDic.ContainsKey(spawnerId.ItemID);
         }
-
-        private bool IsCustomCategory(ItemSpawnerID.EItemCategory category)
-        {
-            return Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), category);
-        }
-
-
+        
         private ItemSpawnerV2.PageMode GetPageForSpawnerId(ItemSpawnerID spawnerId)
         {
             return IM.Instance.PageItemLists.FirstOrDefault(o => o.Value.Contains(spawnerId.ItemID)).Key;
@@ -341,15 +322,5 @@ namespace OtherLoader.Loaders
 				OtherLogger.Log("We didn't tag the item at all!", OtherLogger.LogType.Loading);
 			}
 		}
-
-		private bool IsItemInFirearmCategory(ItemSpawnerID spawnerID)
-        {
-			return spawnerID.Category == ItemSpawnerID.EItemCategory.Pistol
-				|| spawnerID.Category == ItemSpawnerID.EItemCategory.Shotgun
-				|| spawnerID.Category == ItemSpawnerID.EItemCategory.SMG_Rifle
-				|| spawnerID.Category == ItemSpawnerID.EItemCategory.Support;
-
-		}
-
     }
 }

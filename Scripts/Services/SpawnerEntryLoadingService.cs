@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace OtherLoader.Services
 {
@@ -24,21 +21,17 @@ namespace OtherLoader.Services
 
         public void AddItemSpawnerEntryToPaths(ItemSpawnerEntry spawnerEntry)
         {
-            string previousPath = _pathService.GetParentPath(spawnerEntry.EntryPath);
-            var currentPath = spawnerEntry.EntryPath;
+            var entryPath = spawnerEntry.EntryPath;
+            ConstructParentNodes(entryPath);
             
-            ConstructParentNodes(currentPath);
-            EntryNode previousNode = OtherLoader.SpawnerEntriesByPath[previousPath];
-
-            if (OtherLoader.SpawnerEntriesByPath.ContainsKey(currentPath))
+            if (OtherLoader.SpawnerEntriesByPath.ContainsKey(entryPath))
             {
-                OtherLoader.SpawnerEntriesByPath[currentPath].entry = spawnerEntry;
+                OtherLoader.SpawnerEntriesByPath[entryPath].entry = spawnerEntry;
             }
             else
             {
                 var entryNode = new EntryNode(spawnerEntry);
-                OtherLoader.SpawnerEntriesByPath[currentPath] = entryNode;
-                previousNode.childNodes.Add(entryNode);
+                AddEntryNodeToPaths(entryNode);
             }
 
             if (!spawnerEntry.IsCategoryEntry())
@@ -49,7 +42,27 @@ namespace OtherLoader.Services
 
         private void ConstructParentNodes(string path)
         {
-            
+            var childPaths = _pathService.GetChildPaths(path);
+            foreach(var childPath in childPaths)
+            {
+                if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(childPath))
+                {
+                    var entryNode = new EntryNode(path);
+                    AddEntryNodeToPaths(entryNode);
+                }
+            }
+        }
+        
+        private void AddEntryNodeToPaths(EntryNode entryNode)
+        {
+            var path = entryNode.entry.EntryPath;
+            OtherLoader.SpawnerEntriesByPath[path] = entryNode;
+
+            if (_pathService.HasParent(path))
+            {
+                var parentNode = OtherLoader.SpawnerEntriesByPath[_pathService.GetParentPath(path)];
+                parentNode.childNodes.Add(entryNode);
+            }
         }
     }
 }

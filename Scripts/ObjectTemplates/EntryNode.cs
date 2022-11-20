@@ -12,9 +12,9 @@ namespace OtherLoader
 
         public List<EntryNode> childNodes = new List<EntryNode>();
 
-        public EntryNode()
+        public EntryNode(string path = "")
         {
-            this.entry = ScriptableObject.CreateInstance<ItemSpawnerEntry>();
+            entry = ItemSpawnerEntry.CreateEmpty(path);
         }
 
         public EntryNode(ItemSpawnerEntry entry)
