@@ -36,6 +36,7 @@ namespace OtherLoader
         public static Dictionary<string, MediaPath> TutorialBlockVideos = new();
         public static Dictionary<string, ItemSpawnerID> SpawnerIDsByMainObject = new();
         public static Dictionary<string, ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup> TagGroupsByTag = new();
+        public static Dictionary<string, CategoryDisplayData> CategoryDisplayData = new();
         public static UnlockedItemSaveData UnlockSaveData;
         public static Sprite LockIcon;
 

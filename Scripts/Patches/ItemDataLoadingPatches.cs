@@ -73,9 +73,16 @@ namespace OtherLoader.Patches
         {
             foreach (var page in IM.CatDef.Pages)
             {
-                foreach (var tagGroup in page.TagGroups)
+                var categoryTagGroups = page.TagGroups.Where(tag => tag.TagT == TagType.Category || tag.TagT == TagType.SubCategory);
+
+                foreach (var tagGroup in categoryTagGroups)
                 {
-                    OtherLoader.TagGroupsByTag[tagGroup.Tag] = tagGroup;
+                    OtherLoader.CategoryDisplayData[tagGroup.Tag] = new CategoryDisplayData 
+                    {
+                        DisplayImage = tagGroup.Icon,
+                        DisplayName = tagGroup.DisplayName,
+                        CategoryTag = tagGroup.Tag,
+                    };
                 }
             }
             

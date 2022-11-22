@@ -106,7 +106,6 @@
     <Compile Include="Scripts\Loading\Loaders\HandlingSlotSetLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\BulletImpactSetLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\ItemSpawnerIdLoader.cs" />
-    <Compile Include="Scripts\Loading\LoaderUtils\SpawnerEntryPathBuilder.cs" />
     <Compile Include="Scripts\Loading\Loaders\QuickbeltLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\RoundDisplayDataLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\FVRObjectLoader.cs" />
@@ -114,10 +113,11 @@
     <Compile Include="Scripts\Loading\Loaders\BaseAssetLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\ItemSpawnerEntryLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\TutorialBlockLoader.cs" />
-    <Compile Include="Scripts\ObjectTemplates\EntryNode.cs" />
-    <Compile Include="Scripts\ObjectTemplates\ItemSpawnerData.cs" />
-    <Compile Include="Scripts\ObjectTemplates\ItemSpawnerEntry.cs" />
-    <Compile Include="Scripts\ObjectTemplates\UnlockedItemSaveData.cs" />
+    <Compile Include="Scripts\Models\CategoryDisplayData.cs" />
+    <Compile Include="Scripts\Models\EntryNode.cs" />
+    <Compile Include="Scripts\Models\ItemSpawnerData.cs" />
+    <Compile Include="Scripts\Models\ItemSpawnerEntry.cs" />
+    <Compile Include="Scripts\Models\UnlockedItemSaveData.cs" />
     <Compile Include="Scripts\Patches\ItemDataLoadingPatches.cs" />
     <Compile Include="Scripts\Patches\ItemSpawnerV2Patch.cs" />
     <Compile Include="Scripts\Patches\ItemSpawnerV2\DetailsPanelPatches.cs" />

@@ -93,75 +93,12 @@ namespace OtherLoader
                 }
             }
         }
-
-
+        
         public bool IsCategoryEntry()
         {
             return string.IsNullOrEmpty(MainObjectID);
         }
-
-
-        public void LegacyPopulateFromID(ItemSpawnerV2.PageMode Page, ItemSpawnerID ID, bool IsModded)
-        {
-            if(ID.MainObject != null)
-            {
-                MainObjectID = ID.MainObject.ItemID;
-            }
-            else
-            {
-                OtherLogger.LogWarning("ItemSpawnerID has a null MainObject! ItemID: " + ID.ItemID);
-                MainObjectID = ID.ItemID;
-            }
-
-            SpawnWithIDs = new List<string>();
-            if(ID.SecondObject != null)
-            {
-                SpawnWithIDs.Add(ID.SecondObject.ItemID);
-            }
-            
-
-            //Add secondary items to entry, being careful of null values!
-            SecondaryObjectIDs = new List<string>();
-            foreach(ItemSpawnerID secondary in ID.Secondaries)
-            {
-                if(secondary != null && secondary.MainObject != null)
-                {
-                    SecondaryObjectIDs.Add(secondary.MainObject.ItemID);
-                }
-                else if(secondary == null)
-                {
-                    OtherLogger.LogWarning("Failed to add secondary to item (" + MainObjectID + ") due to secondary item being null!");
-                }
-                else
-                {
-                    OtherLogger.LogWarning("Failed to add secondary to item (" + MainObjectID + ") due to null MainObject!, Secondary display name: " + secondary.DisplayName);
-                }
-            }
-
-            if(ID.Secondaries_ByStringID != null)
-            {
-                SecondaryObjectIDs.AddRange(ID.Secondaries_ByStringID);
-            }
-
-
-            EntryPath = CreatePath(Page, ID);
-            EntryIcon = ID.Sprite;
-            DisplayName = ID.DisplayName;
-
-            IsDisplayedInMainEntry = ID.IsDisplayedInMainEntry;
-            UsesLargeSpawnPad = ID.UsesLargeSpawnPad;
-            UsesHugeSpawnPad = ID.UsesHugeSpawnPad;
-            this.IsModded = IsModded;
-
-            TutorialBlockIDs = new List<string>();
-            TutorialBlockIDs.AddRange(ID.TutorialBlocks);
-
-            ModTags = new List<string>();
-            ModTags.AddRange(ID.ModTags);
-        }
-
-
-
+        
         private string CreatePath(ItemSpawnerV2.PageMode Page, ItemSpawnerID ID)
         {
             string path = Page.ToString();

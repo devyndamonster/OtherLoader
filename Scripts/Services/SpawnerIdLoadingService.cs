@@ -10,10 +10,12 @@ namespace OtherLoader.Services
     public class SpawnerIdLoadingService : ISpawnerIdLoadingService
     {
         private readonly IPathService _pathService;
-        
-        public SpawnerIdLoadingService(IPathService pathService)
+        private readonly IMetaDataService _metaDataService;
+
+        public SpawnerIdLoadingService(IPathService pathService, IMetaDataService metaDataService)
         {
             _pathService = pathService;
+            _metaDataService = metaDataService;
         }
         
         public IEnumerable<ItemSpawnerEntry> GenerateRequiredSpawnerEntriesForSpawnerId(ItemSpawnerID spawnerId)
@@ -47,7 +49,7 @@ namespace OtherLoader.Services
                     middleEntry.EntryIcon = tagGroup.Icon;
                     middleEntry.DisplayName = tagGroup.DisplayName;
                 }
-
+                
                 spawnerEntries.Add(middleEntry);
             }
 
@@ -56,7 +58,80 @@ namespace OtherLoader.Services
 
         public ItemSpawnerEntry GenerateSpawnerEntryFromSpawnerId(ItemSpawnerID spawnerId)
         {
-            throw new NotImplementedException();
+            var spawnerEntryPath = GetSpawnerEntryPathFromSpawnerId(spawnerId);
+            var spawnerEntry = ItemSpawnerEntry.CreateEmpty(spawnerEntryPath);
+
+            spawnerEntry.MainObjectID = GetMainObjectId(spawnerId);
+            spawnerEntry.SpawnWithIDs = spawnerId.SecondObject is null ? new List<string>() : new List<string> { spawnerId.SecondObject.ItemID };
+
+            spawnerEntry.SecondaryObjectIDs = spawnerId.Secondaries is null ? new List<string>() : spawnerId.Secondaries
+                .Where(secondary => secondary != null && secondary.MainObject != null)
+                .Select(secondary => secondary.MainObject.ItemID)
+                .ToList();
+
+            spawnerEntry.SecondaryObjectIDs = spawnerId.Secondaries_ByStringID?.ToList();
+            spawnerEntry.EntryIcon = spawnerId.Sprite;
+            spawnerEntry.DisplayName = spawnerId.DisplayName;
+            spawnerEntry.IsDisplayedInMainEntry = spawnerId.IsDisplayedInMainEntry;
+            spawnerEntry.UsesLargeSpawnPad = spawnerId.UsesLargeSpawnPad;
+            spawnerEntry.UsesHugeSpawnPad = spawnerId.UsesHugeSpawnPad;
+            spawnerEntry.IsModded = IM.OD[spawnerEntry.MainObjectID].IsModContent;
+            spawnerEntry.TutorialBlockIDs = spawnerId.TutorialBlocks is null ? new List<string>() : new List<string>(spawnerId.TutorialBlocks);
+            spawnerEntry.ModTags = spawnerId.ModTags is null ? new List<string>() : new List<string>(spawnerId.ModTags);
+
+            return spawnerEntry;
+        }
+        
+
+        /* Scenarios
+         * - Vanilla spawner Id, can get path strings from enums
+         * - Modded spawner Id using vanilla categories, can get path from enums
+         * - Modded spawner Id, custom category and custom subcategory, need to get path strings from category display names
+         *    - Need to get image from old category structures as well
+         *    
+         * Plan
+         * - Coallesce all category data (from tag groups and custom categories) into one data structure to make accessing easier
+         */
+        
+        private string GetSpawnerEntryPathFromSpawnerId(ItemSpawnerID spawnerId)
+        {
+            string path = _metaDataService.GetSpawnerPageForSpawnerId(spawnerId).ToString();
+            
+            if (spawnerId.Category == ItemSpawnerID.EItemCategory.MeatFortress ||
+                spawnerId.Category == ItemSpawnerID.EItemCategory.Magazine ||
+                spawnerId.Category == ItemSpawnerID.EItemCategory.Cartridge ||
+                spawnerId.Category == ItemSpawnerID.EItemCategory.Clip ||
+                spawnerId.Category == ItemSpawnerID.EItemCategory.Speedloader)
+            {
+                path += "/" + spawnerId.Category.ToString();
+            }
+            
+            else if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerId.Category) && IM.CDefInfo.ContainsKey(spawnerId.Category))
+            {
+                path += "/" + IM.CDefInfo[spawnerId.Category].DisplayName;
+            }
+            
+            if (spawnerId.SubCategory != ItemSpawnerID.ESubCategory.None)
+            {
+                if (Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), spawnerId.SubCategory))
+                {
+                    path += "/" + spawnerId.SubCategory.ToString();
+                }
+
+                else if (IM.CDefSubInfo.ContainsKey(spawnerId.SubCategory))
+                {
+                    path += "/" + IM.CDefSubInfo[spawnerId.SubCategory].DisplayName;
+                }
+            }
+
+            path += "/" + GetMainObjectId(spawnerId);
+
+            return path;
+        }
+
+        private string GetMainObjectId(ItemSpawnerID spawnerId)
+        {
+            return spawnerId.MainObject?.ItemID ?? spawnerId.ItemID;
         }
     }
 }

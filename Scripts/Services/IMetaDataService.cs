@@ -9,5 +9,7 @@ namespace OtherLoader.Services
     public interface IMetaDataService
     {
         public void RegisterSpawnerIDIntoTagSystem(ItemSpawnerID spawnerID);
+
+        public ItemSpawnerV2.PageMode GetSpawnerPageForSpawnerId(ItemSpawnerID spawnerId);
     }
 }
