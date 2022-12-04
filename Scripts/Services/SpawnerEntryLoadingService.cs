@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using FistVR;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEngine;
 
 namespace OtherLoader.Services
 {
@@ -9,6 +12,43 @@ namespace OtherLoader.Services
         public SpawnerEntryLoadingService(IPathService pathService)
         {
             _pathService = pathService;
+        }
+
+        public ItemSpawnerID ConvertSpawnerEntryToSpawnerId(ItemSpawnerEntry spawnerEntry)
+        {
+            ItemSpawnerID.ESubCategory subcategory = spawnerEntry.GetSpawnerSubcategory();
+
+            if (!IM.OD.ContainsKey(spawnerEntry.MainObjectID) || spawnerEntry.IsCategoryEntry())
+            {
+                return null;
+            }
+
+            ItemSpawnerID itemSpawnerID = ScriptableObject.CreateInstance<ItemSpawnerID>();
+
+            foreach (ItemSpawnerCategoryDefinitions.Category category in IM.CDefs.Categories)
+            {
+                if (category.Subcats.Any(o => o.Subcat == subcategory))
+                {
+                    itemSpawnerID.Category = category.Cat;
+                    itemSpawnerID.SubCategory = subcategory;
+                }
+            }
+
+            itemSpawnerID.MainObject = IM.OD[spawnerEntry.MainObjectID];
+            itemSpawnerID.SecondObject = spawnerEntry.SpawnWithIDs.Where(o => IM.OD.ContainsKey(o)).Select(o => IM.OD[o]).FirstOrDefault();
+            itemSpawnerID.DisplayName = spawnerEntry.DisplayName;
+            itemSpawnerID.IsDisplayedInMainEntry = spawnerEntry.IsDisplayedInMainEntry;
+            itemSpawnerID.ItemID = spawnerEntry.MainObjectID;
+            itemSpawnerID.ModTags = spawnerEntry.ModTags;
+            itemSpawnerID.Secondaries_ByStringID = spawnerEntry.SecondaryObjectIDs.Where(o => IM.OD.ContainsKey(o)).ToList();
+            itemSpawnerID.Secondaries = new ItemSpawnerID[] { };
+            itemSpawnerID.Sprite = spawnerEntry.EntryIcon;
+            itemSpawnerID.UsesLargeSpawnPad = spawnerEntry.UsesLargeSpawnPad;
+            itemSpawnerID.UsesHugeSpawnPad = spawnerEntry.UsesHugeSpawnPad;
+            itemSpawnerID.IsReward = spawnerEntry.IsReward;
+            itemSpawnerID.TutorialBlocks = spawnerEntry.TutorialBlockIDs;
+
+            return itemSpawnerID;
         }
 
         public void AddItemSpawnerEntriesToPaths(IEnumerable<ItemSpawnerEntry> spawnerEntries)
@@ -64,5 +104,7 @@ namespace OtherLoader.Services
                 parentNode.childNodes.Add(entryNode);
             }
         }
+
+        
     }
 }

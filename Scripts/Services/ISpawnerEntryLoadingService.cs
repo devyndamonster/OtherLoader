@@ -11,5 +11,7 @@ namespace OtherLoader.Services
         public void AddItemSpawnerEntryToPaths(ItemSpawnerEntry spawnerEntry);
 
         public void AddItemSpawnerEntriesToPaths(IEnumerable<ItemSpawnerEntry> spawnerEntries);
+
+        public ItemSpawnerID ConvertSpawnerEntryToSpawnerId(ItemSpawnerEntry spawnerEntry);
     }
 }

@@ -175,7 +175,7 @@ namespace OtherLoader.Loaders
             {
                 OtherLogger.Log("Adding spawner entry to legacy spawner", OtherLogger.LogType.Loading);
 
-                ItemSpawnerID itemSpawnerID = entry.ConvertEntryToSpawnerID();
+                ItemSpawnerID itemSpawnerID = _spawnerEntryLoadingService.ConvertSpawnerEntryToSpawnerId(entry);
 
                 if (itemSpawnerID == null) return null;
 
