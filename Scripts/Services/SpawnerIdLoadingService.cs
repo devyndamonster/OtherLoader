@@ -82,46 +82,18 @@ namespace OtherLoader.Services
             return spawnerEntry;
         }
         
-
-        /* Scenarios
-         * - Vanilla spawner Id, can get path strings from enums
-         * - Modded spawner Id using vanilla categories, can get path from enums
-         * - Modded spawner Id, custom category and custom subcategory, need to get path strings from category display names
-         *    - Need to get image from old category structures as well
-         *    
-         * Plan
-         * - Coallesce all category data (from tag groups and custom categories) into one data structure to make accessing easier
-         */
-        
         private string GetSpawnerEntryPathFromSpawnerId(ItemSpawnerID spawnerId)
         {
             string path = _metaDataService.GetSpawnerPageForSpawnerId(spawnerId).ToString();
             
-            if (spawnerId.Category == ItemSpawnerID.EItemCategory.MeatFortress ||
-                spawnerId.Category == ItemSpawnerID.EItemCategory.Magazine ||
-                spawnerId.Category == ItemSpawnerID.EItemCategory.Cartridge ||
-                spawnerId.Category == ItemSpawnerID.EItemCategory.Clip ||
-                spawnerId.Category == ItemSpawnerID.EItemCategory.Speedloader)
+            if (ShouldDisplayMainCategory(spawnerId))
             {
-                path += "/" + spawnerId.Category.ToString();
+                path += "/" + _metaDataService.GetTagFromCategory(spawnerId.Category);
             }
             
-            else if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerId.Category) && IM.CDefInfo.ContainsKey(spawnerId.Category))
+            if (ShouldDisplaySubcategory(spawnerId))
             {
-                path += "/" + IM.CDefInfo[spawnerId.Category].DisplayName;
-            }
-            
-            if (spawnerId.SubCategory != ItemSpawnerID.ESubCategory.None)
-            {
-                if (Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), spawnerId.SubCategory))
-                {
-                    path += "/" + spawnerId.SubCategory.ToString();
-                }
-
-                else if (IM.CDefSubInfo.ContainsKey(spawnerId.SubCategory))
-                {
-                    path += "/" + IM.CDefSubInfo[spawnerId.SubCategory].DisplayName;
-                }
+                path += "/" + _metaDataService.GetTagFromSubcategory(spawnerId.SubCategory);
             }
 
             path += "/" + GetMainObjectId(spawnerId);
@@ -132,6 +104,24 @@ namespace OtherLoader.Services
         private string GetMainObjectId(ItemSpawnerID spawnerId)
         {
             return spawnerId.MainObject?.ItemID ?? spawnerId.ItemID;
+        }
+
+        private bool ShouldDisplayMainCategory(ItemSpawnerID spawnerId)
+        {
+            var isDisplayableVanillaCategory = spawnerId.Category == ItemSpawnerID.EItemCategory.MeatFortress ||
+                spawnerId.Category == ItemSpawnerID.EItemCategory.Magazine ||
+                spawnerId.Category == ItemSpawnerID.EItemCategory.Cartridge ||
+                spawnerId.Category == ItemSpawnerID.EItemCategory.Clip ||
+                spawnerId.Category == ItemSpawnerID.EItemCategory.Speedloader;
+
+            var isModdedMainCategory = !Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerId.Category);
+
+            return isDisplayableVanillaCategory || isModdedMainCategory;
+        }
+
+        private bool ShouldDisplaySubcategory(ItemSpawnerID spawnerId)
+        {
+            return spawnerId.SubCategory != ItemSpawnerID.ESubCategory.None;
         }
     }
 }

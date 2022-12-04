@@ -1,4 +1,5 @@
 ﻿using FistVR;
+using OtherLoader.Services;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -10,6 +11,8 @@ namespace OtherLoader.Loaders
 {
     public class CategoryDefinitionLoader : BaseAssetLoader
     {
+        private readonly IMetaDataService _metaDataService;
+
         public override IEnumerator LoadAssetsFromBundle(AssetBundle assetBundle, string bundleId)
         {
             return LoadAssetsFromBundle<ItemSpawnerCategoryDefinitions>(assetBundle, bundleId);
@@ -88,6 +91,14 @@ namespace OtherLoader.Loaders
             IM.CDefSubs[parentCategory].Add(subcategory);
             IM.CDefSubInfo.AddIfUnique(subcategory.Subcat, subcategory);
             IM.SCD.AddIfUnique(subcategory.Subcat, new List<ItemSpawnerID>());
+
+            OtherLoader.TagGroupsByTag[subcategory.DisplayName] = new ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup
+            {
+                DisplayName = subcategory.DisplayName,
+                Tag = _metaDataService.GetTagFromSubcategory(subcategory.Subcat),
+                TagT = TagType.SubCategory,
+                Icon = subcategory.Sprite
+            };
         }
 
         private void AddCategoryToGlobalDictionaries(ItemSpawnerCategoryDefinitions.Category category)
@@ -96,6 +107,14 @@ namespace OtherLoader.Loaders
             IM.CD.CreateValueIfNewKey(category.Cat);
             IM.CDefSubs.CreateValueIfNewKey(category.Cat);
             IM.CDefInfo.AddIfUnique(category.Cat, category);
+
+            OtherLoader.TagGroupsByTag[category.DisplayName] = new ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup
+            {
+                DisplayName = category.DisplayName,
+                Tag = _metaDataService.GetTagFromCategory(category.Cat),
+                TagT = TagType.Category,
+                Icon = category.Sprite
+            };
         }
 
 
