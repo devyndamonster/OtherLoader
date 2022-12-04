@@ -136,6 +136,7 @@
     <Compile Include="Scripts\Services\IPathService.cs" />
     <Compile Include="Scripts\Services\ISpawnerEntryLoadingService.cs" />
     <Compile Include="Scripts\Services\ISpawnerIdLoadingService.cs" />
+    <Compile Include="Scripts\Services\MetaDataService.cs" />
     <Compile Include="Scripts\Services\SpawnerEntryLoadingService.cs" />
     <Compile Include="Scripts\Services\SpawnerIdLoadingService.cs" />
   </ItemGroup>
