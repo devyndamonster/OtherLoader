@@ -34,7 +34,7 @@ namespace OtherLoader.Services
             var spawnerEntries = new List<ItemSpawnerEntry>();
             var pagePath = _pathService.GetRootPath(spawnerEntry.EntryPath);
             var middlePaths = _pathService
-                .GetChildPaths(spawnerEntry.EntryPath)
+                .GetParentPaths(spawnerEntry.EntryPath)
                 .Skip(1);
 
             spawnerEntries.Add(ItemSpawnerEntry.CreateEmpty(pagePath));

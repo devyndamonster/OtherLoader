@@ -82,8 +82,8 @@ namespace OtherLoader.Services
 
         private void ConstructParentNodes(string path)
         {
-            var childPaths = _pathService.GetChildPaths(path);
-            foreach(var childPath in childPaths)
+            var parentPaths = _pathService.GetParentPaths(path);
+            foreach(var childPath in parentPaths)
             {
                 if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(childPath))
                 {
