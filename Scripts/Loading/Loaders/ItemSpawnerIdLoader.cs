@@ -11,9 +11,9 @@ namespace OtherLoader.Loaders
 {
     public class ItemSpawnerIdLoader : BaseAssetLoader
     {
-        private readonly ISpawnerIdLoadingService _spawnerIdLoadingService;
-		private readonly ISpawnerEntryLoadingService _spawnerEntryLoadingService;
-		private readonly IMetaDataService _metaDataService;
+        private readonly ISpawnerIdLoadingService _spawnerIdLoadingService = new SpawnerIdLoadingService(new PathService(), new MetaDataService());
+        private readonly ISpawnerEntryLoadingService _spawnerEntryLoadingService = new SpawnerEntryLoadingService(new PathService());
+        private readonly IMetaDataService _metaDataService = new MetaDataService();
 
         public override IEnumerator LoadAssetsFromBundle(AssetBundle assetBundle, string bundleId)
         {

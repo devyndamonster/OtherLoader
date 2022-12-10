@@ -15,8 +15,9 @@ namespace OtherLoader.Patches
 {
     public static class ItemDataLoadingPatches
     {
-        public static ISpawnerIdLoadingService _spawnerIdLoadingService;
-        public static ISpawnerEntryLoadingService _spawnerEntryLoadingService;
+        public static ISpawnerIdLoadingService _spawnerIdLoadingService = new SpawnerIdLoadingService(new PathService(), new MetaDataService());
+        public static ISpawnerEntryLoadingService _spawnerEntryLoadingService = new SpawnerEntryLoadingService(new PathService());
+        public static IMetaDataService _metaDataService = new MetaDataService();
 
         
         [HarmonyPatch(typeof(IM), "RegisterItemIntoMetaTagSystem")]
@@ -49,7 +50,7 @@ namespace OtherLoader.Patches
 
         [HarmonyPatch(typeof(IM), "GenerateItemDBs")]
         [HarmonyILManipulator]
-        private static void DisableRewardCheckPatch(ILContext ctx, MethodBase orig)
+        private static void ItemDBGenerationPatch(ILContext ctx, MethodBase orig)
         {
             ILCursor c = new ILCursor(ctx);
 
@@ -57,6 +58,7 @@ namespace OtherLoader.Patches
                 i => i.MatchLdfld(AccessTools.Field(typeof(ItemSpawnerID), "MainObject"))
             );
 
+            //Remove the check for items being unlocked to be registered
             c.RemoveRange(17);
 
             c.Emit(OpCodes.Call, ((Action<ItemSpawnerID>)RegisterItemSpawnerID).Method);
@@ -101,7 +103,7 @@ namespace OtherLoader.Patches
         {
             if (spawnerID.MainObject != null)
             {
-                IM.RegisterItemIntoMetaTagSystem(spawnerID);
+                _metaDataService.RegisterSpawnerIDIntoTagSystem(spawnerID);
             }
         }
     }

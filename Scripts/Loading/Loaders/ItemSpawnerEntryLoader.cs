@@ -11,7 +11,7 @@ namespace OtherLoader.Loaders
 {
     public class ItemSpawnerEntryLoader : BaseAssetLoader
     {
-        private readonly ISpawnerEntryLoadingService _spawnerEntryLoadingService;
+        private readonly ISpawnerEntryLoadingService _spawnerEntryLoadingService = new SpawnerEntryLoadingService(new PathService());
 
         private List<ItemSpawnerID> convertedSpawnerIDs;
 
