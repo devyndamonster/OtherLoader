@@ -16,5 +16,9 @@ namespace OtherLoader.Services
         public IEnumerable<string> GetParentPaths(string path);
 
         public bool HasParent(string path);
+
+        public bool IsParentOf(string parentPath, string path);
+
+        public bool IsImmediateParentOf(string parentPath, string path);
     }
 }

@@ -73,8 +73,8 @@ namespace OtherLoader.Services
                 .Where(secondary => secondary != null && secondary.MainObject != null)
                 .Select(secondary => secondary.MainObject.ItemID)
                 .ToList();
-
-            spawnerEntry.SecondaryObjectIDs = spawnerId.Secondaries_ByStringID?.ToList();
+            
+            spawnerEntry.SecondaryObjectIDs.AddRange(spawnerId.Secondaries_ByStringID?.Where(id => !spawnerEntry.SecondaryObjectIDs.Contains(id)) ?? new List<string>());
             spawnerEntry.EntryIcon = spawnerId.Sprite;
             spawnerEntry.DisplayName = spawnerId.DisplayName;
             spawnerEntry.IsDisplayedInMainEntry = spawnerId.IsDisplayedInMainEntry;

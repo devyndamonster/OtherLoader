@@ -19,7 +19,7 @@ using Valve.Newtonsoft.Json;
 
 namespace OtherLoader
 {
-    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.3.7")]
+    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.3.8")]
     [BepInDependency(StratumRoot.GUID, StratumRoot.Version)]
     [BepInDependency(Sodalite.SodaliteConstants.Guid, Sodalite.SodaliteConstants.Version)]
     public class OtherLoader : StratumPlugin
@@ -36,7 +36,6 @@ namespace OtherLoader
         public static Dictionary<string, MediaPath> TutorialBlockVideos = new();
         public static Dictionary<string, ItemSpawnerID> SpawnerIDsByMainObject = new();
         public static Dictionary<string, ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup> TagGroupsByTag = new();
-        public static Dictionary<string, CategoryDisplayData> CategoryDisplayData = new();
         public static UnlockedItemSaveData UnlockSaveData;
         public static Sprite LockIcon;
 

@@ -36,5 +36,18 @@ namespace OtherLoader.Services
         {
             return path.Contains('/');
         }
+
+        public bool IsParentOf(string parentPath, string path)
+        {
+            return HasParent(path) &&
+                path.StartsWith(parentPath) &&
+                path.Trim('/').Length > parentPath.Trim('/').Length;
+        }
+
+        public bool IsImmediateParentOf(string parentPath, string path)
+        {
+            return HasParent(path) &&
+                GetParentPath(path).Trim('/') == parentPath.Trim('/');
+        }
     }
 }

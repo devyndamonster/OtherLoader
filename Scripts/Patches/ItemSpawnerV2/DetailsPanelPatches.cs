@@ -86,9 +86,11 @@ namespace OtherLoader.Patches
             {
                 return true;
             }
-
+            
             else
             {
+                OtherLogger.Log($"Drawing details for {__instance.m_selectedID}", OtherLogger.LogType.Loading);
+
                 ItemSpawnerEntry entry = OtherLoader.SpawnerEntriesByID[__instance.m_selectedID];
                 ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
 
@@ -147,6 +149,8 @@ namespace OtherLoader.Patches
 
         private static List<ItemSpawnerEntry> GetSecondaryEntries(ItemSpawnerEntry entry)
         {
+            OtherLogger.Log($"Secondary entries for {entry.MainObjectID}:\n{entry.SecondaryObjectIDs.AsJoinedString("\n")}", OtherLogger.LogType.Loading);
+
             return entry.SecondaryObjectIDs
                 .Where(o => OtherLoader.SpawnerEntriesByID.ContainsKey(o))
                 .Select(o => OtherLoader.SpawnerEntriesByID[o])
@@ -156,6 +160,9 @@ namespace OtherLoader.Patches
         private static void RedrawSecondariesPanel(ItemSpawnerV2 __instance, ItemSpawnerEntry entry, ItemSpawnerData data)
         {
             List<ItemSpawnerEntry> secondaryEntries = GetSecondaryEntries(entry);
+
+            OtherLogger.Log($"Aquired Secondary entries for {entry.MainObjectID}:\n{secondaryEntries.AsJoinedString(entry => entry.MainObjectID, "\n")}", OtherLogger.LogType.Loading);
+
             RedrawSecondaryTiles(__instance, secondaryEntries, data);
             RedrawSecondariesPageButtons(__instance, secondaryEntries, data);
             RedrawSecondariesQueueButtons(__instance);

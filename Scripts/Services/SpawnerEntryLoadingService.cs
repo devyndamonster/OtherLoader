@@ -61,6 +61,8 @@ namespace OtherLoader.Services
 
         public void AddItemSpawnerEntryToPaths(ItemSpawnerEntry spawnerEntry)
         {
+            OtherLogger.Log($"Adding spawner entry to paths: " + spawnerEntry.EntryPath, OtherLogger.LogType.Loading);
+
             var entryPath = spawnerEntry.EntryPath;
             ConstructParentNodes(entryPath);
             
@@ -100,9 +102,19 @@ namespace OtherLoader.Services
 
             if (_pathService.HasParent(path))
             {
-                var parentNode = OtherLoader.SpawnerEntriesByPath[_pathService.GetParentPath(path)];
-                parentNode.childNodes.Add(entryNode);
+                var parentPath = _pathService.GetParentPath(path);
+                if (OtherLoader.SpawnerEntriesByPath.ContainsKey(parentPath))
+                {
+                    OtherLoader.SpawnerEntriesByPath[parentPath].childNodes.Add(entryNode);
+                }
             }
+
+            var childNodes = OtherLoader.SpawnerEntriesByPath
+                .Where(child => _pathService.IsImmediateParentOf(path, child.Key))
+                .Select(child => child.Value);
+
+            entryNode.childNodes.AddRange(childNodes);
+
         }
 
         
