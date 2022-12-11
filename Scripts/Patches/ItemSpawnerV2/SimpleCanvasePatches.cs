@@ -104,10 +104,14 @@ namespace OtherLoader.Patches
 
             ItemSpawnerData spawnerData = __instance.GetComponent<ItemSpawnerData>();
 
+            OtherLogger.Log($"Spawner Entries at path:\n{OtherLoader.SpawnerEntriesByPath[spawnerData.CurrentPath].childNodes.AsJoinedString(child => child.entry.EntryPath, "\n")}");
+
             List<EntryNode> entries = OtherLoader.SpawnerEntriesByPath[spawnerData.CurrentPath].childNodes
                 .Where(o => o.entry.IsDisplayedInMainEntry)
                 .OrderBy(o => o.entry.IsModded)
                 .ToList();
+
+            OtherLogger.Log($"Spawner Entries visible at path:\n{entries.AsJoinedString(child => child.entry.EntryPath, "\n")}");
 
             int currentPage = GetCurrentPage(__instance, spawnerData);
             int numberOfPages = GetNumberOfPages(entries.Count, __instance.IMG_SimpleTiles.Count);

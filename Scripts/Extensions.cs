@@ -43,4 +43,17 @@ namespace OtherLoader
             return false;
         }
     }
+
+    public static class IEnumerableExtensions
+    {
+        public static string AsJoinedString(this IEnumerable<string> enumerable, string separator = ", ")
+        {
+            return string.Join(separator, enumerable.ToArray());
+        }
+        
+        public static string AsJoinedString<T>(this IEnumerable<T> enumerable, Func<T, string> selector, string separator = ", ")
+        {
+            return string.Join(separator, enumerable.Select(selector).ToArray());
+        }
+    }
 }

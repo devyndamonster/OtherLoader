@@ -48,6 +48,11 @@ namespace OtherLoader.Services
                 {
                     middleEntry.EntryIcon = tagGroup.Icon;
                     middleEntry.DisplayName = tagGroup.DisplayName;
+                    middleEntry.IsDisplayedInMainEntry = true;
+                }
+                else
+                {
+                    OtherLogger.Log("Didn't have a tag group for " + pathEnding);
                 }
                 
                 spawnerEntries.Add(middleEntry);

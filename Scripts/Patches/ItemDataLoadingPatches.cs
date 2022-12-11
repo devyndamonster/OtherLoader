@@ -79,12 +79,9 @@ namespace OtherLoader.Patches
 
                 foreach (var tagGroup in categoryTagGroups)
                 {
-                    OtherLoader.CategoryDisplayData[tagGroup.Tag] = new CategoryDisplayData 
-                    {
-                        DisplayImage = tagGroup.Icon,
-                        DisplayName = tagGroup.DisplayName,
-                        CategoryTag = tagGroup.Tag,
-                    };
+                    OtherLogger.Log($"Loading vanilla category {tagGroup.DisplayName} data into display data. Tag: {tagGroup.Tag}", OtherLogger.LogType.Loading);
+
+                    OtherLoader.TagGroupsByTag[tagGroup.Tag] = tagGroup;
                 }
             }
             
@@ -93,7 +90,13 @@ namespace OtherLoader.Patches
                 foreach (string itemId in pageLists.Value)
                 {
                     ItemSpawnerID spawnerId = IM.Instance.SpawnerIDDic[itemId];
+                    
+                    OtherLogger.Log($"Loading vanilla ItemSpawnerId {itemId} into spawner entries", OtherLogger.LogType.Loading);
+
                     var spawnerEntries = _spawnerIdLoadingService.GenerateRequiredSpawnerEntriesForSpawnerId(spawnerId);
+
+                    OtherLogger.Log($"Loaded spawner entries:\n{string.Join("\n", spawnerEntries.Select(entry => entry.EntryPath).ToArray())}");
+
                     _spawnerEntryLoadingService.AddItemSpawnerEntriesToPaths(spawnerEntries);
                 }
             }
