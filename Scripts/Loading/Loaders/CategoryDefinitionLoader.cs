@@ -92,10 +92,12 @@ namespace OtherLoader.Loaders
             IM.CDefSubInfo.AddIfUnique(subcategory.Subcat, subcategory);
             IM.SCD.AddIfUnique(subcategory.Subcat, new List<ItemSpawnerID>());
 
-            OtherLoader.TagGroupsByTag[subcategory.DisplayName] = new ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup
+            var tag = _metaDataService.GetTagFromSubcategory(subcategory.Subcat);
+            
+            OtherLoader.TagGroupsByTag[tag] = new ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup
             {
                 DisplayName = subcategory.DisplayName,
-                Tag = _metaDataService.GetTagFromSubcategory(subcategory.Subcat),
+                Tag = tag,
                 TagT = TagType.SubCategory,
                 Icon = subcategory.Sprite
             };
@@ -108,10 +110,12 @@ namespace OtherLoader.Loaders
             IM.CDefSubs.CreateValueIfNewKey(category.Cat);
             IM.CDefInfo.AddIfUnique(category.Cat, category);
 
-            OtherLoader.TagGroupsByTag[category.DisplayName] = new ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup
+            var tag = _metaDataService.GetTagFromCategory(category.Cat);
+
+            OtherLoader.TagGroupsByTag[tag] = new ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup
             {
                 DisplayName = category.DisplayName,
-                Tag = _metaDataService.GetTagFromCategory(category.Cat),
+                Tag = tag,
                 TagT = TagType.Category,
                 Icon = category.Sprite
             };

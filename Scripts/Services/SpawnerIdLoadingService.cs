@@ -42,13 +42,13 @@ namespace OtherLoader.Services
             foreach(var middlePath in middlePaths)
             {
                 var middleEntry = ItemSpawnerEntry.CreateEmpty(middlePath);
+                middleEntry.IsDisplayedInMainEntry = true;
                 var pathEnding = _pathService.GetEndOfPath(middlePath);
 
                 if (OtherLoader.TagGroupsByTag.TryGetValue(pathEnding, out var tagGroup))
                 {
                     middleEntry.EntryIcon = tagGroup.Icon;
                     middleEntry.DisplayName = tagGroup.DisplayName;
-                    middleEntry.IsDisplayedInMainEntry = true;
                 }
                 else
                 {
