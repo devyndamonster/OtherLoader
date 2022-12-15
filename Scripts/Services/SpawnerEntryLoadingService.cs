@@ -85,11 +85,14 @@ namespace OtherLoader.Services
         private void ConstructParentNodes(string path)
         {
             var parentPaths = _pathService.GetParentPaths(path);
-            foreach(var childPath in parentPaths)
+            foreach(var parentPath in parentPaths)
             {
-                if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(childPath))
+                if (!OtherLoader.SpawnerEntriesByPath.ContainsKey(parentPath))
                 {
-                    var entryNode = new EntryNode(path);
+                    OtherLogger.Log($"Adding parent spawner entry path: {parentPath}", OtherLogger.LogType.Loading);
+
+                    var entryNode = new EntryNode(parentPath);
+                    entryNode.entry.IsDisplayedInMainEntry = true;
                     AddEntryNodeToPaths(entryNode);
                 }
             }
