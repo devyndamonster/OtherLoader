@@ -12,6 +12,7 @@ namespace OtherLoader.Loaders
     public class ItemSpawnerEntryLoader : BaseAssetLoader
     {
         private readonly ISpawnerEntryLoadingService _spawnerEntryLoadingService = new SpawnerEntryLoadingService(new PathService());
+        private readonly IMetaDataService _metaDataService = new MetaDataService(new PathService());
 
         private List<ItemSpawnerID> convertedSpawnerIDs;
 
@@ -38,7 +39,7 @@ namespace OtherLoader.Loaders
                 OtherLogger.Log("Spawner Entry is not a category", OtherLogger.LogType.Loading);
 
                 UpdateUnlockStatusForItem(spawnerEntry);
-                RegisterItemIntoMetaTagSystem(spawnerEntry);
+                _metaDataService.RegisterSpawnerEntryIntoTagSystem(spawnerEntry);
 
                 ItemSpawnerID convertedSpawnerId = AddEntryToLegacySpawner(spawnerEntry);
                 if(convertedSpawnerId != null)
@@ -75,99 +76,6 @@ namespace OtherLoader.Loaders
                 OtherLoader.UnlockSaveData.UnlockItem(spawnerEntry.MainObjectID);
             }
         }
-
-        private void RegisterItemIntoMetaTagSystem(ItemSpawnerEntry entry)
-        {
-            if (!IM.OD.ContainsKey(entry.MainObjectID)) return;
-
-            FVRObject mainObject = IM.OD[entry.MainObjectID];
-            ItemSpawnerV2.PageMode page = GetSpawnerPage(entry);
-            
-            RegisterSubcategory(entry, page);
-            RegisterModTags(entry, page);
-            RegisterItemIntoMetaTagSystem(mainObject, page);
-        }
-
-        private ItemSpawnerV2.PageMode GetSpawnerPage(ItemSpawnerEntry entry)
-        {
-            ItemSpawnerV2.PageMode page = ItemSpawnerV2.PageMode.Firearms;
-            string pageString = entry.EntryPath.Split('/')[0];
-
-            if (Enum.IsDefined(typeof(ItemSpawnerV2.PageMode), pageString))
-            {
-                page = (ItemSpawnerV2.PageMode)Enum.Parse(typeof(ItemSpawnerV2.PageMode), pageString);
-            }
-
-            return page;
-        }
-
-        private string GetSpawnerSubcategoryTag(ItemSpawnerEntry entry)
-        {
-            return entry.EntryPath.Split('/')[1];
-        }
-
-        
-
-        private void RegisterModTags(ItemSpawnerEntry entry, ItemSpawnerV2.PageMode page)
-        {
-            foreach(string tag in entry.ModTags)
-            {
-                IM.AddMetaTag(tag, TagType.ModTag, entry.MainObjectID, page);
-            }  
-        }
-
-        private void RegisterSubcategory(ItemSpawnerEntry entry, ItemSpawnerV2.PageMode page)
-        {
-            string subcategory = GetSpawnerSubcategoryTag(entry);
-            IM.AddMetaTag(subcategory, TagType.SubCategory, entry.MainObjectID, page);
-        }
-
-
-        private void RegisterItemIntoMetaTagSystem(FVRObject mainObject, ItemSpawnerV2.PageMode page)
-        {
-            if (mainObject.Category == FVRObject.ObjectCategory.Firearm)
-            {
-                RegisterFirearmIntoMetaTagSystem(mainObject, page);
-            }
-
-            else if (mainObject.Category == FVRObject.ObjectCategory.Attachment)
-            {
-                RegisterAttachmentIntoMetaTagSystem(mainObject, page);
-            }
-        }
-
-        private void RegisterFirearmIntoMetaTagSystem(FVRObject mainObject, ItemSpawnerV2.PageMode page)
-        {
-            IM.AddMetaTag(mainObject.TagSet.ToString(), TagType.Set, mainObject.ItemID, page);
-            IM.AddMetaTag(mainObject.TagEra.ToString(), TagType.Era, mainObject.ItemID, page);
-            IM.AddMetaTag(mainObject.TagFirearmSize.ToString(), TagType.Size, mainObject.ItemID, page);
-            IM.AddMetaTag(mainObject.TagFirearmAction.ToString(), TagType.Action, mainObject.ItemID, page);
-            IM.AddMetaTag(mainObject.TagFirearmRoundPower.ToString(), TagType.RoundClass, mainObject.ItemID, page);
-            IM.AddMetaTag(mainObject.TagFirearmCountryOfOrigin.ToString(), TagType.CountryOfOrigin, mainObject.ItemID, page);
-            IM.AddMetaTag(mainObject.TagFirearmFirstYear.ToString(), TagType.IntroductionYear, mainObject.ItemID, page);
-            IM.AddMetaTag(mainObject.MagazineType.ToString(), TagType.MagazineType, mainObject.ItemID, page);
-
-            if (mainObject.UsesRoundTypeFlag)
-                IM.AddMetaTag(mainObject.RoundType.ToString(), TagType.Caliber, mainObject.ItemID, page);
-
-            mainObject.TagFirearmFiringModes.ForEach(tag =>
-                IM.AddMetaTag(tag.ToString(), TagType.FiringMode, mainObject.ItemID, page));
-
-            mainObject.TagFirearmFeedOption.ForEach(tag =>
-                IM.AddMetaTag(tag.ToString(), TagType.FeedOption, mainObject.ItemID, page));
-
-            mainObject.TagFirearmMounts.ForEach(mode =>
-                IM.AddMetaTag(mode.ToString(), TagType.AttachmentMount, mainObject.ItemID, page));
-        }
-
-        private void RegisterAttachmentIntoMetaTagSystem(FVRObject mainObject, ItemSpawnerV2.PageMode page)
-        {
-            IM.AddMetaTag(mainObject.TagSet.ToString(), TagType.Set, mainObject.ItemID, page);
-            IM.AddMetaTag(mainObject.TagEra.ToString(), TagType.Era, mainObject.ItemID, page);
-            IM.AddMetaTag(mainObject.TagAttachmentFeature.ToString(), TagType.AttachmentFeature, mainObject.ItemID, page);
-            IM.AddMetaTag(mainObject.TagAttachmentMount.ToString(), TagType.AttachmentMount, mainObject.ItemID, page);
-        }
-
 
         private ItemSpawnerID AddEntryToLegacySpawner(ItemSpawnerEntry entry)
         {

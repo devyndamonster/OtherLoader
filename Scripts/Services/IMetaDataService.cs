@@ -10,6 +10,10 @@ namespace OtherLoader.Services
     {
         public void RegisterSpawnerIDIntoTagSystem(ItemSpawnerID spawnerID);
 
+        public void RegisterSpawnerEntryIntoTagSystem(ItemSpawnerEntry spawnerEntry);
+
+        public ItemSpawnerV2.PageMode GetSpawnerPageForFVRObject(FVRObject fvrObject);
+
         public ItemSpawnerV2.PageMode GetSpawnerPageForSpawnerId(ItemSpawnerID spawnerId);
 
         public string GetTagFromCategory(ItemSpawnerID.EItemCategory category);

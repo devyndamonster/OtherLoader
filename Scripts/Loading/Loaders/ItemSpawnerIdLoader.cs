@@ -11,9 +11,9 @@ namespace OtherLoader.Loaders
 {
     public class ItemSpawnerIdLoader : BaseAssetLoader
     {
-        private readonly ISpawnerIdLoadingService _spawnerIdLoadingService = new SpawnerIdLoadingService(new PathService(), new MetaDataService());
+        private readonly ISpawnerIdLoadingService _spawnerIdLoadingService = new SpawnerIdLoadingService(new PathService(), new MetaDataService(new PathService()));
         private readonly ISpawnerEntryLoadingService _spawnerEntryLoadingService = new SpawnerEntryLoadingService(new PathService());
-        private readonly IMetaDataService _metaDataService = new MetaDataService();
+        private readonly IMetaDataService _metaDataService = new MetaDataService(new PathService());
 
         public override IEnumerator LoadAssetsFromBundle(AssetBundle assetBundle, string bundleId)
         {
@@ -36,10 +36,10 @@ namespace OtherLoader.Loaders
                 UpdateUnlockStatusForItem(spawnerId);
 				_metaDataService.RegisterSpawnerIDIntoTagSystem(spawnerId);
                 
-                if(_metaDataService.GetSpawnerPageForSpawnerId(spawnerId) == ItemSpawnerV2.PageMode.MainMenu)
+                if(_metaDataService.GetSpawnerPageForFVRObject(spawnerId.MainObject) == ItemSpawnerV2.PageMode.MainMenu)
                 {
 					OtherLogger.Log("Selected page for itemspawnerID is MainMenu!", OtherLogger.LogType.Loading);
-					OtherLogger.Log("ItemID: " + spawnerId.ItemID, OtherLogger.LogType.Loading);
+					OtherLogger.Log("ItemID: " + spawnerId.MainObject.ItemID, OtherLogger.LogType.Loading);
 					OtherLogger.Log("Was the item added to a page? " + IM.Instance.PageItemLists.Any(o => o.Value.Contains(spawnerId.ItemID)), OtherLogger.LogType.Loading);
                 }
             }
@@ -48,9 +48,9 @@ namespace OtherLoader.Loaders
             {
                 AddSpawnerIdToGlobalDictionaries(spawnerId);
 
-                if (!IsSpawnerIdAlreadyUsed(spawnerId))
+                if (spawnerId.MainObject != null && !IsSpawnerIdAlreadyUsed(spawnerId))
                 {
-                    IM.Instance.SpawnerIDDic[spawnerId.ItemID] = spawnerId;
+                    IM.Instance.SpawnerIDDic[spawnerId.MainObject.ItemID] = spawnerId;
                     AddSpawnerIdToNewSpawner(spawnerId);
                 }
             }
@@ -80,7 +80,7 @@ namespace OtherLoader.Loaders
 
         private bool IsSpawnerIdAlreadyUsed(ItemSpawnerID spawnerId)
         {
-            return IM.Instance.SpawnerIDDic.ContainsKey(spawnerId.ItemID);
+            return IM.Instance.SpawnerIDDic.ContainsKey(spawnerId.MainObject.ItemID);
         }
         
         private void UpdateUnlockCostForItem(ItemSpawnerID spawnerId)
@@ -111,7 +111,7 @@ namespace OtherLoader.Loaders
         {
             foreach (List<string> pageItems in IM.Instance.PageItemLists.Values)
             {
-                pageItems.Remove(spawnerId.ItemID);
+                pageItems.Remove(spawnerId.MainObject.ItemID);
             }
         }
 

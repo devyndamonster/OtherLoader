@@ -8,9 +8,63 @@ namespace OtherLoader.Services
 {
     public class MetaDataService : IMetaDataService
     {
-        public ItemSpawnerV2.PageMode GetSpawnerPageForSpawnerId(ItemSpawnerID spawnerId)
+		private readonly ItemSpawnerID.EItemCategory[] _firearmItemCategories = new ItemSpawnerID.EItemCategory[]
+		{
+			ItemSpawnerID.EItemCategory.Pistol,
+			ItemSpawnerID.EItemCategory.Shotgun,
+			ItemSpawnerID.EItemCategory.SMG_Rifle,
+			ItemSpawnerID.EItemCategory.Support
+		};
+
+		private readonly IPathService _pathService;
+
+		public MetaDataService(IPathService pathService)
         {
-			return IM.Instance.PageItemLists.FirstOrDefault(o => o.Value.Contains(spawnerId.ItemID)).Key;
+			_pathService = pathService;
+        }
+
+		public ItemSpawnerV2.PageMode GetSpawnerPageForFVRObject(FVRObject fvrObject)
+        {
+			return IM.Instance.PageItemLists.FirstOrDefault(o => o.Value.Contains(fvrObject.ItemID)).Key;
+		}
+
+		private ItemSpawnerV2.PageMode GetSpawnerPageForSpawnerEntry(ItemSpawnerEntry entry)
+		{
+			ItemSpawnerV2.PageMode page = ItemSpawnerV2.PageMode.Firearms;
+			string pageString = _pathService.GetRootPath(entry.EntryPath);
+
+			if (Enum.IsDefined(typeof(ItemSpawnerV2.PageMode), pageString))
+			{
+				page = (ItemSpawnerV2.PageMode)Enum.Parse(typeof(ItemSpawnerV2.PageMode), pageString);
+			}
+
+			return page;
+		}
+
+		public ItemSpawnerV2.PageMode GetSpawnerPageForSpawnerId(ItemSpawnerID spawnerId)
+        {
+			if (ShouldItemBeTaggedAsToolsToy(spawnerId))
+			{
+				return ItemSpawnerV2.PageMode.ToolsToys;
+			}
+			else if (ShouldItemBeTaggedAsMelee(spawnerId))
+			{
+				return ItemSpawnerV2.PageMode.Melee;
+			}
+			else if (ShouldItemBeTaggedAsAmmo(spawnerId))
+            {
+				return ItemSpawnerV2.PageMode.Ammo;
+			}
+			else if (ShouldItemBeTaggedAsAttachment(spawnerId))
+            {
+				return ItemSpawnerV2.PageMode.Attachments;
+            }
+			else if (ShouldItemBeTaggedAsFirearm(spawnerId))
+			{
+				return ItemSpawnerV2.PageMode.Firearms;
+			}
+
+			return ItemSpawnerV2.PageMode.MainMenu;
 		}
 
         public string GetTagFromCategory(ItemSpawnerID.EItemCategory category)
@@ -30,179 +84,173 @@ namespace OtherLoader.Services
         public void RegisterSpawnerIDIntoTagSystem(ItemSpawnerID spawnerID)
         {
 			OtherLogger.Log($"Attempting to tag {spawnerID.MainObject.ItemID}", OtherLogger.LogType.Loading);
-			if (spawnerID.Category == ItemSpawnerID.EItemCategory.MeatFortress)
-			{
-				if (spawnerID.MainObject.Category == FVRObject.ObjectCategory.Firearm)
-				{
-					TagFirearm(spawnerID);
-				}
-				else if (spawnerID.MainObject.Category == FVRObject.ObjectCategory.Explosive || spawnerID.MainObject.Category == FVRObject.ObjectCategory.Thrown)
-				{
-					TagMisc(spawnerID, ItemSpawnerV2.PageMode.ToolsToys);
-				}
-				else if (spawnerID.MainObject.Category == FVRObject.ObjectCategory.MeleeWeapon)
-				{
-					TagMisc(spawnerID, ItemSpawnerV2.PageMode.Melee);
-				}
-				else if (spawnerID.MainObject.Category == FVRObject.ObjectCategory.Attachment)
-				{
-					TagAttachment(spawnerID);
-				}
-				OtherLogger.Log($"Reason for page selection: Category = {spawnerID.Category} & ObjectCategory = {spawnerID.MainObject.Category}", OtherLogger.LogType.Loading);
-			}
-			else if (spawnerID.MainObject.Category == FVRObject.ObjectCategory.Firearm)
-			{
-				TagFirearm(spawnerID);
-				OtherLogger.Log($"Reason for page selection: ObjectCategory = {spawnerID.MainObject.Category}", OtherLogger.LogType.Loading);
-			}
-			else if (spawnerID.Category == ItemSpawnerID.EItemCategory.Magazine || spawnerID.Category == ItemSpawnerID.EItemCategory.Clip || spawnerID.Category == ItemSpawnerID.EItemCategory.Speedloader || spawnerID.Category == ItemSpawnerID.EItemCategory.Cartridge)
-			{
-				TagAmmo(spawnerID);
-				OtherLogger.Log($"Reason for page selection: Category = {spawnerID.Category}", OtherLogger.LogType.Loading);
-			}
-			else if (spawnerID.Category == ItemSpawnerID.EItemCategory.Melee)
-			{
-				TagMisc(spawnerID, ItemSpawnerV2.PageMode.Melee);
-				OtherLogger.Log($"Reason for page selection: Category = {spawnerID.Category}", OtherLogger.LogType.Loading);
-			}
-			else if (spawnerID.MainObject.Category == FVRObject.ObjectCategory.Attachment)
-			{
-				TagAttachment(spawnerID);
-				OtherLogger.Log($"Reason for page selection: ObjectCategory = {spawnerID.MainObject.Category}", OtherLogger.LogType.Loading);
-			}
-			else if (spawnerID.SubCategory == ItemSpawnerID.ESubCategory.Grenade || spawnerID.SubCategory == ItemSpawnerID.ESubCategory.RemoteExplosives || spawnerID.Category == ItemSpawnerID.EItemCategory.Misc)
-			{
-				TagMisc(spawnerID, ItemSpawnerV2.PageMode.ToolsToys);
-				OtherLogger.Log($"Reason for page selection: SubCategory = Grenade or  SubCategory = RemoteExplosives or Category = Misc", OtherLogger.LogType.Loading);
-			}
-			else if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerID.Category))
-			{
-				OtherLogger.Log("Could not tag item, but it has a custom category, so we'll put it in firearms", OtherLogger.LogType.Loading);
-				TagMisc(spawnerID, ItemSpawnerV2.PageMode.Firearms);
-			}
-			else
-			{
-				OtherLogger.Log("We didn't tag the item at all!", OtherLogger.LogType.Loading);
-			}
+
+			var page = GetSpawnerPageForSpawnerId(spawnerID);
+
+			RegisterModTags(spawnerID, page);
+			RegisterCategoryTags(spawnerID, page);
+			RegisterNewTag(spawnerID.MainObject, page);
+
+			if (page == ItemSpawnerV2.PageMode.Firearms)
+            {
+				RegisterFirearmIntoMetaTagSystem(spawnerID.MainObject, page);
+            }
+			else if (page == ItemSpawnerV2.PageMode.Attachments)
+            {
+				RegisterAttachmentIntoMetaTagSystem(spawnerID.MainObject, page);
+            }
+			else if (page == ItemSpawnerV2.PageMode.Ammo)
+            {
+				RegisterAmmoIntoMetaTagSystem(spawnerID.MainObject, page);
+            }
 		}
 
-		private void TagFirearm(ItemSpawnerID spawnerID)
+		public void RegisterSpawnerEntryIntoTagSystem(ItemSpawnerEntry spawnerEntry)
 		{
-			OtherLogger.Log("Tagging for page Firearms!", OtherLogger.LogType.Loading);
-			IM.AddMetaTag(spawnerID.Category.ToString(), TagType.Category, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			IM.AddMetaTag(spawnerID.SubCategory.ToString(), TagType.SubCategory, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			IM.AddMetaTag(spawnerID.MainObject.TagSet.ToString(), TagType.Set, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			IM.AddMetaTag(spawnerID.MainObject.TagFirearmSize.ToString(), TagType.Size, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			IM.AddMetaTag(spawnerID.MainObject.TagEra.ToString(), TagType.Era, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			IM.AddMetaTag(spawnerID.MainObject.TagFirearmAction.ToString(), TagType.Action, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			IM.AddMetaTag(spawnerID.MainObject.TagFirearmRoundPower.ToString(), TagType.RoundClass, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			if (spawnerID.MainObject.UsesRoundTypeFlag)
-			{
-				IM.AddMetaTag(spawnerID.MainObject.RoundType.ToString(), TagType.Caliber, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			}
-			IM.AddMetaTag(spawnerID.MainObject.TagFirearmCountryOfOrigin.ToString(), TagType.CountryOfOrigin, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			IM.AddMetaTag(spawnerID.MainObject.TagFirearmFirstYear.ToString(), TagType.IntroductionYear, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			for (int num6 = 0; num6 < spawnerID.MainObject.TagFirearmFiringModes.Count; num6++)
-			{
-				IM.AddMetaTag(spawnerID.MainObject.TagFirearmFiringModes[num6].ToString(), TagType.FiringMode, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			}
-			for (int num7 = 0; num7 < spawnerID.MainObject.TagFirearmFeedOption.Count; num7++)
-			{
-				IM.AddMetaTag(spawnerID.MainObject.TagFirearmFeedOption[num7].ToString(), TagType.FeedOption, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			}
-			IM.AddMetaTag(spawnerID.MainObject.MagazineType.ToString(), TagType.MagazineType, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			for (int num8 = 0; num8 < spawnerID.MainObject.TagFirearmMounts.Count; num8++)
-			{
-				IM.AddMetaTag(spawnerID.MainObject.TagFirearmMounts[num8].ToString(), TagType.AttachmentMount, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			}
-			for (int num9 = 0; num9 < spawnerID.ModTags.Count; num9++)
-			{
-				IM.AddMetaTag(spawnerID.ModTags[num9].ToString(), TagType.ModTag, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			}
-			if (spawnerID.MainObject.IsModContent)
-			{
-				IM.AddMetaTag("Mod Content", TagType.Set, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-			}
-			for (int num10 = 0; num10 < ManagerSingleton<IM>.Instance.NewItems.Groups.Count; num10++)
-			{
-				if (ManagerSingleton<IM>.Instance.NewItems.Groups[num10].NewItemIDs.Contains(spawnerID.ItemID))
-				{
-					IM.AddMetaTag(ManagerSingleton<IM>.Instance.NewItems.Groups[num10].Tag, TagType.New, spawnerID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-				}
-			}
+			var page = GetSpawnerPageForSpawnerEntry(spawnerEntry);
+			var mainObject = IM.OD[spawnerEntry.MainObjectID];
+
+			RegisterModTags(spawnerEntry, page);
+			RegisterCategoryTags(spawnerEntry, page);
+			RegisterNewTag(mainObject, page);
 		}
 
-
-		private void TagMisc(ItemSpawnerID spawnerID, ItemSpawnerV2.PageMode page)
+		private void RegisterCategoryTags(ItemSpawnerID spawnerId, ItemSpawnerV2.PageMode page)
 		{
-			OtherLogger.Log("Tagging misc for page " + page, OtherLogger.LogType.Loading);
-			IM.AddMetaTag(spawnerID.Category.ToString(), TagType.Category, spawnerID.ItemID, page);
-			IM.AddMetaTag(spawnerID.SubCategory.ToString(), TagType.SubCategory, spawnerID.ItemID, page);
-			for (int num17 = 0; num17 < spawnerID.ModTags.Count; num17++)
-			{
-				IM.AddMetaTag(spawnerID.ModTags[num17].ToString(), TagType.ModTag, spawnerID.ItemID, page);
+			IM.AddMetaTag(GetTagFromCategory(spawnerId.Category), TagType.Category, spawnerId.MainObject.ItemID, page);
+			IM.AddMetaTag(GetTagFromSubcategory(spawnerId.SubCategory), TagType.SubCategory, spawnerId.MainObject.ItemID, page);
+		}
+
+		private void RegisterCategoryTags(ItemSpawnerEntry spawnerEntry, ItemSpawnerV2.PageMode page)
+		{
+			var category = spawnerEntry.GetSpawnerCategory();
+			var subcategory = spawnerEntry.GetSpawnerSubcategory();
+
+            if (category.HasValue)
+            {
+				IM.AddMetaTag(category.Value.ToString(), TagType.Category, spawnerEntry.MainObjectID, page);
 			}
-			if (spawnerID.MainObject.IsModContent)
+
+			if (subcategory.HasValue)
 			{
-				IM.AddMetaTag("Mod Content", TagType.Set, spawnerID.ItemID, page);
-			}
-			for (int num18 = 0; num18 < ManagerSingleton<IM>.Instance.NewItems.Groups.Count; num18++)
-			{
-				if (ManagerSingleton<IM>.Instance.NewItems.Groups[num18].NewItemIDs.Contains(spawnerID.ItemID))
-				{
-					IM.AddMetaTag(ManagerSingleton<IM>.Instance.NewItems.Groups[num18].Tag, TagType.New, spawnerID.ItemID, page);
-				}
+				IM.AddMetaTag(subcategory.Value.ToString(), TagType.SubCategory, spawnerEntry.MainObjectID, page);
 			}
 		}
 
-		private void TagAttachment(ItemSpawnerID spawnerID)
+		private void RegisterModTags(ItemSpawnerID spawnerId, ItemSpawnerV2.PageMode page)
 		{
-			OtherLogger.Log("Tagging for page Attachments!", OtherLogger.LogType.Loading);
-			IM.AddMetaTag(spawnerID.SubCategory.ToString(), TagType.SubCategory, spawnerID.ItemID, ItemSpawnerV2.PageMode.Attachments);
-			IM.AddMetaTag(spawnerID.MainObject.TagAttachmentFeature.ToString(), TagType.AttachmentFeature, spawnerID.ItemID, ItemSpawnerV2.PageMode.Attachments);
-			IM.AddMetaTag(spawnerID.MainObject.TagAttachmentMount.ToString(), TagType.AttachmentMount, spawnerID.ItemID, ItemSpawnerV2.PageMode.Attachments);
-			for (int num4 = 0; num4 < spawnerID.ModTags.Count; num4++)
+			foreach (string tag in spawnerId.ModTags)
 			{
-				IM.AddMetaTag(spawnerID.ModTags[num4].ToString(), TagType.ModTag, spawnerID.ItemID, ItemSpawnerV2.PageMode.Attachments);
+				IM.AddMetaTag(tag, TagType.ModTag, spawnerId.MainObject.ItemID, page);
 			}
-			if (spawnerID.MainObject.IsModContent)
+
+			if (spawnerId.MainObject.IsModContent)
 			{
-				IM.AddMetaTag("Mod Content", TagType.Set, spawnerID.ItemID, ItemSpawnerV2.PageMode.Attachments);
-			}
-			for (int num5 = 0; num5 < ManagerSingleton<IM>.Instance.NewItems.Groups.Count; num5++)
-			{
-				if (ManagerSingleton<IM>.Instance.NewItems.Groups[num5].NewItemIDs.Contains(spawnerID.ItemID))
-				{
-					IM.AddMetaTag(ManagerSingleton<IM>.Instance.NewItems.Groups[num5].Tag, TagType.New, spawnerID.ItemID, ItemSpawnerV2.PageMode.Attachments);
-				}
+				IM.AddMetaTag("Mod Content", TagType.Set, spawnerId.MainObject.ItemID, page);
 			}
 		}
 
-		private void TagAmmo(ItemSpawnerID spawnerID)
+		private void RegisterModTags(ItemSpawnerEntry spawnerEntry, ItemSpawnerV2.PageMode page)
 		{
-			OtherLogger.Log("Tagging for page Ammo!", OtherLogger.LogType.Loading);
-			IM.AddMetaTag(spawnerID.Category.ToString(), TagType.Category, spawnerID.ItemID, ItemSpawnerV2.PageMode.Ammo);
-			IM.AddMetaTag(spawnerID.MainObject.TagSet.ToString(), TagType.Set, spawnerID.ItemID, ItemSpawnerV2.PageMode.Ammo);
-			if (spawnerID.MainObject.UsesRoundTypeFlag)
+			foreach (string tag in spawnerEntry.ModTags)
 			{
-				IM.AddMetaTag(spawnerID.MainObject.RoundType.ToString(), TagType.Caliber, spawnerID.ItemID, ItemSpawnerV2.PageMode.Ammo);
+				IM.AddMetaTag(tag, TagType.ModTag, spawnerEntry.MainObjectID, page);
 			}
-			IM.AddMetaTag(spawnerID.MainObject.MagazineType.ToString(), TagType.MagazineType, spawnerID.ItemID, ItemSpawnerV2.PageMode.Ammo);
-			for (int num11 = 0; num11 < spawnerID.ModTags.Count; num11++)
+
+			if (spawnerEntry.IsModded)
 			{
-				IM.AddMetaTag(spawnerID.ModTags[num11].ToString(), TagType.ModTag, spawnerID.ItemID, ItemSpawnerV2.PageMode.Ammo);
-			}
-			if (spawnerID.MainObject.IsModContent)
-			{
-				IM.AddMetaTag("Mod Content", TagType.Set, spawnerID.ItemID, ItemSpawnerV2.PageMode.Ammo);
-			}
-			for (int num12 = 0; num12 < ManagerSingleton<IM>.Instance.NewItems.Groups.Count; num12++)
-			{
-				if (ManagerSingleton<IM>.Instance.NewItems.Groups[num12].NewItemIDs.Contains(spawnerID.ItemID))
-				{
-					IM.AddMetaTag(ManagerSingleton<IM>.Instance.NewItems.Groups[num12].Tag, TagType.New, spawnerID.ItemID, ItemSpawnerV2.PageMode.Ammo);
-				}
+				IM.AddMetaTag("Mod Content", TagType.Set, spawnerEntry.MainObjectID, page);
 			}
 		}
-	}
+
+		private void RegisterNewTag(FVRObject mainObject, ItemSpawnerV2.PageMode page)
+        {
+			foreach(var group in ManagerSingleton<IM>.Instance.NewItems.Groups)
+            {
+                if (group.NewItemIDs.Contains(mainObject.ItemID))
+                {
+					IM.AddMetaTag(group.Tag, TagType.New, mainObject.ItemID, page);
+				}
+            }
+		}
+
+		private void RegisterFirearmIntoMetaTagSystem(FVRObject mainObject, ItemSpawnerV2.PageMode page)
+		{
+			IM.AddMetaTag(mainObject.TagSet.ToString(), TagType.Set, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.TagEra.ToString(), TagType.Era, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.TagFirearmSize.ToString(), TagType.Size, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.TagFirearmAction.ToString(), TagType.Action, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.TagFirearmRoundPower.ToString(), TagType.RoundClass, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.TagFirearmCountryOfOrigin.ToString(), TagType.CountryOfOrigin, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.TagFirearmFirstYear.ToString(), TagType.IntroductionYear, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.MagazineType.ToString(), TagType.MagazineType, mainObject.ItemID, page);
+
+			if (mainObject.UsesRoundTypeFlag)
+				IM.AddMetaTag(mainObject.RoundType.ToString(), TagType.Caliber, mainObject.ItemID, page);
+
+			mainObject.TagFirearmFiringModes.ForEach(tag =>
+				IM.AddMetaTag(tag.ToString(), TagType.FiringMode, mainObject.ItemID, page));
+
+			mainObject.TagFirearmFeedOption.ForEach(tag =>
+				IM.AddMetaTag(tag.ToString(), TagType.FeedOption, mainObject.ItemID, page));
+
+			mainObject.TagFirearmMounts.ForEach(mode =>
+				IM.AddMetaTag(mode.ToString(), TagType.AttachmentMount, mainObject.ItemID, page));
+		}
+
+		private void RegisterAttachmentIntoMetaTagSystem(FVRObject mainObject, ItemSpawnerV2.PageMode page)
+		{
+			IM.AddMetaTag(mainObject.TagSet.ToString(), TagType.Set, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.TagEra.ToString(), TagType.Era, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.TagAttachmentFeature.ToString(), TagType.AttachmentFeature, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.TagAttachmentMount.ToString(), TagType.AttachmentMount, mainObject.ItemID, page);
+		}
+
+		private void RegisterAmmoIntoMetaTagSystem(FVRObject mainObject, ItemSpawnerV2.PageMode page)
+		{
+			IM.AddMetaTag(mainObject.TagSet.ToString(), TagType.Set, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.TagEra.ToString(), TagType.Era, mainObject.ItemID, page);
+			IM.AddMetaTag(mainObject.MagazineType.ToString(), TagType.MagazineType, mainObject.ItemID, page);
+
+			if (mainObject.UsesRoundTypeFlag)
+            {
+				IM.AddMetaTag(mainObject.RoundType.ToString(), TagType.Caliber, mainObject.ItemID, page);
+			}
+		}
+
+		private bool ShouldItemBeTaggedAsFirearm(ItemSpawnerID spawnerId)
+        {
+			return spawnerId.MainObject.Category == FVRObject.ObjectCategory.Firearm ||
+				_firearmItemCategories.Contains(spawnerId.Category) ||
+				!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerId.Category);
+		}
+
+		private bool ShouldItemBeTaggedAsToolsToy(ItemSpawnerID spawnerId)
+        {
+			return spawnerId.MainObject.Category == FVRObject.ObjectCategory.Explosive ||
+				spawnerId.MainObject.Category == FVRObject.ObjectCategory.Thrown ||
+				spawnerId.SubCategory == ItemSpawnerID.ESubCategory.Grenade ||
+				spawnerId.SubCategory == ItemSpawnerID.ESubCategory.RemoteExplosives ||
+				spawnerId.Category == ItemSpawnerID.EItemCategory.Misc;
+		}
+
+		private bool ShouldItemBeTaggedAsMelee(ItemSpawnerID spawnerId)
+        {
+			return spawnerId.MainObject.Category == FVRObject.ObjectCategory.MeleeWeapon ||
+				spawnerId.Category == ItemSpawnerID.EItemCategory.Melee;
+		}
+
+		private bool ShouldItemBeTaggedAsAmmo(ItemSpawnerID spawnerId)
+        {
+			return spawnerId.Category == ItemSpawnerID.EItemCategory.Magazine ||
+				spawnerId.Category == ItemSpawnerID.EItemCategory.Clip ||
+				spawnerId.Category == ItemSpawnerID.EItemCategory.Speedloader ||
+				spawnerId.Category == ItemSpawnerID.EItemCategory.Cartridge;
+		} 
+
+		private bool ShouldItemBeTaggedAsAttachment(ItemSpawnerID spawnerId)
+        {
+			return spawnerId.MainObject.Category == FVRObject.ObjectCategory.Attachment;
+		}
+    }
 }

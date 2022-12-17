@@ -15,9 +15,9 @@ namespace OtherLoader.Patches
 {
     public static class ItemDataLoadingPatches
     {
-        public static ISpawnerIdLoadingService _spawnerIdLoadingService = new SpawnerIdLoadingService(new PathService(), new MetaDataService());
+        public static ISpawnerIdLoadingService _spawnerIdLoadingService = new SpawnerIdLoadingService(new PathService(), new MetaDataService(new PathService()));
         public static ISpawnerEntryLoadingService _spawnerEntryLoadingService = new SpawnerEntryLoadingService(new PathService());
-        public static IMetaDataService _metaDataService = new MetaDataService();
+        public static IMetaDataService _metaDataService = new MetaDataService(new PathService());
 
         
         [HarmonyPatch(typeof(IM), "RegisterItemIntoMetaTagSystem")]
@@ -32,18 +32,6 @@ namespace OtherLoader.Patches
                 if (OtherLoader.UnlockSaveData.ShouldAutoUnlockItem(ID))
                 {
                     OtherLoader.UnlockSaveData.UnlockItem(ID.MainObject.ItemID);
-                }
-            }
-
-            //If this IDs items didn't get added, add it to the firearm page
-            if (IM.Instance.PageItemLists.ContainsKey(ItemSpawnerV2.PageMode.Firearms))
-            {
-                if (!IM.Instance.PageItemLists.Any(o => o.Value.Contains(ID.ItemID)) && IM.OD.ContainsKey(ID.MainObject.ItemID) && IM.OD[ID.MainObject.ItemID].IsModContent)
-                {
-                    OtherLogger.Log("Adding misc mod item to meta tag system: " + ID.ItemID, OtherLogger.LogType.Loading);
-
-                    IM.AddMetaTag(ID.Category.ToString(), TagType.Category, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);
-                    IM.AddMetaTag(ID.SubCategory.ToString(), TagType.SubCategory, ID.ItemID, ItemSpawnerV2.PageMode.Firearms);
                 }
             }
         }

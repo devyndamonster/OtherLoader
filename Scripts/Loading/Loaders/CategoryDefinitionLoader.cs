@@ -11,7 +11,7 @@ namespace OtherLoader.Loaders
 {
     public class CategoryDefinitionLoader : BaseAssetLoader
     {
-        private readonly IMetaDataService _metaDataService = new MetaDataService();
+        private readonly IMetaDataService _metaDataService = new MetaDataService(new PathService());
 
         public override IEnumerator LoadAssetsFromBundle(AssetBundle assetBundle, string bundleId)
         {

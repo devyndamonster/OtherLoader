@@ -99,15 +99,30 @@ namespace OtherLoader
             return string.IsNullOrEmpty(MainObjectID);
         }
         
-        public ItemSpawnerID.ESubCategory GetSpawnerSubcategory()
+        public ItemSpawnerID.ESubCategory? GetSpawnerSubcategory()
         {
-            return EntryPath
+            var definedSubcategories = EntryPath
                 .Split('/')
-                .Where(o => Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), o))
+                .Where(o => Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), o));
+
+            if (definedSubcategories.Count() == 0) return null;
+
+            return definedSubcategories
                 .Select(o => (ItemSpawnerID.ESubCategory)Enum.Parse(typeof(ItemSpawnerID.ESubCategory), o))
                 .FirstOrDefault();
         }
 
+        public ItemSpawnerID.EItemCategory? GetSpawnerCategory()
+        {
+            var definedCategories = EntryPath
+                .Split('/')
+                .Where(o => Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), o));
 
+            if (definedCategories.Count() == 0) return null;
+
+            return definedCategories
+                .Select(o => (ItemSpawnerID.EItemCategory)Enum.Parse(typeof(ItemSpawnerID.EItemCategory), o))
+                .FirstOrDefault();
+        }
     }
 }
