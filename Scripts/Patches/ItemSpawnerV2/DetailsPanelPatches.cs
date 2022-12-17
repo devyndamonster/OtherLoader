@@ -15,44 +15,13 @@ namespace OtherLoader.Patches
         [HarmonyPrefix]
         private static bool DetailTextPatch(ItemSpawnerV2 __instance, string id, ref string __result)
         {
-            FVRObject fvrObj;
-            string spawnerCat;
-            string spawnerSubcat;
+            OtherLogger.Log($"Getting detail text for {id}", OtherLogger.LogType.ItemSpawner);
 
-            if (IM.Instance.SpawnerIDDic.ContainsKey(id))
-            {
-                OtherLogger.Log("Getting ID from spawnerID", OtherLogger.LogType.General);
-
-                ItemSpawnerID spawnerID = IM.Instance.SpawnerIDDic[id];
-                fvrObj = IM.OD[spawnerID.MainObject.ItemID];
-
-                spawnerCat = spawnerID.Category.ToString();
-                if (!Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerID.Category) && IM.CDefInfo.ContainsKey(spawnerID.Category))
-                    spawnerCat = IM.CDefInfo[spawnerID.Category].DisplayName;
-
-                spawnerSubcat = spawnerID.SubCategory.ToString();
-                if (!Enum.IsDefined(typeof(ItemSpawnerID.ESubCategory), spawnerID.SubCategory) && IM.CDefSubInfo.ContainsKey(spawnerID.SubCategory))
-                    spawnerSubcat = IM.CDefSubInfo[spawnerID.SubCategory].DisplayName;
-            }
-
-            else if (OtherLoader.SpawnerEntriesByID.ContainsKey(id))
-            {
-                OtherLogger.Log("Getting ID from otherloader", OtherLogger.LogType.General);
-
-                spawnerCat = "None";
-                spawnerSubcat = "None";
-
-                fvrObj = IM.OD[id];
-            }
-
-            else
-            {
-                OtherLogger.LogError($"The ItemID was not found to have spawner entry! ItemID: {id}");
-                __result = "";
-                return false;
-            }
-
-
+            var spawnerEntry = OtherLoader.SpawnerEntriesByID[id];
+            FVRObject fvrObj = IM.OD[id];
+            string spawnerCat = IM.Instance.ItemMetaDic[id][TagType.Category].AsJoinedString();
+            string spawnerSubcat = IM.Instance.ItemMetaDic[id][TagType.SubCategory].AsJoinedString();
+            
             string text =
                 "Spawner Category: " + spawnerCat + "\n" +
                 "Spawner Subcategory: " + spawnerSubcat + "\n" +
@@ -82,32 +51,24 @@ namespace OtherLoader.Patches
         [HarmonyPrefix]
         private static bool RedrawDetailsCanvasPatch(ItemSpawnerV2 __instance)
         {
-            if (!OtherLoader.SpawnerEntriesByID.ContainsKey(__instance.m_selectedID))
-            {
-                return true;
-            }
+            OtherLogger.Log($"Drawing details for {__instance.m_selectedID}", OtherLogger.LogType.ItemSpawner);
             
-            else
+            ItemSpawnerEntry spawnerEntry = OtherLoader.SpawnerEntriesByID[__instance.m_selectedID];
+            ItemSpawnerData spawnerData = __instance.GetComponent<ItemSpawnerData>();
+
+            EnableDetailElements(__instance);
+            PopulateDetailText(__instance, spawnerEntry);
+            PopulateCurrentItemIcon(__instance, spawnerEntry);
+            RedrawSecondariesPanel(__instance, spawnerEntry, spawnerData);
+            RedrawFavButtons(__instance);
+
+            if (__instance.m_detailsLinkedResourceMode == ItemSpawnerV2.DetailsLinkedResourceMode.Tutorials)
             {
-                OtherLogger.Log($"Drawing details for {__instance.m_selectedID}", OtherLogger.LogType.Loading);
-
-                ItemSpawnerEntry entry = OtherLoader.SpawnerEntriesByID[__instance.m_selectedID];
-                ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
-
-                EnableDetailElements(__instance);
-                PopulateDetailText(__instance, entry);
-                PopulateCurrentItemIcon(__instance, entry);
-                RedrawSecondariesPanel(__instance, entry, data);
-                RedrawFavButtons(__instance);
-
-                if (__instance.m_detailsLinkedResourceMode == ItemSpawnerV2.DetailsLinkedResourceMode.Tutorials)
-                {
-                    RedrawTutorialBlocks(__instance, entry);
-                }
-                else if(__instance.m_detailsLinkedResourceMode == ItemSpawnerV2.DetailsLinkedResourceMode.RelatedVaultFiles)
-                {
-                    RedrawRelatedVaultFiles(__instance, entry);
-                }
+                RedrawTutorialBlocks(__instance, spawnerEntry);
+            }
+            else if(__instance.m_detailsLinkedResourceMode == ItemSpawnerV2.DetailsLinkedResourceMode.RelatedVaultFiles)
+            {
+                RedrawRelatedVaultFiles(__instance, spawnerEntry);
             }
 
             return false;
@@ -149,7 +110,7 @@ namespace OtherLoader.Patches
 
         private static List<ItemSpawnerEntry> GetSecondaryEntries(ItemSpawnerEntry entry)
         {
-            OtherLogger.Log($"Secondary entries for {entry.MainObjectID}:\n{entry.SecondaryObjectIDs.AsJoinedString("\n")}", OtherLogger.LogType.Loading);
+            OtherLogger.Log($"Secondary entries for {entry.MainObjectID}:\n{entry.SecondaryObjectIDs.AsJoinedString("\n")}", OtherLogger.LogType.ItemSpawner);
 
             return entry.SecondaryObjectIDs
                 .Where(o => OtherLoader.SpawnerEntriesByID.ContainsKey(o))
@@ -160,9 +121,7 @@ namespace OtherLoader.Patches
         private static void RedrawSecondariesPanel(ItemSpawnerV2 __instance, ItemSpawnerEntry entry, ItemSpawnerData data)
         {
             List<ItemSpawnerEntry> secondaryEntries = GetSecondaryEntries(entry);
-
-            OtherLogger.Log($"Aquired Secondary entries for {entry.MainObjectID}:\n{secondaryEntries.AsJoinedString(entry => entry.MainObjectID, "\n")}", OtherLogger.LogType.Loading);
-
+            
             RedrawSecondaryTiles(__instance, secondaryEntries, data);
             RedrawSecondariesPageButtons(__instance, secondaryEntries, data);
             RedrawSecondariesQueueButtons(__instance);

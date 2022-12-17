@@ -1,5 +1,6 @@
 ﻿using FistVR;
 using HarmonyLib;
+using OtherLoader.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,17 +10,20 @@ namespace OtherLoader.Patches
 {
     public class SimpleCanvasePatches
     {
+
+        public static IPathService PathService = new PathService();
+
         [HarmonyPatch(typeof(ItemSpawnerV2), "SimpleGoBack")]
         [HarmonyPrefix]
         private static bool GoBackPatch(ItemSpawnerV2 __instance)
         {
-            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
+            ItemSpawnerData spawnerData = __instance.GetComponent<ItemSpawnerData>();
 
-            if (CanGoBack(data))
+            if (PathService.HasParent(spawnerData.CurrentPath))
             {
-                data.CurrentPath = GetPreviousPagePath(data);
-                SetCurrentPage(__instance, data, 0);
-                data.CurrentDepth -= 1;
+                spawnerData.SavedPagePositions[spawnerData.CurrentPath] = 0;
+                spawnerData.CurrentPath = PathService.GetParentPath(spawnerData.CurrentPath);
+                spawnerData.CurrentDepth -= 1;
                 __instance.RedrawSimpleCanvas();
             }
 
@@ -33,12 +37,10 @@ namespace OtherLoader.Patches
         {
             ItemSpawnerData spawnerData = __instance.GetComponent<ItemSpawnerData>();
 
-            if (HasNextPage(__instance, spawnerData))
-            {
-                int currentPage = GetCurrentPage(__instance, spawnerData);
-                SetCurrentPage(__instance, spawnerData, currentPage + 1);
-                __instance.RedrawSimpleCanvas();
-            }
+            var numberOfPages = GetNumberOfPages(__instance, spawnerData);
+            var currentPage = spawnerData.SavedPagePositions[spawnerData.CurrentPath];
+            spawnerData.SavedPagePositions[spawnerData.CurrentPath] = Math.Min(currentPage + 1, numberOfPages);
+            __instance.RedrawSimpleCanvas();
 
             return false;
         }
@@ -48,15 +50,12 @@ namespace OtherLoader.Patches
         [HarmonyPrefix]
         private static bool PrevPagePatch(ItemSpawnerV2 __instance)
         {
-            ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
-            
-            if (HasPreviousPage(__instance, data))
-            {
-                int currentPage = GetCurrentPage(__instance, data);
-                SetCurrentPage(__instance, data, currentPage - 1);
-                __instance.RedrawSimpleCanvas();
-            }
+            ItemSpawnerData spawnerData = __instance.GetComponent<ItemSpawnerData>();
 
+            var currentPage = spawnerData.SavedPagePositions[spawnerData.CurrentPath];
+            spawnerData.SavedPagePositions[spawnerData.CurrentPath] = Math.Max(currentPage - 1, 0);
+            __instance.RedrawSimpleCanvas();
+            
             return false;
         }
 
@@ -84,7 +83,7 @@ namespace OtherLoader.Patches
         {
             spawnerData.CurrentPath = spawnerData.VisibleEntries[itemIndex].EntryPath;
             spawnerData.CurrentDepth += 1;
-            SetCurrentPage(instance, spawnerData, 0);
+            spawnerData.SavedPagePositions[spawnerData.CurrentPath] = 0;
             instance.RedrawSimpleCanvas();
         }
 
@@ -104,16 +103,15 @@ namespace OtherLoader.Patches
 
             ItemSpawnerData spawnerData = __instance.GetComponent<ItemSpawnerData>();
 
-            OtherLogger.Log($"Spawner Entries at path:\n{OtherLoader.SpawnerEntriesByPath[spawnerData.CurrentPath].childNodes.AsJoinedString(child => child.entry.EntryPath, "\n")}");
-
             List<EntryNode> entries = OtherLoader.SpawnerEntriesByPath[spawnerData.CurrentPath].childNodes
                 .Where(o => o.entry.IsDisplayedInMainEntry)
                 .OrderBy(o => o.entry.IsModded)
                 .ToList();
 
-            OtherLogger.Log($"Spawner Entries visible at path:\n{entries.AsJoinedString(child => child.entry.EntryPath, "\n")}");
+            OtherLogger.Log($"Spawner Entries visible at path:\n{entries
+                .AsJoinedString(child => child.entry.EntryPath + ", IsUnlocked: " + OtherLoader.UnlockSaveData.IsItemUnlocked(child.entry.MainObjectID).ToString(), "\n")}", OtherLogger.LogType.ItemSpawner);
 
-            int currentPage = GetCurrentPage(__instance, spawnerData);
+            int currentPage = spawnerData.SavedPagePositions[spawnerData.CurrentPath];
             int numberOfPages = GetNumberOfPages(entries.Count, __instance.IMG_SimpleTiles.Count);
 
             DrawTiles(__instance, entries, spawnerData, currentPage);
@@ -161,6 +159,12 @@ namespace OtherLoader.Patches
             return (int)Math.Ceiling((double)numberOfItems / pageSize);
         }
 
+        private static int GetNumberOfPages(ItemSpawnerV2 instance, ItemSpawnerData spawnerData)
+        {
+            int numberOfItems = OtherLoader.SpawnerEntriesByPath[spawnerData.CurrentPath].childNodes.Count;
+            return GetNumberOfPages(numberOfItems, instance.IMG_SimpleTiles.Count);
+        }
+
         private static void DrawPageNumberDisplay(ItemSpawnerV2 instance, int currentPage, int numberOfPages, int itemsOnPage)
         {
             instance.TXT_SimpleTiles_PageNumber.text = (currentPage + 1) + " / " + (numberOfPages);
@@ -186,39 +190,6 @@ namespace OtherLoader.Patches
             {
                 instance.GO_SimpleTiles_NextPage.SetActive(false);
             }
-        }
-
-        private static bool HasNextPage(ItemSpawnerV2 instance, ItemSpawnerData spawnerData)
-        {
-            int numberOfItems = OtherLoader.SpawnerEntriesByPath[spawnerData.CurrentPath].childNodes.Count;
-            int numberOfPages = GetNumberOfPages(numberOfItems, instance.IMG_SimpleTiles.Count);
-            int currentPage = GetCurrentPage(instance, spawnerData);
-            return numberOfPages > currentPage;
-        }
-
-        private static bool HasPreviousPage(ItemSpawnerV2 instance, ItemSpawnerData spawnerData)
-        {   
-            return GetCurrentPage(instance, spawnerData) > 0;
-        }
-
-        private static bool CanGoBack(ItemSpawnerData spawnerData)
-        {
-            return spawnerData.CurrentPath.Contains("/");
-        }
-
-        private static int GetCurrentPage(ItemSpawnerV2 instance, ItemSpawnerData spawnerData)
-        {
-            return spawnerData.SavedPagePositions[instance.PMode][spawnerData.CurrentDepth];
-        }
-
-        private static void SetCurrentPage(ItemSpawnerV2 instance, ItemSpawnerData spawnerData, int page)
-        {
-            spawnerData.SavedPagePositions[instance.PMode][spawnerData.CurrentDepth] = page;
-        }
-
-        private static string GetPreviousPagePath(ItemSpawnerData spawnerData)
-        {
-            return spawnerData.CurrentPath.Substring(0, spawnerData.CurrentPath.LastIndexOf("/"));
         }
 
     }

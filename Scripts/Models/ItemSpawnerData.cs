@@ -17,6 +17,6 @@ namespace OtherLoader
 
         public int CurrentDepth = 0;
 
-        public Dictionary<ItemSpawnerV2.PageMode, Dictionary<int, int>> SavedPagePositions = new Dictionary<ItemSpawnerV2.PageMode, Dictionary<int, int>>();
+        public Dictionary<string, int> SavedPagePositions = new Dictionary<string, int>();
     }
 }

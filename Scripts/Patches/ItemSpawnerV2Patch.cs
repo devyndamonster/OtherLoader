@@ -141,9 +141,8 @@ namespace OtherLoader
             ItemSpawnerData data = __instance.GetComponent<ItemSpawnerData>();
             data.CurrentPath = ((ItemSpawnerV2.PageMode)i).ToString();
             data.CurrentDepth = 0;
-            data.SavedPagePositions[(ItemSpawnerV2.PageMode)i] = new Dictionary<int, int>();
-
-            data.SavedPagePositions[(ItemSpawnerV2.PageMode)i][data.CurrentDepth] = 0;
+            data.SavedPagePositions = new();
+            data.SavedPagePositions[data.CurrentPath] = 0;
 
             return true;
         }

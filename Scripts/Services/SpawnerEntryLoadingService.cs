@@ -16,7 +16,7 @@ namespace OtherLoader.Services
 
         public ItemSpawnerID ConvertSpawnerEntryToSpawnerId(ItemSpawnerEntry spawnerEntry)
         {
-            ItemSpawnerID.ESubCategory subcategory = spawnerEntry.GetSpawnerSubcategory();
+            ItemSpawnerID.ESubCategory? subcategory = spawnerEntry.GetSpawnerSubcategory();
 
             if (!IM.OD.ContainsKey(spawnerEntry.MainObjectID) || spawnerEntry.IsCategoryEntry())
             {
@@ -30,7 +30,7 @@ namespace OtherLoader.Services
                 if (category.Subcats.Any(o => o.Subcat == subcategory))
                 {
                     itemSpawnerID.Category = category.Cat;
-                    itemSpawnerID.SubCategory = subcategory;
+                    itemSpawnerID.SubCategory = subcategory ?? ItemSpawnerID.ESubCategory.None;
                 }
             }
 

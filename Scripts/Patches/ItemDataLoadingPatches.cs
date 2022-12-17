@@ -27,8 +27,6 @@ namespace OtherLoader.Patches
             //If this item is not a reward, unlock it by default
             if (ID.MainObject != null)
             {
-                OtherLoader.SpawnerIDsByMainObject[ID.MainObject.ItemID] = ID;
-                
                 if (OtherLoader.UnlockSaveData.ShouldAutoUnlockItem(ID))
                 {
                     OtherLoader.UnlockSaveData.UnlockItem(ID.MainObject.ItemID);
@@ -41,7 +39,7 @@ namespace OtherLoader.Patches
         private static void ItemDBGenerationPatch(ILContext ctx, MethodBase orig)
         {
             ILCursor c = new ILCursor(ctx);
-
+            
             c.GotoNext(
                 i => i.MatchLdfld(AccessTools.Field(typeof(ItemSpawnerID), "MainObject"))
             );
@@ -54,9 +52,8 @@ namespace OtherLoader.Patches
             c.GotoNext(
                 i => i.MatchLdstr("SosigEnemyTemplates")
             );
-
+            
             c.Emit(OpCodes.Call, ((Action)PopulateSpawnerEntries).Method);
-
         }
 
         private static void PopulateSpawnerEntries()
@@ -77,13 +74,13 @@ namespace OtherLoader.Patches
             {
                 foreach (string itemId in pageLists.Value)
                 {
-                    ItemSpawnerID spawnerId = IM.Instance.SpawnerIDDic[itemId];
-                    
                     OtherLogger.Log($"Loading vanilla ItemSpawnerId {itemId} into spawner entries", OtherLogger.LogType.Loading);
+
+                    ItemSpawnerID spawnerId = OtherLoader.SpawnerIDsByMainObject[itemId];
 
                     var spawnerEntries = _spawnerIdLoadingService.GenerateRequiredSpawnerEntriesForSpawnerId(spawnerId);
 
-                    OtherLogger.Log($"Loaded spawner entries:\n{string.Join("\n", spawnerEntries.Select(entry => entry.EntryPath).ToArray())}");
+                    OtherLogger.Log($"Loaded spawner entries:\n{string.Join("\n", spawnerEntries.Select(entry => entry.EntryPath).ToArray())}", OtherLogger.LogType.Loading);
 
                     _spawnerEntryLoadingService.AddItemSpawnerEntriesToPaths(spawnerEntries);
                 }
@@ -94,6 +91,7 @@ namespace OtherLoader.Patches
         {
             if (spawnerID.MainObject != null)
             {
+                OtherLoader.SpawnerIDsByMainObject[spawnerID.MainObject.ItemID] = spawnerID;
                 _metaDataService.RegisterSpawnerIDIntoTagSystem(spawnerID);
             }
         }

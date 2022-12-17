@@ -43,6 +43,8 @@ namespace OtherLoader
         public static ConfigEntry<bool> OptimizeMemory;
         public static ConfigEntry<bool> EnableLogging;
         public static ConfigEntry<bool> LogLoading;
+        public static ConfigEntry<bool> LogItemSpawner;
+        public static ConfigEntry<bool> LogMetaTagging;
         public static ConfigEntry<bool> AddUnloadButton;
         public static ConfigEntry<ItemUnlockMode> UnlockMode;
 
@@ -55,7 +57,7 @@ namespace OtherLoader
         private void Awake()
         {
             LoadConfigFile();
-            OtherLogger.Init(EnableLogging.Value, LogLoading.Value);
+            OtherLogger.Init(EnableLogging.Value, LogLoading.Value, LogItemSpawner.Value, LogMetaTagging.Value);
 
             InitPaths();
             InitUnlockSaveData();
@@ -112,6 +114,20 @@ namespace OtherLoader
                 "LogLoading",
                 false,
                 "When enabled, OtherLoader will log additional useful information during the loading process. EnableLogging must be set to true for this to have an effect"
+                );
+
+            LogItemSpawner = Config.Bind(
+                "Logging",
+                "LogItemSpawner",
+                false,
+                "When enabled, OtherLoader will log additional useful information about the item spawner. EnableLogging must be set to true for this to have an effect"
+                );
+
+            LogMetaTagging = Config.Bind(
+                "Logging",
+                "LogMetaTagging",
+                false,
+                "When enabled, OtherLoader will log additional useful information about metadata. EnableLogging must be set to true for this to have an effect"
                 );
 
             MaxActiveLoadersConfig = Config.Bind(

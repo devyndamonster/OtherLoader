@@ -13,33 +13,32 @@ namespace OtherLoader
 
         private static bool AllowLogging = false;
         private static bool LogLoading = false;
+        private static bool LogItemSpawner = false;
+        private static bool LogMetaTagging = false;
 
         public enum LogType
         {
             General,
-            Loading
+            Loading,
+            ItemSpawner,
+            MetaTagging
         }
 
-        public static void Init(bool enabled, bool logLoading)
+        public static void Init(bool enabled, bool logLoading, bool logItemSpawner, bool logMetaTagging)
         {
             BepLog = BepInEx.Logging.Logger.CreateLogSource("OtherLoader");
 
             AllowLogging = enabled;
             LogLoading = logLoading;
+            LogItemSpawner = logItemSpawner;
+            LogMetaTagging = logMetaTagging;
         }
 
         public static void Log(string log, LogType type = LogType.General)
         {
-            if (AllowLogging)
+            if (CanBeLogged(type))
             {
-                if (type == LogType.General)
-                {
-                    BepLog.LogInfo(log);
-                }
-                else if (type == LogType.Loading && LogLoading)
-                {
-                    BepLog.LogInfo(log);
-                }
+                BepLog.LogInfo(log);
             }
         }
 
@@ -51,6 +50,17 @@ namespace OtherLoader
         public static void LogError(string log)
         {
             BepLog.LogError(log);
+        }
+
+        private static bool CanBeLogged(LogType logType)
+        {
+            if (!AllowLogging) return false;
+
+            return
+                logType == LogType.General ||
+                (logType == LogType.Loading && LogLoading) ||
+                (logType == LogType.ItemSpawner && LogItemSpawner) ||
+                (logType == LogType.MetaTagging && LogMetaTagging);
         }
 
     }
