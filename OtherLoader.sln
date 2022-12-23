@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OtherLoader", "OtherLoader.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OtherLoader.Core", "OtherLoader.Core\OtherLoader.Core.csproj", "{51E79649-E0B3-4BDE-8776-B7C67D8982FF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OtherLoader.UnitTests", "OtherLoader.UnitTests\OtherLoader.UnitTests.csproj", "{AF851F4F-7C08-4B8C-BAAA-A17BFB135551}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OtherLoader.Tests", "OtherLoader.UnitTests\OtherLoader.Tests.csproj", "{AF851F4F-7C08-4B8C-BAAA-A17BFB135551}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

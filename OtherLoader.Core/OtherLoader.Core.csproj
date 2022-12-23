@@ -55,9 +55,17 @@
   <ItemGroup>
     <Compile Include="Controllers\IItemSpawnerController.cs" />
     <Compile Include="Controllers\ItemSpawnerController.cs" />
+    <Compile Include="Models\ItemDataContainer.cs" />
     <Compile Include="Models\ItemSpawnerState.cs" />
+    <Compile Include="Models\ItemSpawnerTileState.cs" />
+    <Compile Include="Models\PageMode.cs" />
+    <Compile Include="Models\SearchMode.cs" />
     <Compile Include="Models\SpawnerEntryData.cs" />
+    <Compile Include="Models\TagGroup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\IPathService.cs" />
+    <Compile Include="Services\PathService.cs" />
+    <Compile Include="SharedInterfaces\IPrototype.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

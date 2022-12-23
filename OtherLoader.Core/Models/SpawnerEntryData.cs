@@ -7,5 +7,8 @@ namespace OtherLoader.Core.Models
 {
     public class SpawnerEntryData
     {
+        public string Path;
+        
+        public string DisplayText;
     }
 }
