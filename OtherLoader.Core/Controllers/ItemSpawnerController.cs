@@ -48,7 +48,9 @@ namespace OtherLoader.Core.Controllers
         private IEnumerable<ItemSpawnerTileState> GetSimpleTileStatesForPath(string path)
         {
             return _dataContainer.ItemEntries
-                .Where(entry => _pathService.IsImmediateParentOf(path, entry.Path))
+                .Where(entry => 
+                    _pathService.IsImmediateParentOf(path, entry.Path) &&
+                    entry.IsDisplayedInMainEntry)
                 .Select(entry => new ItemSpawnerTileState
                 {
                     DisplayText = entry.DisplayText,
