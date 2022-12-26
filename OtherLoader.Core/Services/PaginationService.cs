@@ -14,14 +14,14 @@ namespace OtherLoader.Core.Services
             return Math.Max(pagesRoundedUp, 1);
         }
 
-        public int HasNextPage(int pageSize, int itemCount, int currentPage)
+        public bool HasNextPage(int pageSize, int itemCount, int currentPage)
         {
-            throw new NotImplementedException();
+            return currentPage < GetNumberOfPages(pageSize, itemCount) - 1;
         }
 
-        public int HasPrevPage(int currentPage)
+        public bool HasPrevPage(int currentPage)
         {
-            throw new NotImplementedException();
+            return currentPage > 0;
         }
     }
 }

@@ -9,8 +9,8 @@ namespace OtherLoader.Core.Services
     {
         public int GetNumberOfPages(int pageSize, int itemCount);
 
-        public int HasNextPage(int pageSize, int itemCount, int currentPage);
+        public bool HasNextPage(int pageSize, int itemCount, int currentPage);
 
-        public int HasPrevPage(int currentPage);
+        public bool HasPrevPage(int currentPage);
     }
 }

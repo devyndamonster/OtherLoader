@@ -19,5 +19,31 @@ namespace OtherLoader.UnitTests.Services
 
             result.Should().Be(expected);
         }
+
+        [TestCase(20, 0, 0, false)]
+        [TestCase(20, 1, 0, false)]
+        [TestCase(20, 20, 0, false)]
+        [TestCase(20, 21, 0, true)]
+        [TestCase(20, 21, 1, false)]
+        public void ItWillHaveNextPageInCorrectScenarios(int pageSize, int itemCount, int currentPage, bool expected)
+        {
+            var pageService = new PaginationService();
+
+            var result = pageService.HasNextPage(pageSize, itemCount, currentPage);
+
+            result.Should().Be(expected);
+        }
+
+        [TestCase(0, false)]
+        [TestCase(1, true)]
+        [TestCase(123, true)]
+        public void ItWillHavePrevPageInCorrectScenarios(int currentPage, bool expected)
+        {
+            var pageService = new PaginationService();
+
+            var result = pageService.HasPrevPage(currentPage);
+
+            result.Should().Be(expected);
+        }
     }
 }

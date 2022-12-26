@@ -35,23 +35,24 @@ namespace OtherLoader.Core.Controllers
             newState.CurrentPath = page.ToString();
             newState.SavedPathsToPages[newState.CurrentPath] = 0;
             var tileStatesAtPath = GetAllSimpleTileStatesForPath(newState.CurrentPath);
-            var totalTiles = newState.SimplePageSize * _pageService.GetNumberOfPages(newState.SimplePageSize, tileStatesAtPath.Count());
-            var startingTile = newState.SimplePageSize * newState.SimpleCurrentPage;
-
-            newState.SimpleTileStates = Enumerable.Range(0, totalTiles)
-                .Skip(startingTile)
-                .Take(newState.SimplePageSize)
-                .Select(index => 
-                    tileStatesAtPath.ElementAtOrDefault(index) ?? new() { Path = "" });
-
-            newState.SimpleNextPageEnabled = tileStatesAtPath.Count() > newState.SimplePageSize;
+            newState.SimpleTileStates = GetTileStatesForPage(tileStatesAtPath, newState.SimplePageSize, newState.SimpleCurrentPage);
+            newState.SimpleNextPageEnabled = _pageService.HasNextPage(newState.SimplePageSize, tileStatesAtPath.Count(), newState.SimpleCurrentPage);
+            newState.SimplePrevPageEnabled = _pageService.HasPrevPage(newState.SimpleCurrentPage);
 
             return newState;
         }
 
         public ItemSpawnerState NextPageClicked(ItemSpawnerState state)
         {
-            throw new NotImplementedException();
+            var newState = state.Clone();
+
+            newState.SavedPathsToPages[newState.CurrentPath] += 1;
+            var tileStatesAtPath = GetAllSimpleTileStatesForPath(newState.CurrentPath);
+            newState.SimpleTileStates = GetTileStatesForPage(tileStatesAtPath, newState.SimplePageSize, newState.SimpleCurrentPage);
+            newState.SimpleNextPageEnabled = _pageService.HasNextPage(newState.SimplePageSize, tileStatesAtPath.Count(), newState.SimpleCurrentPage);
+            newState.SimplePrevPageEnabled = _pageService.HasPrevPage(newState.SimpleCurrentPage);
+
+            return newState;
         }
         
         public ItemSpawnerState PreviousPageClicked(ItemSpawnerState state)
@@ -70,6 +71,18 @@ namespace OtherLoader.Core.Controllers
                     DisplayText = entry.DisplayText,
                     Path = entry.Path
                 });
+        }
+
+        private IEnumerable<ItemSpawnerTileState> GetTileStatesForPage(IEnumerable<ItemSpawnerTileState> allTiles, int pageSize, int currentPage)
+        {
+            var totalTiles = pageSize * _pageService.GetNumberOfPages(pageSize, allTiles.Count());
+            var startingTile = pageSize * currentPage;
+
+            return Enumerable.Range(0, totalTiles)
+                .Skip(startingTile)
+                .Take(pageSize)
+                .Select(index =>
+                    allTiles.ElementAtOrDefault(index) ?? new() { Path = "" });
         }
     }
 }

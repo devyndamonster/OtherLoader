@@ -8,8 +8,48 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 {
     public class PageSelectedTests
     {
+
         [Test]
-        public void ItWillDisplayCorrectCategories_WhenPageSelected()
+        public void ItWillDisplayCorrectDataForEntry()
+        {
+            var itemData = new ItemDataContainer
+            {
+                ItemEntries = new SpawnerEntryData[]
+                {
+                    new SpawnerEntryData
+                    {
+                        DisplayText = "Pistols Category",
+                        Path = "Firearms/Pistols",
+                        IsDisplayedInMainEntry = true
+                    }
+                }
+            };
+
+            var expectedTileStates = new ItemSpawnerTileState[]
+            {
+                new ItemSpawnerTileState
+                {
+                    DisplayText = "Pistols Category",
+                    Path = "Firearms/Pistols",
+                }
+            };
+
+            var state = new ItemSpawnerState
+            {
+                SimplePageSize = 1
+            };
+
+            var pathService = new PathService();
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
+
+            var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
+
+            newState.SimpleTileStates.ShouldBeEquivalentTo(expectedTileStates); 
+        }
+
+        [Test]
+        public void ItWillDisplayCorrectEntries()
         {
             var itemData = new ItemDataContainer
             {
@@ -117,7 +157,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
         }
         
         [Test]
-        public void ItShouldStartOnFirstPage()
+        public void ItWillStartOnFirstPage()
         {
             var itemData = new ItemDataContainer
             {
@@ -169,7 +209,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
         }
 
         [Test]
-        public void NextPageButtonDisabled_WhenFirstPageNotFull()
+        public void ItWillDisableNextPageButton_WhenFirstPageNotFull()
         {
             var itemData = new ItemDataContainer
             {
@@ -198,7 +238,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
         }
 
         [Test]
-        public void NextPageButtonDisabled_WhenFirstPageExactlyFull()
+        public void ItWillDisableNextPageButton_WhenFirstPageExactlyFull()
         {
             var itemData = new ItemDataContainer
             {
@@ -227,7 +267,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
         }
 
         [Test]
-        public void NextPageButtonEnabled_WhenNotEnoughRoomOnFirstPage()
+        public void ItWillEnableNextPageButton_WhenNotEnoughRoomOnFirstPage()
         {
             var itemData = new ItemDataContainer
             {
@@ -261,7 +301,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
         }
 
         [Test]
-        public void PrevPageButtonDisabled_OnFirstPage()
+        public void ItWillDisablePrevPageButton_OnFirstPage()
         {
             var itemData = new ItemDataContainer
             {
@@ -290,7 +330,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
         }
 
         [Test]
-        public void TilePathWillBeEmpty_WhenNotEntryForTile()
+        public void ItWillHaveEmptyTilePath_WhenNotEntryForTile()
         {
             var itemData = new ItemDataContainer
             {
