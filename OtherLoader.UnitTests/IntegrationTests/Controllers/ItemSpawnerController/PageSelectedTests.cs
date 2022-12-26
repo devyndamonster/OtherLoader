@@ -29,27 +29,20 @@ namespace OtherLoader.IntegrationTests.Controllers
                     }
                 }
             };
-                
-            var expectedTileStates = new []
-            {
-                new ItemSpawnerTileState
-                {
-                    Path = "Firearms/Pistols",
-                    DisplayText = "Pistols Category"
-                }
-            };
-
+            
             var state = new ItemSpawnerState
             {
                 SimplePageSize = 2
             };
-
+            
             var pathService = new PathService();
-            var itemSpawnerController = new ItemSpawnerController(itemData, pathService);
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
                 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleTileStates.ShouldBeEquivalentTo(expectedTileStates);
+            newState.SimpleTileStates.Should().Contain(tile => tile.Path == "Firearms/Pistols");
+            newState.SimpleTileStates.Should().NotContain(tile => tile.Path == "Melee/Swords");
         }
 
         [Test]
@@ -73,25 +66,19 @@ namespace OtherLoader.IntegrationTests.Controllers
                 }
             };
 
-            var expectedTileStates = new[]
-            {
-                new ItemSpawnerTileState
-                {
-                    Path = "Firearms/Pistols"
-                }
-            };
-
             var state = new ItemSpawnerState
             {
                 SimplePageSize = 2
             };
             
             var pathService = new PathService();
-            var itemSpawnerController = new ItemSpawnerController(itemData, pathService);
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleTileStates.ShouldBeEquivalentTo(expectedTileStates);
+            newState.SimpleTileStates.Should().Contain(tile => tile.Path == "Firearms/Pistols");
+            newState.SimpleTileStates.Should().NotContain(tile => tile.Path == "Firearms/SMGs");
         }
 
         [Test]
@@ -113,14 +100,6 @@ namespace OtherLoader.IntegrationTests.Controllers
                     }
                 }
             };
-                
-            var expectedTileStates = new[]
-            {
-                new ItemSpawnerTileState
-                {
-                    Path = "Firearms/Pistols"
-                }
-            };
 
             var state = new ItemSpawnerState
             {
@@ -128,11 +107,13 @@ namespace OtherLoader.IntegrationTests.Controllers
             };
             
             var pathService = new PathService();
-            var itemSpawnerController = new ItemSpawnerController(itemData, pathService);
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleTileStates.ShouldBeEquivalentTo(expectedTileStates);
+            newState.SimpleTileStates.Should().Contain(tile => tile.Path == "Firearms/Pistols");
+            newState.SimpleTileStates.Should().NotContain(tile => tile.Path == "Firearms/Pistols/Glock");
         }
         
         [Test]
@@ -178,7 +159,8 @@ namespace OtherLoader.IntegrationTests.Controllers
             };
 
             var pathService = new PathService();
-            var itemSpawnerController = new ItemSpawnerController(itemData, pathService);
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
@@ -207,7 +189,8 @@ namespace OtherLoader.IntegrationTests.Controllers
             };
 
             var pathService = new PathService();
-            var itemSpawnerController = new ItemSpawnerController(itemData, pathService);
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
@@ -235,7 +218,8 @@ namespace OtherLoader.IntegrationTests.Controllers
             };
 
             var pathService = new PathService();
-            var itemSpawnerController = new ItemSpawnerController(itemData, pathService);
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
@@ -268,7 +252,8 @@ namespace OtherLoader.IntegrationTests.Controllers
             };
 
             var pathService = new PathService();
-            var itemSpawnerController = new ItemSpawnerController(itemData, pathService);
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
@@ -296,11 +281,53 @@ namespace OtherLoader.IntegrationTests.Controllers
             };
 
             var pathService = new PathService();
-            var itemSpawnerController = new ItemSpawnerController(itemData, pathService);
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
             newState.SimplePrevPageEnabled.Should().BeFalse();
+        }
+
+        [Test]
+        public void TilePathWillBeEmpty_WhenNotEntryForTile()
+        {
+            var itemData = new ItemDataContainer
+            {
+                ItemEntries = new SpawnerEntryData[]
+                {
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/Pistols",
+                        IsDisplayedInMainEntry = true
+                    }
+                }
+            };
+
+            var expectedTileStates = new[]
+            {
+                new ItemSpawnerTileState
+                {
+                    Path = "Firearms/Pistols"
+                },
+                new ItemSpawnerTileState
+                {
+                    Path = ""
+                }
+            };
+
+            var state = new ItemSpawnerState
+            {
+                SimplePageSize = 2
+            };
+
+            var pathService = new PathService();
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
+
+            var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
+
+            newState.SimpleTileStates.ShouldBeEquivalentTo(expectedTileStates);
         }
     }
 }

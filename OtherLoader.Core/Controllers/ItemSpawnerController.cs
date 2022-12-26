@@ -10,11 +10,13 @@ namespace OtherLoader.Core.Controllers
     {
         private readonly ItemDataContainer _dataContainer;
         private readonly IPathService _pathService;
+        private readonly IPaginationService _pageService;
 
-        public ItemSpawnerController(ItemDataContainer dataContainer, IPathService pathService) 
+        public ItemSpawnerController(ItemDataContainer dataContainer, IPathService pathService, IPaginationService pageService) 
         {
             _dataContainer = dataContainer;
             _pathService = pathService;
+            _pageService = pageService;
         }
         
         public ItemSpawnerState GetInitialState()
@@ -31,8 +33,17 @@ namespace OtherLoader.Core.Controllers
             var newState = state.Clone();
             
             newState.CurrentPath = page.ToString();
-            var tileStatesAtPath = GetSimpleTileStatesForPath(newState.CurrentPath);
-            newState.SimpleTileStates = tileStatesAtPath.Take(newState.SimplePageSize);
+            newState.SavedPathsToPages[newState.CurrentPath] = 0;
+            var tileStatesAtPath = GetAllSimpleTileStatesForPath(newState.CurrentPath);
+            var totalTiles = newState.SimplePageSize * _pageService.GetNumberOfPages(newState.SimplePageSize, tileStatesAtPath.Count());
+            var startingTile = newState.SimplePageSize * newState.SimpleCurrentPage;
+
+            newState.SimpleTileStates = Enumerable.Range(0, totalTiles)
+                .Skip(startingTile)
+                .Take(newState.SimplePageSize)
+                .Select(index => 
+                    tileStatesAtPath.ElementAtOrDefault(index) ?? new() { Path = "" });
+
             newState.SimpleNextPageEnabled = tileStatesAtPath.Count() > newState.SimplePageSize;
 
             return newState;
@@ -48,7 +59,7 @@ namespace OtherLoader.Core.Controllers
             throw new NotImplementedException();
         }
         
-        private IEnumerable<ItemSpawnerTileState> GetSimpleTileStatesForPath(string path)
+        private IEnumerable<ItemSpawnerTileState> GetAllSimpleTileStatesForPath(string path)
         {
             return _dataContainer.ItemEntries
                 .Where(entry => 

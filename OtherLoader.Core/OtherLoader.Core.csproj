@@ -63,7 +63,9 @@
     <Compile Include="Models\SpawnerEntryData.cs" />
     <Compile Include="Models\TagGroup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Services\IPaginationService.cs" />
     <Compile Include="Services\IPathService.cs" />
+    <Compile Include="Services\PaginationService.cs" />
     <Compile Include="Services\PathService.cs" />
     <Compile Include="SharedInterfaces\IPrototype.cs" />
   </ItemGroup>

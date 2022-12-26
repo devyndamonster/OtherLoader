@@ -13,7 +13,8 @@ namespace OtherLoader.IntegrationTests.Controllers
         {
             var itemDataContainer = new ItemDataContainer();
             var pathService = new PathService();
-            var itemSpawnerController = new ItemSpawnerController(itemDataContainer, pathService);
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemDataContainer, pathService, pageService);
 
             var state = itemSpawnerController.GetInitialState();
                 
@@ -25,7 +26,8 @@ namespace OtherLoader.IntegrationTests.Controllers
         {
             var itemDataContainer = new ItemDataContainer();
             var pathService = new PathService();
-            var itemSpawnerController = new ItemSpawnerController(itemDataContainer, pathService);
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemDataContainer, pathService, pageService);
 
             var state = itemSpawnerController.GetInitialState();
 
