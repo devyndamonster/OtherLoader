@@ -274,5 +274,33 @@ namespace OtherLoader.IntegrationTests.Controllers
 
             newState.SimpleNextPageEnabled.Should().BeTrue();
         }
+
+        [Test]
+        public void PrevPageButtonDisabled_OnFirstPage()
+        {
+            var itemData = new ItemDataContainer
+            {
+                ItemEntries = new SpawnerEntryData[]
+                {
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/Pistols",
+                        IsDisplayedInMainEntry = true
+                    }
+                }
+            };
+
+            var state = new ItemSpawnerState
+            {
+                SimplePageSize = 1
+            };
+
+            var pathService = new PathService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService);
+
+            var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
+
+            newState.SimplePrevPageEnabled.Should().BeFalse();
+        }
     }
 }

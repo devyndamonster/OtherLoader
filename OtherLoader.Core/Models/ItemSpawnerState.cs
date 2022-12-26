@@ -26,6 +26,8 @@ namespace OtherLoader.Core.Models
 
         public bool SimpleNextPageEnabled { get; set; }
 
+        public bool SimplePrevPageEnabled { get; set; }
+
         public ItemSpawnerState Clone()
         {
             using (var ms = new MemoryStream())

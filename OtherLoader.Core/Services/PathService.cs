@@ -9,12 +9,12 @@ namespace OtherLoader.Core.Services
     {
         public IEnumerable<string> GetParentPaths(string path)
         {
-            var paths = path
-                .Split('/')
-                .Select(pathSegment =>
-                    path.Substring(0, path.IndexOf(pathSegment) + pathSegment.Length));
-                
-            return paths.Take(paths.Count() - 1);
+            if (!HasParent(path)) return new string[0];
+
+            var parentPath = GetParentPath(path);
+            var parentPaths = GetParentPaths(parentPath);
+            
+            return parentPaths.Union(new[] { parentPath });
         }
 
         public string GetEndOfPath(string path)
@@ -24,6 +24,8 @@ namespace OtherLoader.Core.Services
 
         public string GetParentPath(string path)
         {
+            if (!path.Contains("/")) return string.Empty;
+
             return path.Substring(0, path.LastIndexOf('/'));
         }
 
@@ -36,18 +38,21 @@ namespace OtherLoader.Core.Services
         {
             return path.Contains('/');
         }
-
+        
         public bool IsParentOf(string parentPath, string path)
         {
-            return HasParent(path) &&
-                path.StartsWith(parentPath) &&
-                path.Trim('/').Length > parentPath.Trim('/').Length;
+            if (!HasParent(path)) return false;
+
+            var parent = GetParentPath(path);
+            
+            return 
+                (parent == parentPath) ||
+                (HasParent(parent) && IsParentOf(parentPath, parent));
         }
 
         public bool IsImmediateParentOf(string parentPath, string path)
         {
-            return HasParent(path) &&
-                GetParentPath(path).Trim('/') == parentPath.Trim('/');
+            return HasParent(path) && GetParentPath(path) == parentPath;
         }
     }
 }
