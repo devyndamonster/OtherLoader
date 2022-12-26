@@ -2,7 +2,7 @@
 using NUnit.Framework;
 using OtherLoader.Core.Services;
 
-namespace OtherLoader.UnitTests.UnitTests.Services
+namespace OtherLoader.UnitTests.Services
 {
     public class PaginationServiceTests
     {

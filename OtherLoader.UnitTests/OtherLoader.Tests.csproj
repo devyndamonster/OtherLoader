@@ -9,7 +9,7 @@
     <ProjectGuid>{AF851F4F-7C08-4B8C-BAAA-A17BFB135551}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>OtherLoader.UnitTests</RootNamespace>
+    <RootNamespace>OtherLoader</RootNamespace>
     <AssemblyName>OtherLoader.UnitTests</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>

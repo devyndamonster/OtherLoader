@@ -3,7 +3,7 @@ using NUnit.Framework;
 using OtherLoader.Core.Services;
 using System.Collections;
 
-namespace OtherLoader.UnitTests.UnitTests.Services
+namespace OtherLoader.UnitTests.Services
 {
     public class PathServiceTests
     {
