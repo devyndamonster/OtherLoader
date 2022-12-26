@@ -4,7 +4,7 @@ using OtherLoader.Core.Models;
 using OtherLoader.Core.Services;
 using FluentAssertions;
 
-namespace OtherLoader.IntegrationTests.Controllers
+namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 {
     public class PageSelectedTests
     {
