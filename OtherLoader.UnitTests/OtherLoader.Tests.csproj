@@ -64,7 +64,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IntegrationTests\Controllers\ItemSpawnerControllerTests.cs" />
+    <Compile Include="IntegrationTests\Controllers\ItemSpawnerController\PageSelectedTests.cs" />
+    <Compile Include="IntegrationTests\Controllers\ItemSpawnerController\GetInitialStateTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

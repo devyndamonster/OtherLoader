@@ -21,16 +21,19 @@ namespace OtherLoader.Core.Controllers
         {
             return new ItemSpawnerState
             {
-                CurrentPath = PageMode.MainMenu.ToString()
+                CurrentPath = PageMode.MainMenu.ToString(),
+                SimplePageSize = 18
             };
         }
 
         public ItemSpawnerState PageSelected(ItemSpawnerState state, PageMode page)
         {
             var newState = state.Clone();
-
+            
             newState.CurrentPath = page.ToString();
-            newState.SimpleTileStates = GetSimpleTileStatesForPath(newState.CurrentPath);
+            var tileStatesAtPath = GetSimpleTileStatesForPath(newState.CurrentPath);
+            newState.SimpleTileStates = tileStatesAtPath.Take(newState.SimplePageSize);
+            newState.SimpleNextPageEnabled = tileStatesAtPath.Count() > newState.SimplePageSize;
 
             return newState;
         }

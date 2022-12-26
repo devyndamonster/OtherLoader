@@ -17,7 +17,15 @@ namespace OtherLoader.Core.Models
         public SearchMode SearchMode { get; set; }
 
         public IEnumerable<ItemSpawnerTileState> SimpleTileStates { get; set; }
-        
+
+        public int SimplePageSize { get; set; }
+
+        public IDictionary<string, int> SavedPathsToPages { get; set; } = new Dictionary<string, int>();
+
+        public int SimpleCurrentPage => SavedPathsToPages.ContainsKey(CurrentPath) ? SavedPathsToPages[CurrentPath] : 0;
+
+        public bool SimpleNextPageEnabled { get; set; }
+
         public ItemSpawnerState Clone()
         {
             using (var ms = new MemoryStream())
