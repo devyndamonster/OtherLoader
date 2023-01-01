@@ -42,11 +42,14 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 1,
-                CurrentPath = "Firearms",
-                SavedPathsToPages = new Dictionary<string, int>
+                SimpleState = new()
                 {
-                    { "Firearms", 0 }
+                    PageSize = 1,
+                    CurrentPath = "Firearms",
+                    SavedPathsToPages = new Dictionary<string, int>
+                    {
+                        { "Firearms", 0 }
+                    }
                 }
             };
 
@@ -56,7 +59,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.NextPageClicked(state);
 
-            newState.SimpleTileStates.ShouldBeEquivalentTo(expectedTileStates);
+            newState.SimpleState.TileStates.ShouldBeEquivalentTo(expectedTileStates);
         }
 
 
@@ -82,11 +85,14 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 1,
-                CurrentPath = "Firearms",
-                SavedPathsToPages = new Dictionary<string, int>
+                SimpleState = new() 
                 {
-                    { "Firearms", 0 }
+                    PageSize = 1,
+                    CurrentPath = "Firearms",
+                    SavedPathsToPages = new Dictionary<string, int>
+                    {
+                        { "Firearms", 0 }
+                    }
                 }
             };
 
@@ -96,7 +102,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.NextPageClicked(state);
 
-            newState.SimpleCurrentPage.Should().Be(1);
+            newState.SimpleState.CurrentPage.Should().Be(1);
         }
 
         [Test]
@@ -121,11 +127,14 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 1,
-                CurrentPath = "Firearms",
-                SavedPathsToPages = new Dictionary<string, int>
+                SimpleState = new()
                 {
-                    { "Firearms", 0 }
+                    PageSize = 1,
+                    CurrentPath = "Firearms",
+                    SavedPathsToPages = new Dictionary<string, int>
+                    {
+                        { "Firearms", 0 }
+                    }
                 }
             };
 
@@ -135,7 +144,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.NextPageClicked(state);
 
-            newState.SimpleTileStates.Should().ContainSingle(tile => tile.Path == "Firearms/SMGs");
+            newState.SimpleState.TileStates.Should().ContainSingle(tile => tile.Path == "Firearms/SMGs");
         }
 
         [Test]
@@ -160,11 +169,14 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 1,
-                CurrentPath = "Firearms",
-                SavedPathsToPages = new Dictionary<string, int>
+                SimpleState = new()
                 {
-                    { "Firearms", 0 }
+                    PageSize = 1,
+                    CurrentPath = "Firearms",
+                    SavedPathsToPages = new Dictionary<string, int>
+                    {
+                        { "Firearms", 0 }
+                    }
                 }
             };
 
@@ -174,7 +186,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.NextPageClicked(state);
 
-            newState.SimpleNextPageEnabled.Should().BeFalse();
+            newState.SimpleState.NextPageEnabled.Should().BeFalse();
         }
 
         [Test]
@@ -204,11 +216,14 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 1,
-                CurrentPath = "Firearms",
-                SavedPathsToPages = new Dictionary<string, int>
+                SimpleState = new()
                 {
-                    { "Firearms", 0 }
+                    PageSize = 1,
+                    CurrentPath = "Firearms",
+                    SavedPathsToPages = new Dictionary<string, int>
+                    {
+                        { "Firearms", 0 }
+                    }
                 }
             };
 
@@ -218,7 +233,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.NextPageClicked(state);
 
-            newState.SimpleNextPageEnabled.Should().BeTrue();
+            newState.SimpleState.NextPageEnabled.Should().BeTrue();
         }
 
         [Test]
@@ -243,11 +258,14 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 1,
-                CurrentPath = "Firearms",
-                SavedPathsToPages = new Dictionary<string, int>
+                SimpleState = new()
                 {
-                    { "Firearms", 0 }
+                    PageSize = 1,
+                    CurrentPath = "Firearms",
+                    SavedPathsToPages = new Dictionary<string, int>
+                    {
+                        { "Firearms", 0 }
+                    }
                 }
             };
 
@@ -257,7 +275,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.NextPageClicked(state);
 
-            newState.SimplePrevPageEnabled.Should().BeTrue();
+            newState.SimpleState.PrevPageEnabled.Should().BeTrue();
         }
         
 

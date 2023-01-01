@@ -18,7 +18,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = itemSpawnerController.GetInitialState();
                 
-            state.CurrentPath.Should().Be(PageMode.MainMenu.ToString());
+            state.SimpleState.CurrentPath.Should().Be(PageMode.MainMenu.ToString());
         }
 
         [Test]
@@ -30,8 +30,8 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
             var itemSpawnerController = new ItemSpawnerController(itemDataContainer, pathService, pageService);
 
             var state = itemSpawnerController.GetInitialState();
-
-            state.SimplePageSize.Should().Be(18);
+            
+            state.SimpleState.PageSize.Should().Be(18);
         }
     }
 }

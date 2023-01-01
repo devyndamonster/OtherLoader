@@ -21,24 +21,29 @@ namespace OtherLoader.Core.Controllers
         
         public ItemSpawnerState GetInitialState()
         {
-            return new ItemSpawnerState
+            return new ()
             {
-                CurrentPath = PageMode.MainMenu.ToString(),
-                SimplePageSize = 18
+                SimpleState = new ()
+                {
+                    CurrentPath = PageMode.MainMenu.ToString(),
+                    PageSize = 18
+                }
             };
         }
 
         public ItemSpawnerState PageSelected(ItemSpawnerState state, PageMode page)
         {
             var newState = state.Clone();
-            
-            newState.CurrentPath = page.ToString();
-            newState.SavedPathsToPages[newState.CurrentPath] = 0;
-            var tileStatesAtPath = GetAllSimpleTileStatesForPath(newState.CurrentPath);
-            newState.SimpleTileStates = GetTileStatesForPage(tileStatesAtPath, newState.SimplePageSize, newState.SimpleCurrentPage);
-            newState.SimpleNextPageEnabled = _pageService.HasNextPage(newState.SimplePageSize, tileStatesAtPath.Count(), newState.SimpleCurrentPage);
-            newState.SimplePrevPageEnabled = _pageService.HasPrevPage(newState.SimpleCurrentPage);
 
+            var simpleState = newState.SimpleState;
+
+            simpleState.CurrentPath = page.ToString();
+            simpleState.SavedPathsToPages[simpleState.CurrentPath] = 0;
+            var tileStatesAtPath = GetAllSimpleTileStatesForPath(simpleState.CurrentPath);
+            simpleState.TileStates = GetTileStatesForPage(tileStatesAtPath, simpleState.PageSize, simpleState.CurrentPage);
+            simpleState.NextPageEnabled = _pageService.HasNextPage(simpleState.PageSize, tileStatesAtPath.Count(), simpleState.CurrentPage);
+            simpleState.PrevPageEnabled = _pageService.HasPrevPage(simpleState.CurrentPage);
+            
             return newState;
         }
 
@@ -46,12 +51,14 @@ namespace OtherLoader.Core.Controllers
         {
             var newState = state.Clone();
 
-            newState.SavedPathsToPages[newState.CurrentPath] += 1;
-            var tileStatesAtPath = GetAllSimpleTileStatesForPath(newState.CurrentPath);
-            newState.SimpleTileStates = GetTileStatesForPage(tileStatesAtPath, newState.SimplePageSize, newState.SimpleCurrentPage);
-            newState.SimpleNextPageEnabled = _pageService.HasNextPage(newState.SimplePageSize, tileStatesAtPath.Count(), newState.SimpleCurrentPage);
-            newState.SimplePrevPageEnabled = _pageService.HasPrevPage(newState.SimpleCurrentPage);
+            var simpleState = newState.SimpleState;
 
+            simpleState.SavedPathsToPages[simpleState.CurrentPath] += 1;
+            var tileStatesAtPath = GetAllSimpleTileStatesForPath(simpleState.CurrentPath);
+            simpleState.TileStates = GetTileStatesForPage(tileStatesAtPath, simpleState.PageSize, simpleState.CurrentPage);
+            simpleState.NextPageEnabled = _pageService.HasNextPage(simpleState.PageSize, tileStatesAtPath.Count(), simpleState.CurrentPage);
+            simpleState.PrevPageEnabled = _pageService.HasPrevPage(simpleState.CurrentPage);
+            
             return newState;
         }
         

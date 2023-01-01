@@ -36,7 +36,10 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 1
+                SimpleState = new()
+                {
+                    PageSize = 1
+                }
             };
 
             var pathService = new PathService();
@@ -45,7 +48,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleTileStates.ShouldBeEquivalentTo(expectedTileStates); 
+            newState.SimpleState.TileStates.ShouldBeEquivalentTo(expectedTileStates); 
         }
 
         [Test]
@@ -72,7 +75,10 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
             
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 2
+                SimpleState = new()
+                {
+                    PageSize = 2
+                }
             };
             
             var pathService = new PathService();
@@ -81,8 +87,8 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
                 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleTileStates.Should().Contain(tile => tile.Path == "Firearms/Pistols");
-            newState.SimpleTileStates.Should().NotContain(tile => tile.Path == "Melee/Swords");
+            newState.SimpleState.TileStates.Should().Contain(tile => tile.Path == "Firearms/Pistols");
+            newState.SimpleState.TileStates.Should().NotContain(tile => tile.Path == "Melee/Swords");
         }
 
         [Test]
@@ -108,7 +114,10 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 2
+                SimpleState = new()
+                {
+                    PageSize = 2
+                }
             };
             
             var pathService = new PathService();
@@ -117,8 +126,8 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleTileStates.Should().Contain(tile => tile.Path == "Firearms/Pistols");
-            newState.SimpleTileStates.Should().NotContain(tile => tile.Path == "Firearms/SMGs");
+            newState.SimpleState.TileStates.Should().Contain(tile => tile.Path == "Firearms/Pistols");
+            newState.SimpleState.TileStates.Should().NotContain(tile => tile.Path == "Firearms/SMGs");
         }
 
         [Test]
@@ -143,7 +152,10 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 2
+                SimpleState = new()
+                {
+                    PageSize = 2
+                }
             };
             
             var pathService = new PathService();
@@ -152,8 +164,8 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleTileStates.Should().Contain(tile => tile.Path == "Firearms/Pistols");
-            newState.SimpleTileStates.Should().NotContain(tile => tile.Path == "Firearms/Pistols/Glock");
+            newState.SimpleState.TileStates.Should().Contain(tile => tile.Path == "Firearms/Pistols");
+            newState.SimpleState.TileStates.Should().NotContain(tile => tile.Path == "Firearms/Pistols/Glock");
         }
         
         [Test]
@@ -195,7 +207,10 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
             
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 2
+                SimpleState = new()
+                {
+                    PageSize = 2
+                }
             };
 
             var pathService = new PathService();
@@ -204,8 +219,8 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleTileStates.ShouldBeEquivalentTo(expectedTileStates);
-            newState.SimpleCurrentPage.Should().Be(0);
+            newState.SimpleState.TileStates.ShouldBeEquivalentTo(expectedTileStates);
+            newState.SimpleState.CurrentPage.Should().Be(0);
         }
 
         [Test]
@@ -225,7 +240,10 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 2
+                SimpleState = new()
+                {
+                    PageSize = 2
+                }
             };
 
             var pathService = new PathService();
@@ -234,7 +252,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleNextPageEnabled.Should().BeFalse();
+            newState.SimpleState.NextPageEnabled.Should().BeFalse();
         }
 
         [Test]
@@ -254,7 +272,10 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 1
+                SimpleState = new()
+                {
+                    PageSize = 1
+                }
             };
 
             var pathService = new PathService();
@@ -263,7 +284,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleNextPageEnabled.Should().BeFalse();
+            newState.SimpleState.NextPageEnabled.Should().BeFalse();
         }
 
         [Test]
@@ -288,7 +309,10 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 1
+                SimpleState = new()
+                {
+                    PageSize = 1
+                }
             };
 
             var pathService = new PathService();
@@ -297,7 +321,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleNextPageEnabled.Should().BeTrue();
+            newState.SimpleState.NextPageEnabled.Should().BeTrue();
         }
 
         [Test]
@@ -317,7 +341,10 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 1
+                SimpleState = new()
+                {
+                    PageSize = 1
+                }
             };
 
             var pathService = new PathService();
@@ -326,7 +353,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimplePrevPageEnabled.Should().BeFalse();
+            newState.SimpleState.PrevPageEnabled.Should().BeFalse();
         }
 
         [Test]
@@ -358,7 +385,10 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var state = new ItemSpawnerState
             {
-                SimplePageSize = 2
+                SimpleState = new()
+                {
+                    PageSize = 2
+                }
             };
 
             var pathService = new PathService();
@@ -367,7 +397,7 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
 
-            newState.SimpleTileStates.ShouldBeEquivalentTo(expectedTileStates);
+            newState.SimpleState.TileStates.ShouldBeEquivalentTo(expectedTileStates);
         }
     }
 }

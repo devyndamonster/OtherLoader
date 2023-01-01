@@ -10,23 +10,12 @@ namespace OtherLoader.Core.Models
     [Serializable]
     public class ItemSpawnerState : IPrototype<ItemSpawnerState>
     {
-        public string CurrentPath { get; set; }
-        
         public IEnumerable<PageMode> VisiblePages { get; set; }
 
         public SearchMode SearchMode { get; set; }
+        
+        public SimpleModeState SimpleState { get; set; }
 
-        public IEnumerable<ItemSpawnerTileState> SimpleTileStates { get; set; }
-
-        public int SimplePageSize { get; set; }
-
-        public IDictionary<string, int> SavedPathsToPages { get; set; } = new Dictionary<string, int>();
-
-        public int SimpleCurrentPage => SavedPathsToPages.ContainsKey(CurrentPath) ? SavedPathsToPages[CurrentPath] : 0;
-
-        public bool SimpleNextPageEnabled { get; set; }
-
-        public bool SimplePrevPageEnabled { get; set; }
 
         public ItemSpawnerState Clone()
         {
@@ -37,6 +26,24 @@ namespace OtherLoader.Core.Models
                 ms.Seek(0, SeekOrigin.Begin);
                 return (ItemSpawnerState)formatter.Deserialize(ms);
             }
+        }
+
+        [Serializable]
+        public class SimpleModeState
+        {
+            public string CurrentPath { get; set; }
+
+            public IEnumerable<ItemSpawnerTileState> TileStates { get; set; }
+
+            public int PageSize { get; set; }
+
+            public IDictionary<string, int> SavedPathsToPages { get; set; } = new Dictionary<string, int>();
+
+            public int CurrentPage => SavedPathsToPages.ContainsKey(CurrentPath) ? SavedPathsToPages[CurrentPath] : 0;
+
+            public bool NextPageEnabled { get; set; }
+
+            public bool PrevPageEnabled { get; set; }
         }
     }
 }
