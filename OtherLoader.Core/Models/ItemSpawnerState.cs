@@ -1,13 +1,15 @@
 ﻿using OtherLoader.Core.SharedInterfaces;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.Serialization;
-using System.Runtime.Serialization.Formatters.Binary;
+
+#if DEBUG
+using Newtonsoft.Json;
+#else
+using Valve.Newtonsoft.Json;
+#endif
 
 namespace OtherLoader.Core.Models
 {
-    [Serializable]
     public class ItemSpawnerState : IPrototype<ItemSpawnerState>
     {
         public IEnumerable<PageMode> VisiblePages { get; set; }
@@ -15,20 +17,13 @@ namespace OtherLoader.Core.Models
         public SearchMode SearchMode { get; set; }
         
         public SimpleModeState SimpleState { get; set; }
-
-
+        
         public ItemSpawnerState Clone()
         {
-            using (var ms = new MemoryStream())
-            {
-                IFormatter formatter = new BinaryFormatter();
-                formatter.Serialize(ms, this);
-                ms.Seek(0, SeekOrigin.Begin);
-                return (ItemSpawnerState)formatter.Deserialize(ms);
-            }
+            var json = JsonConvert.SerializeObject(this);
+            return JsonConvert.DeserializeObject<ItemSpawnerState>(json);
         }
-
-        [Serializable]
+        
         public class SimpleModeState
         {
             public string CurrentPath { get; set; }
@@ -39,6 +34,7 @@ namespace OtherLoader.Core.Models
 
             public IDictionary<string, int> SavedPathsToPages { get; set; } = new Dictionary<string, int>();
 
+            [JsonIgnore]
             public int CurrentPage => SavedPathsToPages.ContainsKey(CurrentPath) ? SavedPathsToPages[CurrentPath] : 0;
 
             public bool NextPageEnabled { get; set; }
