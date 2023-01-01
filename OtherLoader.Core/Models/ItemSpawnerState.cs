@@ -44,6 +44,8 @@ namespace OtherLoader.Core.Models
             public bool NextPageEnabled { get; set; }
 
             public bool PrevPageEnabled { get; set; }
+
+            public string PageCountText { get; set; }
         }
     }
 }

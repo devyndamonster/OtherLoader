@@ -399,5 +399,89 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             newState.SimpleState.TileStates.ShouldBeEquivalentTo(expectedTileStates);
         }
+
+        [Test]
+        public void ItWillDisplayCorrectPageCountText_OnFirstPage_WhenOnePage()
+        {
+            var itemData = new ItemDataContainer
+            {
+                ItemEntries = new SpawnerEntryData[]
+                {
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/Pistols",
+                        IsDisplayedInMainEntry = true
+                    }
+                }
+            };
+
+            var state = new ItemSpawnerState
+            {
+                SimpleState = new()
+                {
+                    PageSize = 1
+                }
+            };
+
+            var pathService = new PathService();
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
+
+            var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
+
+            newState.SimpleState.PageCountText.Should().Be("Showing 0-1 of 1");
+        }
+
+        [Test]
+        public void ItWillDisplayCorrectPageCountText_OnFirstPage_WhenMultiplePages()
+        {
+            var itemData = new ItemDataContainer
+            {
+                ItemEntries = new SpawnerEntryData[]
+                {
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/Pistols",
+                        IsDisplayedInMainEntry = true
+                    },
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/SMGs",
+                        IsDisplayedInMainEntry = true
+                    },
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/Rifles",
+                        IsDisplayedInMainEntry = true
+                    },
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/Shotguns",
+                        IsDisplayedInMainEntry = true
+                    },
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/Support",
+                        IsDisplayedInMainEntry = true
+                    },
+                }
+            };
+
+            var state = new ItemSpawnerState
+            {
+                SimpleState = new()
+                {
+                    PageSize = 2
+                }
+            };
+
+            var pathService = new PathService();
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
+
+            var newState = itemSpawnerController.PageSelected(state, PageMode.Firearms);
+
+            newState.SimpleState.PageCountText.Should().Be("Showing 0-2 of 5");
+        }
     }
 }

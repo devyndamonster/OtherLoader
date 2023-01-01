@@ -36,14 +36,15 @@ namespace OtherLoader.Core.Controllers
             var newState = state.Clone();
 
             var simpleState = newState.SimpleState;
-
+            
             simpleState.CurrentPath = page.ToString();
             simpleState.SavedPathsToPages[simpleState.CurrentPath] = 0;
             var tileStatesAtPath = GetAllSimpleTileStatesForPath(simpleState.CurrentPath);
             simpleState.TileStates = GetTileStatesForPage(tileStatesAtPath, simpleState.PageSize, simpleState.CurrentPage);
             simpleState.NextPageEnabled = _pageService.HasNextPage(simpleState.PageSize, tileStatesAtPath.Count(), simpleState.CurrentPage);
             simpleState.PrevPageEnabled = _pageService.HasPrevPage(simpleState.CurrentPage);
-            
+            simpleState.PageCountText = GetPageCountDisplayText(simpleState.CurrentPage, simpleState.PageSize, tileStatesAtPath.Count());
+
             return newState;
         }
 
@@ -58,7 +59,8 @@ namespace OtherLoader.Core.Controllers
             simpleState.TileStates = GetTileStatesForPage(tileStatesAtPath, simpleState.PageSize, simpleState.CurrentPage);
             simpleState.NextPageEnabled = _pageService.HasNextPage(simpleState.PageSize, tileStatesAtPath.Count(), simpleState.CurrentPage);
             simpleState.PrevPageEnabled = _pageService.HasPrevPage(simpleState.CurrentPage);
-            
+            simpleState.PageCountText = GetPageCountDisplayText(simpleState.CurrentPage, simpleState.PageSize, tileStatesAtPath.Count());
+
             return newState;
         }
         
@@ -90,6 +92,14 @@ namespace OtherLoader.Core.Controllers
                 .Take(pageSize)
                 .Select(index =>
                     allTiles.ElementAtOrDefault(index) ?? new() { Path = "" });
+        }
+        
+        private string GetPageCountDisplayText(int currentPage, int pageSize, int totalEntriesOnPage)
+        {
+            var startCount = currentPage * pageSize;
+            var endCount = (currentPage + 1) * pageSize;
+
+            return $"Showing {startCount}-{endCount} of {totalEntriesOnPage}";
         }
     }
 }

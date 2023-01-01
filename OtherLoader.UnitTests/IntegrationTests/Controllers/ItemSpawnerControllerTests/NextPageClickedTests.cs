@@ -277,7 +277,64 @@ namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
 
             newState.SimpleState.PrevPageEnabled.Should().BeTrue();
         }
-        
+
+        [Test]
+        public void ItWillDisplayCorrectPageCountText()
+        {
+            var itemData = new ItemDataContainer
+            {
+                ItemEntries = new SpawnerEntryData[]
+                {
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/Pistols",
+                        IsDisplayedInMainEntry = true
+                    },
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/SMGs",
+                        IsDisplayedInMainEntry = true
+                    },
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/Rifles",
+                        IsDisplayedInMainEntry = true
+                    },
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/Shotguns",
+                        IsDisplayedInMainEntry = true
+                    },
+                    new SpawnerEntryData
+                    {
+                        Path = "Firearms/Support",
+                        IsDisplayedInMainEntry = true
+                    },
+                }
+            };
+
+            var state = new ItemSpawnerState
+            {
+                SimpleState = new()
+                {
+                    PageSize = 2,
+                    CurrentPath = "Firearms",
+                    SavedPathsToPages = new Dictionary<string, int>
+                    {
+                        { "Firearms", 0 }
+                    }
+                }
+            };
+
+            var pathService = new PathService();
+            var pageService = new PaginationService();
+            var itemSpawnerController = new ItemSpawnerController(itemData, pathService, pageService);
+
+            var newState = itemSpawnerController.NextPageClicked(state);
+
+            newState.SimpleState.PageCountText.Should().Be("Showing 2-4 of 5");
+        }
+
 
     }
 }
