@@ -99,6 +99,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Scripts\Adapters\RewardSystemAdapter.cs" />
     <Compile Include="Scripts\Loading\Loaders\AudioImpactSetLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\CategoryDefinitionLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\HandlingGrabSetLoader.cs" />
@@ -118,6 +119,8 @@
     <Compile Include="Scripts\Models\ItemSpawnerData.cs" />
     <Compile Include="Scripts\Models\ItemSpawnerEntry.cs" />
     <Compile Include="Scripts\Models\UnlockedItemSaveData.cs" />
+    <Compile Include="Scripts\Patches\UnlockPatches.cs" />
+    <Compile Include="Scripts\Patches\AssetLoadingPatches.cs" />
     <Compile Include="Scripts\Patches\ItemDataLoadingPatches.cs" />
     <Compile Include="Scripts\Patches\ItemSpawnerV2Patch.cs" />
     <Compile Include="Scripts\Patches\ItemSpawnerV2\DetailsPanelPatches.cs" />
@@ -144,7 +147,12 @@
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="OtherLoader.Core\OtherLoader.Core.csproj">
+      <Project>{51e79649-e0b3-4bde-8776-b7c67d8982ff}</Project>
+      <Name>OtherLoader.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\BepInEx.Core.5.4.17\build\BepInEx.Core.targets" Condition="Exists('packages\BepInEx.Core.5.4.17\build\BepInEx.Core.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
