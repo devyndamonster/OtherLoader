@@ -8,6 +8,8 @@ namespace OtherLoader.Core.Controllers
 {
     public interface IRewardController
     {
+        public void InitializeUnlockData();
+        
         public bool IsItemUnlocked(string mainObjectId);
 
         public bool ForceUnlockItem(string mainObjectId);

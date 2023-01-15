@@ -60,7 +60,6 @@ namespace OtherLoader
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value, LogItemSpawner.Value, LogMetaTagging.Value);
 
             InitPaths();
-            InitUnlockSaveData();
 
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));
@@ -142,67 +141,7 @@ namespace OtherLoader
 
             MaxActiveLoaders = MaxActiveLoadersConfig.Value;
         }
-
-
-        private void InitUnlockSaveData()
-        {
-            if (!Directory.Exists(OtherLoaderSaveDirectory))
-            {
-                Directory.CreateDirectory(OtherLoaderSaveDirectory);
-            }
-
-            if (!File.Exists(UnlockedItemSaveDataPath))
-            {
-                UnlockSaveData = new UnlockedItemSaveData(UnlockMode.Value);
-
-                SaveUnlockedItemsData();
-            }
-
-            else
-            {
-                LoadUnlockedItemsData();
-            }
-        }
-
-
-        public static void LoadUnlockedItemsData()
-        {
-            try
-            {
-                string unlockJson = File.ReadAllText(UnlockedItemSaveDataPath);
-                UnlockSaveData = JsonConvert.DeserializeObject<UnlockedItemSaveData>(unlockJson);
-
-                if(UnlockSaveData.UnlockMode != UnlockMode.Value)
-                {
-                    UnlockSaveData = new UnlockedItemSaveData(UnlockMode.Value);
-                }
-            } 
-            catch (Exception ex)
-            {
-                OtherLogger.LogError("Exception when loading unlocked items!\n" + ex.ToString());
-
-                OtherLogger.LogError("Attempting to create new unlock file");
-                File.Delete(UnlockedItemSaveDataPath);
-                UnlockSaveData = new UnlockedItemSaveData(UnlockMode.Value);
-                SaveUnlockedItemsData();
-            }
-        }
-
-
-        public static void SaveUnlockedItemsData()
-        {
-            try
-            {
-                string unlockJson = JsonConvert.SerializeObject(UnlockSaveData, Formatting.Indented);
-                File.WriteAllText(UnlockedItemSaveDataPath, unlockJson);
-            }
-            catch (Exception ex)
-            {
-                OtherLogger.LogError("Exception when saving unlocked items!\n" + ex.ToString());
-            }
-        }
-
-
+        
         public override void OnSetup(IStageContext<Empty> ctx)
         {
             ItemLoader loader = new ItemLoader();
@@ -249,13 +188,11 @@ namespace OtherLoader
                 loadLast = loadLast
             });
         }
-
+        
         public static bool DoesEntryHaveChildren(ItemSpawnerEntry entry)
         {
             return SpawnerEntriesByPath[entry.EntryPath].childNodes.Count > 0;
         }
-        
-        
         
         private class DirectLoadMod
         {
@@ -266,9 +203,5 @@ namespace OtherLoader
             public string loadAny;
             public string loadLast;
         }
-
     }
-
-
-    
 }
