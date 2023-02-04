@@ -73,7 +73,8 @@
     <Compile Include="Models\TagGroup.cs" />
     <Compile Include="Models\UnlockedItemSaveData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\IApplicationPathsService.cs" />
+    <Compile Include="Services\ApplicationPathService.cs" />
+    <Compile Include="Services\IApplicationPathService.cs" />
     <Compile Include="Services\IPaginationService.cs" />
     <Compile Include="Services\IPathService.cs" />
     <Compile Include="Services\PaginationService.cs" />

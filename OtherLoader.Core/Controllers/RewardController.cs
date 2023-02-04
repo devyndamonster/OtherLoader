@@ -4,6 +4,7 @@ using OtherLoader.Core.Services;
 using System;
 using System.IO.Abstractions;
 using System.Linq;
+using System.IO;
 
 #if DEBUG
 using Newtonsoft.Json;
@@ -17,18 +18,14 @@ namespace OtherLoader.Core.Controllers
     {
         private readonly IRewardSystemAdapter _rewardSystemAdapter;
         private readonly IApplicationPathService _applicationPathService;
-        private readonly IFileSystem _fileSystem;
         private readonly ItemDataContainer _dataContainer;
         
         private UnlockedItemSaveData _unlockedItemSaveData;
-
-        private string _unlockedItemSaveDataPath => _fileSystem.Path.Combine(_applicationPathService.GetOtherloaderSaveDirectory(), "UnlockedItems.json");
-
-        public RewardController(IRewardSystemAdapter rewardSystemAdapter, IApplicationPathService applicationPathService, IFileSystem fileSystem, ItemDataContainer dataContainer)
+        
+        public RewardController(IRewardSystemAdapter rewardSystemAdapter, IApplicationPathService applicationPathService, ItemDataContainer dataContainer)
         {
             _rewardSystemAdapter = rewardSystemAdapter;
             _applicationPathService = applicationPathService;
-            _fileSystem = fileSystem;
             _dataContainer = dataContainer;
 
             InitializeUnlockData();
@@ -39,7 +36,7 @@ namespace OtherLoader.Core.Controllers
             _rewardSystemAdapter.InitializeFromSaveFile();
             _applicationPathService.InitializeApplicationPaths();
             
-            if (!_fileSystem.File.Exists(_unlockedItemSaveDataPath))
+            if (!File.Exists(_applicationPathService.UnlockedItemSaveDataPath))
             {
                 _unlockedItemSaveData = new UnlockedItemSaveData();
                 SaveUnlockedItemsData(_unlockedItemSaveData);
@@ -55,7 +52,7 @@ namespace OtherLoader.Core.Controllers
         {
             try
             {
-                string unlockJson = _fileSystem.File.ReadAllText(_unlockedItemSaveDataPath);
+                string unlockJson = File.ReadAllText(_applicationPathService.UnlockedItemSaveDataPath);
                 return JsonConvert.DeserializeObject<UnlockedItemSaveData>(unlockJson);
             }
             catch (Exception ex)
@@ -63,7 +60,7 @@ namespace OtherLoader.Core.Controllers
                 //OtherLogger.LogError("Exception when loading unlocked items!\n" + ex.ToString());
                 //OtherLogger.LogError("Attempting to create new unlock file");
                 
-                _fileSystem.File.Delete(_unlockedItemSaveDataPath);
+                File.Delete(_applicationPathService.UnlockedItemSaveDataPath);
                 return new UnlockedItemSaveData();
             }
         }
@@ -73,7 +70,7 @@ namespace OtherLoader.Core.Controllers
             try
             {
                 string unlockJson = JsonConvert.SerializeObject(unlockedItemSaveData, Formatting.Indented);
-                _fileSystem.File.WriteAllText(_unlockedItemSaveDataPath, unlockJson);
+                File.WriteAllText(_applicationPathService.UnlockedItemSaveDataPath, unlockJson);
             }
             catch (Exception ex)
             {

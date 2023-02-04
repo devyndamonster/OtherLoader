@@ -24,10 +24,6 @@ namespace OtherLoader
     [BepInDependency(Sodalite.SodaliteConstants.Guid, Sodalite.SodaliteConstants.Version)]
     public class OtherLoader : StratumPlugin
     {
-        public static string MainLegacyDirectory;
-        public static string OtherLoaderSaveDirectory;
-        public static string UnlockedItemSaveDataPath;
-
         // A dictionary of asset bundles managed by OtherLoader. The key is the UniqueAssetID, and the value is the path to that file
         public static Dictionary<string, string> ManagedBundles = new();
 
@@ -58,9 +54,7 @@ namespace OtherLoader
         {
             LoadConfigFile();
             OtherLogger.Init(EnableLogging.Value, LogLoading.Value, LogItemSpawner.Value, LogMetaTagging.Value);
-
-            InitPaths();
-
+            
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerV2Patch));
@@ -71,13 +65,6 @@ namespace OtherLoader
             Harmony.CreateAndPatchAll(typeof(ItemDataLoadingPatches));
             
             coroutineStarter = StartCoroutine;
-        }
-
-        private void InitPaths()
-        {
-            MainLegacyDirectory = Application.dataPath.Replace("/h3vr_Data", "/LegacyVirtualObjects");
-            OtherLoaderSaveDirectory = Application.dataPath.Replace("/h3vr_Data", "/OtherLoader");
-            UnlockedItemSaveDataPath = Path.Combine(OtherLoaderSaveDirectory, "UnlockedItems.json");
         }
 
         private void Start()

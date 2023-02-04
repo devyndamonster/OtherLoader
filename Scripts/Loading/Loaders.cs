@@ -15,6 +15,7 @@ using Stratum;
 using System.Reflection;
 using RenderHeads.Media.AVProVideo;
 using OtherLoader.Loaders;
+using OtherLoader.Core.Services;
 
 namespace OtherLoader
 {
@@ -37,6 +38,8 @@ namespace OtherLoader
             new TutorialBlockLoader(),
             new QuickbeltLoader()
         };
+
+        private static IApplicationPathService _applicationPathService = new ApplicationPathService(Application.dataPath);
 
 
         //Anatomy of a BundleID
@@ -241,12 +244,12 @@ namespace OtherLoader
 
         public void LoadLegacyAssets(CoroutineStarter starter)
         {
-            if (!Directory.Exists(OtherLoader.MainLegacyDirectory)) Directory.CreateDirectory(OtherLoader.MainLegacyDirectory);
+            if (!Directory.Exists(_applicationPathService.MainLegacyDirectory)) Directory.CreateDirectory(_applicationPathService.MainLegacyDirectory);
 
             OtherLogger.Log("Plugins folder found (" + Paths.PluginPath + ")", OtherLogger.LogType.General);
 
             List<string> legacyPaths = Directory.GetDirectories(Paths.PluginPath, "LegacyVirtualObjects", SearchOption.AllDirectories).ToList();
-            legacyPaths.Add(OtherLoader.MainLegacyDirectory);
+            legacyPaths.Add(_applicationPathService.MainLegacyDirectory);
 
             foreach(string legacyPath in legacyPaths)
             {

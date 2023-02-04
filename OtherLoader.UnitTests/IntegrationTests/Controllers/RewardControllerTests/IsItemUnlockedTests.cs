@@ -4,6 +4,7 @@ using NUnit.Framework;
 using OtherLoader.Core.Adapters;
 using OtherLoader.Core.Controllers;
 using OtherLoader.Core.Models;
+using OtherLoader.Core.Services;
 
 namespace OtherLoader.IntegrationTests.Controllers.RewardControllerTests
 {
@@ -25,8 +26,9 @@ namespace OtherLoader.IntegrationTests.Controllers.RewardControllerTests
             };
 
             var rewardAdapter = Substitute.For<IRewardSystemAdapter>();
-            var rewardController = new RewardController(rewardAdapter, itemData);
-            
+            var applicationPathService = Substitute.For<IApplicationPathService>();
+            var rewardController = new RewardController(rewardAdapter, applicationPathService, itemData);
+
             var isUnlocked = rewardController.IsItemUnlocked("TestObject");
 
             isUnlocked.Should().BeFalse();
@@ -41,7 +43,8 @@ namespace OtherLoader.IntegrationTests.Controllers.RewardControllerTests
             };
 
             var rewardAdapter = Substitute.For<IRewardSystemAdapter>();
-            var rewardController = new RewardController(rewardAdapter, itemData);
+            var applicationPathService = Substitute.For<IApplicationPathService>();
+            var rewardController = new RewardController(rewardAdapter, applicationPathService, itemData);
 
             var isUnlocked = rewardController.IsItemUnlocked("TestObject");
 
