@@ -4,8 +4,10 @@ using OtherLoader.Core.Models;
 using OtherLoader.Core.Services;
 using FluentAssertions;
 
-namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
+namespace OtherLoader.IntegrationTests.Controllers
 {
+    [TestFixture]
+    [Category("ItemSpawnerController")]
     public class GetInitialStateTests
     {
         [Test]

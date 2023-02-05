@@ -6,8 +6,10 @@ using OtherLoader.Core.Controllers;
 using OtherLoader.Core.Models;
 using OtherLoader.Core.Services;
 
-namespace OtherLoader.IntegrationTests.Controllers.RewardControllerTests
+namespace OtherLoader.IntegrationTests.Controllers
 {
+    [TestFixture]
+    [Category("RewardController")]
     public class AutoUnlockItemTests
     {
         [Test]

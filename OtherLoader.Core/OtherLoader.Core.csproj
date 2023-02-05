@@ -33,11 +33,8 @@
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp, Version=1.2.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\H3VR.GameLibs.0.106.9\lib\net35\Assembly-CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Assembly-CSharp-firstpass, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\H3VR.GameLibs.0.106.9\lib\net35\Assembly-CSharp-firstpass.dll</HintPath>
+    <Reference Include="BepInEx, Version=5.4.21.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\BepInEx.BaseLib.5.4.21\lib\net35\BepInEx.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.13.0.2\lib\net35\Newtonsoft.Json.dll</HintPath>
@@ -51,14 +48,9 @@
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\H3VR.GameLibs.0.106.9\lib\net35\UnityEngine.UI.dll</HintPath>
-    </Reference>
-    <Reference Include="Valve.Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\H3VR.GameLibs.0.106.9\lib\net35\Valve.Newtonsoft.Json.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\IAssetLoadingController.cs" />
     <Compile Include="Controllers\IItemSpawnerController.cs" />
     <Compile Include="Controllers\IRewardController.cs" />
     <Compile Include="Controllers\ItemSpawnerController.cs" />
@@ -67,6 +59,7 @@
     <Compile Include="Models\ItemDataContainer.cs" />
     <Compile Include="Models\ItemSpawnerState.cs" />
     <Compile Include="Models\ItemSpawnerTileState.cs" />
+    <Compile Include="Models\OtherLoaderConfig.cs" />
     <Compile Include="Models\PageMode.cs" />
     <Compile Include="Models\SearchMode.cs" />
     <Compile Include="Models\SpawnerEntryData.cs" />

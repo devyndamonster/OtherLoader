@@ -5,6 +5,8 @@ using System.Collections;
 
 namespace OtherLoader.UnitTests.Services
 {
+    [TestFixture]
+    [Category("PathService")]
     public class PathServiceTests
     {
         [TestCase("", "")]

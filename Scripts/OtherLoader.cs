@@ -1,21 +1,14 @@
 ﻿
 using UnityEngine;
-using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
 using BepInEx;
 using HarmonyLib;
-using BepInEx.Logging;
 using FistVR;
-using BepInEx.Configuration;
 using Stratum;
 using System.Collections;
-using Anvil;
 using RenderHeads.Media.AVProVideo;
 using OtherLoader.Patches;
-using Valve.Newtonsoft.Json;
+using OtherLoader.Core.Models;
 
 namespace OtherLoader
 {
@@ -26,6 +19,8 @@ namespace OtherLoader
     {
         // A dictionary of asset bundles managed by OtherLoader. The key is the UniqueAssetID, and the value is the path to that file
         public static Dictionary<string, string> ManagedBundles = new();
+        
+        public static OtherLoaderConfig Configuration;
 
         public static Dictionary<string, EntryNode> SpawnerEntriesByPath = new();
         public static Dictionary<string, ItemSpawnerEntry> SpawnerEntriesByID = new();
@@ -34,16 +29,7 @@ namespace OtherLoader
         public static Dictionary<string, ItemSpawnerCategoryDefinitionsV2.SpawnerPage.SpawnerTagGroup> TagGroupsByTag = new();
         public static UnlockedItemSaveData UnlockSaveData;
         public static Sprite LockIcon;
-
-        private static ConfigEntry<int> MaxActiveLoadersConfig;
-        public static ConfigEntry<bool> OptimizeMemory;
-        public static ConfigEntry<bool> EnableLogging;
-        public static ConfigEntry<bool> LogLoading;
-        public static ConfigEntry<bool> LogItemSpawner;
-        public static ConfigEntry<bool> LogMetaTagging;
-        public static ConfigEntry<bool> AddUnloadButton;
-        public static ConfigEntry<ItemUnlockMode> UnlockMode;
-
+        
         public static int MaxActiveLoaders = 0;
 
         private static List<DirectLoadMod> directLoadMods = new List<DirectLoadMod>();
@@ -52,9 +38,23 @@ namespace OtherLoader
 
         private void Awake()
         {
-            LoadConfigFile();
-            OtherLogger.Init(EnableLogging.Value, LogLoading.Value, LogItemSpawner.Value, LogMetaTagging.Value);
+            Configuration = OtherLoaderConfig.LoadFromFile(this);
+            OtherLogger.Init(Configuration);
+            CreateHarmonyPatches();
+            coroutineStarter = StartCoroutine;
+
+            //TODO: Setup services here
+
             
+        }
+
+        private void Start()
+        {
+            GM.SetRunningModded();
+        }
+
+        private void CreateHarmonyPatches()
+        {
             Harmony.CreateAndPatchAll(typeof(OtherLoader));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerPatch));
             Harmony.CreateAndPatchAll(typeof(ItemSpawnerV2Patch));
@@ -63,70 +63,6 @@ namespace OtherLoader
             Harmony.CreateAndPatchAll(typeof(ItemSpawningPatches));
             Harmony.CreateAndPatchAll(typeof(SimpleCanvasePatches));
             Harmony.CreateAndPatchAll(typeof(ItemDataLoadingPatches));
-            
-            coroutineStarter = StartCoroutine;
-        }
-
-        private void Start()
-        {
-            GM.SetRunningModded();
-        }
-
-        private void LoadConfigFile()
-        {
-            
-            OptimizeMemory = Config.Bind(
-                "General",
-                "OptimizeMemory",
-                false,
-                "When enabled, modded assets will be loaded on-demand instead of kept in memory. Can cause small hiccups when spawning modded guns for the first time. Useful if you are low on RAM"
-                );
-            
-
-            EnableLogging = Config.Bind(
-                "Logging",
-                "EnableLogging",
-                true,
-                "When enabled, OtherLoader will log more than just errors and warning to the output log"
-                );
-
-            LogLoading = Config.Bind(
-                "Logging",
-                "LogLoading",
-                false,
-                "When enabled, OtherLoader will log additional useful information during the loading process. EnableLogging must be set to true for this to have an effect"
-                );
-
-            LogItemSpawner = Config.Bind(
-                "Logging",
-                "LogItemSpawner",
-                false,
-                "When enabled, OtherLoader will log additional useful information about the item spawner. EnableLogging must be set to true for this to have an effect"
-                );
-
-            LogMetaTagging = Config.Bind(
-                "Logging",
-                "LogMetaTagging",
-                false,
-                "When enabled, OtherLoader will log additional useful information about metadata. EnableLogging must be set to true for this to have an effect"
-                );
-
-            MaxActiveLoadersConfig = Config.Bind(
-                "General",
-                "MaxActiveLoaders",
-                6,
-                "Sets the number of mods that can be loading at once. Values less than 1 will result in all mods being loaded at the same time"
-                );
-
-            UnlockMode = Config.Bind(
-                "General",
-                "UnlockMode",
-                ItemUnlockMode.Normal,
-                "When set to Unlockathon, all items will start out locked, and you must unlock items by finding them in game"
-                );
-
-
-            MaxActiveLoaders = MaxActiveLoadersConfig.Value;
         }
         
         public override void OnSetup(IStageContext<Empty> ctx)

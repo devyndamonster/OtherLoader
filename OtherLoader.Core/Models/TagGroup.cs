@@ -1,5 +1,4 @@
-﻿using FistVR;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +11,7 @@ namespace OtherLoader.Core.Models
 
         public string DisplayName;
         
-        public TagType TagT;
+        //public TagType TagT;
 
         public string Tag;
     }

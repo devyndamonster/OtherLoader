@@ -4,6 +4,8 @@ using OtherLoader.Core.Services;
 
 namespace OtherLoader.UnitTests.Services
 {
+    [TestFixture]
+    [Category("PaginationService")]
     public class PaginationServiceTests
     {
         [TestCase(20, 0, 1)]

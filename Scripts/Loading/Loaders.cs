@@ -222,7 +222,7 @@ namespace OtherLoader
                 AnvilManager.m_bundles.m_lookup.Remove(bundleID);
                 AnvilManager.m_bundles.m_loading.Remove(anvilCallbackBase);
 
-                if (OtherLoader.LogLoading.Value)
+                if (OtherLoader.Configuration.LogLoading.Value)
                 {
                     OtherLogger.Log("Registered asset bundle to load later (" + bundlePath + ")", OtherLogger.LogType.General);
                     OtherLogger.Log("This bundle will replace the data bundle (" + bundleID + ")", OtherLogger.LogType.Loading);
@@ -343,12 +343,12 @@ namespace OtherLoader
 
             OtherLoader.ManagedBundles.Add(bundleId, path);
             LoaderStatus.UpdateProgress(bundleId, 1);
-            LoaderStatus.RemoveActiveLoader(bundleId, !(OtherLoader.OptimizeMemory.Value && allowUnload));
+            LoaderStatus.RemoveActiveLoader(bundleId, !(OtherLoader.Configuration.OptimizeMemory.Value && allowUnload));
         }
 
         private void LogLoadingStart(string bundleId)
         {
-            if (OtherLoader.LogLoading.Value)
+            if (OtherLoader.Configuration.LogLoading.Value)
             {
                 OtherLogger.Log("Beginning async loading of asset bundle (" + bundleId + ")", OtherLogger.LogType.General);
             }
@@ -357,7 +357,7 @@ namespace OtherLoader
 
         private void LogLoadingDone(string bundleId, float loadingTime)
         {
-            if (OtherLoader.LogLoading.Value)
+            if (OtherLoader.Configuration.LogLoading.Value)
             {
                 OtherLogger.Log($"[{(Time.time - loadingTime).ToString("0.000")} s] Completed loading bundle ({bundleId})", OtherLogger.LogType.General);
             }
@@ -371,7 +371,7 @@ namespace OtherLoader
 
         private void HandleOptimizeMemory(AnvilCallback<AssetBundle> bundle, string bundleId, bool allowUnload)
         {
-            if (allowUnload && OtherLoader.OptimizeMemory.Value)
+            if (allowUnload && OtherLoader.Configuration.OptimizeMemory.Value)
             {
                 OtherLogger.Log("Unloading asset bundle (Optimize Memory is true)", OtherLogger.LogType.Loading);
                 bundle.Result.Unload(false);

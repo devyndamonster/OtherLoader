@@ -5,8 +5,10 @@ using OtherLoader.Core.Models;
 using OtherLoader.Core.Services;
 using System.Collections.Generic;
 
-namespace OtherLoader.IntegrationTests.Controllers.ItemSpawnerControllerTests
+namespace OtherLoader.IntegrationTests.Controllers
 {
+    [TestFixture]
+    [Category("ItemSpawnerController")]
     public class NextPageClickedTests
     {
         [Test]

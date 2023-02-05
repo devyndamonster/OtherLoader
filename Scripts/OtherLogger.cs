@@ -1,4 +1,5 @@
 ﻿using BepInEx.Logging;
+using OtherLoader.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,14 +25,14 @@ namespace OtherLoader
             MetaTagging
         }
 
-        public static void Init(bool enabled, bool logLoading, bool logItemSpawner, bool logMetaTagging)
+        public static void Init(OtherLoaderConfig config)
         {
             BepLog = BepInEx.Logging.Logger.CreateLogSource("OtherLoader");
 
-            AllowLogging = enabled;
-            LogLoading = logLoading;
-            LogItemSpawner = logItemSpawner;
-            LogMetaTagging = logMetaTagging;
+            AllowLogging = config.EnableLogging.Value;
+            LogLoading = config.LogLoading.Value;
+            LogItemSpawner = config.LogItemSpawner.Value;
+            LogMetaTagging = config.LogMetaTagging.Value;
         }
 
         public static void Log(string log, LogType type = LogType.General)
