@@ -66,7 +66,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IntegrationTests\Controllers\AssetLoadingControllerTests\GetInitialStateTests.cs" />
+    <Compile Include="IntegrationTests\Controllers\AssetLoadingControllerTests\AssetLoadingControllerTests.cs" />
     <Compile Include="IntegrationTests\Controllers\ItemSpawnerControllerTests\NextPageClickedTests.cs" />
     <Compile Include="IntegrationTests\Controllers\ItemSpawnerControllerTests\PageSelectedTests.cs" />
     <Compile Include="IntegrationTests\Controllers\ItemSpawnerControllerTests\GetInitialStateTests.cs" />
