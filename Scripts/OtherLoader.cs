@@ -32,7 +32,7 @@ namespace OtherLoader
         
         public static int MaxActiveLoaders = 0;
 
-        private static List<DirectLoadMod> directLoadMods = new List<DirectLoadMod>();
+        private static List<DirectLoadModData> directLoadMods = new List<DirectLoadModData>();
 
         public static CoroutineStarter coroutineStarter;
 
@@ -91,7 +91,7 @@ namespace OtherLoader
             
             loader.LoadLegacyAssets(coroutineStarter);
 
-            foreach(DirectLoadMod mod in directLoadMods)
+            foreach(DirectLoadModData mod in directLoadMods)
             {
                 loader.LoadDirectAssets(coroutineStarter, mod.path, mod.guid, mod.dependancies.Split(','), mod.loadFirst.Split(','), mod.loadAny.Split(','), mod.loadLast.Split(','));
             }
@@ -101,30 +101,20 @@ namespace OtherLoader
         
         public static void RegisterDirectLoad(string path, string guid, string dependancies, string loadFirst, string loadAny, string loadLast)
         {
-            directLoadMods.Add(new DirectLoadMod()
+            directLoadMods.Add(new DirectLoadModData()
             {
-                path = path,
-                guid = guid,
-                dependancies = dependancies,
-                loadFirst = loadFirst,
-                loadAny = loadAny,
-                loadLast = loadLast
+                Path = path,
+                Guid = guid,
+                Dependancies = dependancies.Split(','),
+                LoadFirst = loadFirst.Split(','),
+                LoadAny = loadAny.Split(','),
+                LoadLast = loadLast.Split(',')
             });
         }
         
         public static bool DoesEntryHaveChildren(ItemSpawnerEntry entry)
         {
             return SpawnerEntriesByPath[entry.EntryPath].childNodes.Count > 0;
-        }
-        
-        private class DirectLoadMod
-        {
-            public string path;
-            public string guid;
-            public string dependancies;
-            public string loadFirst;
-            public string loadAny;
-            public string loadLast;
         }
     }
 }

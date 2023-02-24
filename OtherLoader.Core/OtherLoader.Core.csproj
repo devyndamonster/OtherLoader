@@ -50,7 +50,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controllers\ILoadOrderController.cs" />
+    <Compile Include="Controllers\LoadOrderController.cs" />
     <Compile Include="Enums\LoadOrderType.cs" />
+    <Compile Include="Models\DirectLoadModData.cs" />
     <Compile Include="Services\AssetLoadingService.cs" />
     <Compile Include="Services\IAssetLoadingService.cs" />
     <Compile Include="Controllers\IItemSpawnerController.cs" />

@@ -1,4 +1,6 @@
-﻿using System.Collections;
+﻿using OtherLoader.Core.Models;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
@@ -6,6 +8,7 @@ namespace OtherLoader.Core.Services
 {
     public interface IAssetLoadingService
     {
+        public event Action<string> OnAssetLoadComplete;
 
         /* Steps of asset loading
          * 1. Register the asset for loading
@@ -30,7 +33,7 @@ namespace OtherLoader.Core.Services
 
         public IEnumerator RegisterAssetLoadLastLate(FileSystemInfo handle);
 
-        public IEnumerable<IEnumerator> LoadDirectAssets(string folderPath, string guid, string[] dependancies, string[] loadFirst, string[] loadAny, string[] loadLast);
+        public IEnumerable<IEnumerator> LoadDirectAssets(DirectLoadModData modData);
 
         public IEnumerable<IEnumerator> LoadLegacyAssets();
 
