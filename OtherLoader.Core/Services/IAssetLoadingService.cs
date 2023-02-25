@@ -8,17 +8,8 @@ namespace OtherLoader.Core.Services
 {
     public interface IAssetLoadingService
     {
-        public event Action<string> OnAssetLoadComplete;
-
-        /* Steps of asset loading
-         * 1. Register the asset for loading
-         * 2. Have the asset wait to start loading untill it is allowed based on order
-         * 3. Register that the asset is now actively being loaded
-         * 4. Load the asset bundle
-         * 5. Get the assets from the asset bundle an apply them to the game
-         * 6. Register asset bundle as finished loading
-         */
-
+        public event Action<object[]> OnAssetLoadComplete;
+        
         public IEnumerator StartAssetLoadFirst(FileSystemInfo handle);
 
         public IEnumerator StartAssetLoadUnordered(FileSystemInfo handle);

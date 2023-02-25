@@ -9,6 +9,7 @@ using System.Collections;
 using RenderHeads.Media.AVProVideo;
 using OtherLoader.Patches;
 using OtherLoader.Core.Models;
+using OtherLoader.Core.Services;
 
 namespace OtherLoader
 {
@@ -98,12 +99,26 @@ namespace OtherLoader
 
             yield break;
         }
+
+        public static void TestLoadContainerSetup_DeleteLater()
+        {
+            var assetLoadingService = new AssetLoadingService(null, null);
+
+            BaseAssetLoadingSubscriber<TutorialBlock> tutorialSubscriber = null;
+
+            assetLoadingService.OnAssetLoadComplete += tutorialSubscriber.LoadSubscribedAssets;
+
+            foreach (DirectLoadModData mod in directLoadMods)
+            {
+                assetLoadingService.LoadDirectAssets(mod);
+            }
+        }
         
         public static void RegisterDirectLoad(string path, string guid, string dependancies, string loadFirst, string loadAny, string loadLast)
         {
             directLoadMods.Add(new DirectLoadModData()
             {
-                Path = path,
+                FolderPath = path,
                 Guid = guid,
                 Dependancies = dependancies.Split(','),
                 LoadFirst = loadFirst.Split(','),

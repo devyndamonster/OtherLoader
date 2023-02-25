@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace OtherLoader.Core.Models.Adapters
+namespace OtherLoader.Core.Adapters
 {
     public interface IConfigAdapter
     {

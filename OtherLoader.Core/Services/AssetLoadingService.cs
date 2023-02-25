@@ -1,4 +1,5 @@
-﻿using OtherLoader.Core.Controllers;
+﻿using OtherLoader.Core.Adapters;
+using OtherLoader.Core.Controllers;
 using OtherLoader.Core.Enums;
 using OtherLoader.Core.Models;
 using System;
@@ -12,13 +13,15 @@ namespace OtherLoader.Core.Services
 {
     public class AssetLoadingService : IAssetLoadingService
     {
-        public event Action<string> OnAssetLoadComplete;
+        public event Action<object[]> OnAssetLoadComplete;
 
         private readonly ILoadOrderController _loadOrderController;
+        private readonly IBundleLoadingAdapter _bundleLoadingAdapter;
 
-        public AssetLoadingService(ILoadOrderController loadOrderController)
+        public AssetLoadingService(ILoadOrderController loadOrderController, IBundleLoadingAdapter bundleLoadingAdapter)
         {
             _loadOrderController = loadOrderController;
+            _bundleLoadingAdapter = bundleLoadingAdapter;
         }
         
         public IEnumerable<IEnumerator> LoadDirectAssets(DirectLoadModData modData)
@@ -31,7 +34,7 @@ namespace OtherLoader.Core.Services
                 {
                     if (!string.IsNullOrEmpty(bundleName))
                     {
-                        loadCoroutines.Add(StartAssetLoadDirect(modData.Path, bundleName, modData.Guid, modData.Dependancies, loadOrderBundles.Key, false));
+                        loadCoroutines.Add(StartAssetLoadDirect(modData.FolderPath, bundleName, modData.Guid, modData.Dependancies, loadOrderBundles.Key, false));
                     }
                 }
             }
@@ -79,18 +82,20 @@ namespace OtherLoader.Core.Services
             throw new NotImplementedException();
         }
 
-        /* Steps of asset loading
+         /* Steps of asset loading
          * 1. Register the asset for loading
          * 2. Have the asset wait to start loading untill it is allowed based on order
          * 3. Register that the asset is now actively being loaded
          * 4. Load the asset bundle
          * 5. Get the assets from the asset bundle an apply them to the game
          * 6. Register asset bundle as finished loading
+         * 7. If the bundle has a late bundle, register that to load later
          */
 
         private IEnumerator StartAssetLoadDirect(string folderPath, string bundleName, string guid, string[] dependancies, LoadOrderType loadOrder, bool allowUnload)
         {
             _loadOrderController.RegisterBundleForLoading(bundleName);
+            yield return null;
 
             while (_loadOrderController.CanBundleBeginLoading(bundleName))
             {
@@ -99,13 +104,14 @@ namespace OtherLoader.Core.Services
 
             _loadOrderController.RegisterBundleLoadingStarted(bundleName);
 
-            //TODO: Load the bundle
-
-            //TODO: Get the assets
-
-            //TODO: Fire event passing loaded assets to subscribed asset loaders
-
+            yield return _bundleLoadingAdapter.LoadAssetsFromAssetBundle(assets =>
+            {
+                OnAssetLoadComplete?.Invoke(assets);
+            });
+            
             _loadOrderController.RegisterBundleLoadingComplete(bundleName);
+
+            //TODO: Register bundle to load later
 
             yield return null;
         }

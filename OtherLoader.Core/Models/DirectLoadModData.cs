@@ -8,7 +8,7 @@ namespace OtherLoader.Core.Models
 {
     public class DirectLoadModData
     {
-        public string Path { get; set; }
+        public string FolderPath { get; set; }
 
         public string Guid { get; set; }
 

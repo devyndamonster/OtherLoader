@@ -50,17 +50,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Adapters\IBundleLoadingAdapter.cs" />
     <Compile Include="Controllers\ILoadOrderController.cs" />
     <Compile Include="Controllers\LoadOrderController.cs" />
     <Compile Include="Enums\LoadOrderType.cs" />
     <Compile Include="Models\DirectLoadModData.cs" />
+    <Compile Include="Models\BaseAssetLoadingSubscriber.cs" />
     <Compile Include="Services\AssetLoadingService.cs" />
     <Compile Include="Services\IAssetLoadingService.cs" />
     <Compile Include="Controllers\IItemSpawnerController.cs" />
     <Compile Include="Controllers\IRewardController.cs" />
     <Compile Include="Controllers\ItemSpawnerController.cs" />
     <Compile Include="Controllers\RewardController.cs" />
-    <Compile Include="Models\Adapters\IConfigAdapter.cs" />
+    <Compile Include="Adapters\IConfigAdapter.cs" />
     <Compile Include="Models\ItemDataContainer.cs" />
     <Compile Include="Models\ItemSpawnerState.cs" />
     <Compile Include="Models\ItemSpawnerTileState.cs" />
@@ -78,7 +80,7 @@
     <Compile Include="Services\PaginationService.cs" />
     <Compile Include="Services\PathService.cs" />
     <Compile Include="SharedInterfaces\IPrototype.cs" />
-    <Compile Include="Models\Adapters\IRewardSystemAdapter.cs" />
+    <Compile Include="Adapters\IRewardSystemAdapter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
