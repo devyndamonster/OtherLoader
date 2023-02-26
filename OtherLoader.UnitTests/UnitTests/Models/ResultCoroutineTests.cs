@@ -30,17 +30,9 @@ namespace OtherLoader.UnitTests.Models
 
         
         [Test]
-        public void ItWillReturnResultWhenYielded()
+        public void ItWillRunSubroutines()
         {
-            var expectedResult = new object[]
-            {
-                "Test Result"
-            };
-
-            var coroutine = new ResultCoroutine<object[]>(TestCoroutine());
-            var coroutineWrapper = TestCoroutineThatYields(coroutine);
-
-            coroutineWrapper.ExecuteCoroutine();
+            Assert.True(false);
         }
         
 
@@ -52,13 +44,6 @@ namespace OtherLoader.UnitTests.Models
             {
                 "Test Result"
             };
-        }
-        
-        private IEnumerator TestCoroutineThatYields<T>(ResultCoroutine<T> coroutine)
-        {
-            yield return coroutine;
-
-            var result = coroutine.Result;
         }
     }
 }

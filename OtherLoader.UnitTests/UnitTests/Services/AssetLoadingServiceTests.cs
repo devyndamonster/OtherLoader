@@ -39,7 +39,9 @@ namespace OtherLoader.UnitTests.Services
                 var returnedAssets = new List<object>();
 
                 var mockLoadOrderService = Substitute.For<ILoadOrderController>();
-                mockLoadOrderService.CanBundleBeginLoading(Arg.Any<string>()).Returns(true);
+                mockLoadOrderService
+                    .CanBundleBeginLoading(Arg.Any<string>())
+                    .Returns(true);
                 
                 var mockBundleLoadingAdapter = Substitute.For<IBundleLoadingAdapter>();
                 mockBundleLoadingAdapter
@@ -78,14 +80,44 @@ namespace OtherLoader.UnitTests.Services
             }
 
             [Test]
-            public void ItWillWaitToLoadBundleUntilReady()
+            public void ItWontLoadModWhenWaitingForOtherMods()
             {
+                var loadedAssets = new object[]
+                {
+                    "Test Object"
+                };
+
+                var modData = new DirectLoadModData
+                {
+                    FolderPath = "TestPath",
+                    Guid = "TestGuid",
+                    Dependancies = new string[] { },
+                    LoadFirst = new string[] { "TestLoadFirst" },
+                    LoadAny = new string[] { },
+                    LoadLast = new string[] { },
+                };
+                
+                var mockLoadOrderService = Substitute.For<ILoadOrderController>();
+                mockLoadOrderService
+                    .CanBundleBeginLoading(Arg.Any<string>())
+                    .Returns(false);
+
+                var mockBundleLoadingAdapter = Substitute.For<IBundleLoadingAdapter>();
+                mockBundleLoadingAdapter
+                    .LoadAssetsFromAssetBundle(Arg.Any<string>())
+                    .Returns(MockedLoadAssetsFromBundle(loadedAssets));
+
+                var assetLoadingService = new AssetLoadingService(mockLoadOrderService, mockBundleLoadingAdapter);
+                var coroutineUnderTest = assetLoadingService.LoadDirectAssets(modData).First();
+                
+                coroutineUnderTest.ExecuteCoroutine(99);
+
+                mockLoadOrderService.DidNotReceive().RegisterBundleLoadingStarted(Arg.Any<string>());
             }
 
             private IEnumerator MockedLoadAssetsFromBundle(object[] assets)
             {
                 yield return null;
-
                 yield return assets;
             }
             

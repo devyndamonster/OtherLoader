@@ -27,7 +27,17 @@ namespace OtherLoader.Core.Models
                 _result = result;
             }
 
-            return _coroutine.MoveNext();
+            return ProgressRoutine(_coroutine);
+        }
+
+        private bool ProgressRoutine(IEnumerator coroutine)
+        {
+            if (coroutine.Current is IEnumerator subroutine)
+            {
+                return ProgressRoutine(subroutine);
+            }
+
+            return coroutine.MoveNext();
         }
 
         public void Reset()
