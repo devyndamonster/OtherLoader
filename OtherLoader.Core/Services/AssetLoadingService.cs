@@ -97,18 +97,17 @@ namespace OtherLoader.Core.Services
             _loadOrderController.RegisterBundleForLoading(bundleName);
             yield return null;
 
-            while (_loadOrderController.CanBundleBeginLoading(bundleName))
+            while (!_loadOrderController.CanBundleBeginLoading(bundleName))
             {
                 yield return null;
             }
 
             _loadOrderController.RegisterBundleLoadingStarted(bundleName);
-
-            yield return _bundleLoadingAdapter.LoadAssetsFromAssetBundle(assets =>
-            {
-                OnAssetLoadComplete?.Invoke(assets);
-            });
             
+            var resultCoroutine = new ResultCoroutine<object[]>(_bundleLoadingAdapter.LoadAssetsFromAssetBundle(""));
+            yield return resultCoroutine;
+            OnAssetLoadComplete?.Invoke(resultCoroutine.Result);
+
             _loadOrderController.RegisterBundleLoadingComplete(bundleName);
 
             //TODO: Register bundle to load later

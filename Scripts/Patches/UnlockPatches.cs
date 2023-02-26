@@ -23,7 +23,7 @@ namespace OtherLoader.Patches
             {
                 if (OtherLoader.UnlockSaveData.UnlockItem(__instance.ObjectWrapper.ItemID))
                 {
-                    OtherLoader.SaveUnlockedItemsData();
+                    //OtherLoader.SaveUnlockedItemsData();
                 }
             }
 

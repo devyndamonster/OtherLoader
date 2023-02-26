@@ -56,6 +56,7 @@
     <Compile Include="Enums\LoadOrderType.cs" />
     <Compile Include="Models\DirectLoadModData.cs" />
     <Compile Include="Models\BaseAssetLoadingSubscriber.cs" />
+    <Compile Include="Models\ResultCoroutine.cs" />
     <Compile Include="Services\AssetLoadingService.cs" />
     <Compile Include="Services\IAssetLoadingService.cs" />
     <Compile Include="Controllers\IItemSpawnerController.cs" />

@@ -8,7 +8,7 @@ namespace OtherLoader.Core.Adapters
 {
     public interface IBundleLoadingAdapter
     {
-        public IEnumerator LoadAssetsFromAssetBundle(Action<object[]> onAssetsLoaded);
+        public IEnumerator LoadAssetsFromAssetBundle(string bundlePath);
 
     }
 }
