@@ -50,43 +50,44 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Adapters\IBundleLoadingAdapter.cs" />
-    <Compile Include="Controllers\ILoadOrderController.cs" />
-    <Compile Include="Controllers\LoadOrderController.cs" />
-    <Compile Include="Enums\LoadOrderType.cs" />
+    <Compile Include="Features\AssetLoading\Adapters\IBundleLoadingAdapter.cs" />
+    <Compile Include="Features\AssetLoading\Controllers\ILoadOrderController.cs" />
+    <Compile Include="Features\AssetLoading\Controllers\LoadOrderController.cs" />
+    <Compile Include="Features\AssetLoading\Models\LoadOrderType.cs" />
     <Compile Include="Features\DependancyInjection\ServiceContainer.cs" />
-    <Compile Include="Models\DirectLoadModData.cs" />
-    <Compile Include="Models\BaseAssetLoadingSubscriber.cs" />
-    <Compile Include="Models\IAssetLoadingSubscriber.cs" />
-    <Compile Include="Models\ResultCoroutine.cs" />
-    <Compile Include="Services\AssetLoadingService.cs" />
-    <Compile Include="Services\IAssetLoadingService.cs" />
-    <Compile Include="Controllers\IItemSpawnerController.cs" />
-    <Compile Include="Controllers\IRewardController.cs" />
-    <Compile Include="Controllers\ItemSpawnerController.cs" />
-    <Compile Include="Controllers\RewardController.cs" />
-    <Compile Include="Adapters\IConfigAdapter.cs" />
-    <Compile Include="Models\ItemDataContainer.cs" />
-    <Compile Include="Models\ItemSpawnerState.cs" />
-    <Compile Include="Models\ItemSpawnerTileState.cs" />
-    <Compile Include="Models\OtherLoaderConfig.cs" />
-    <Compile Include="Models\PageMode.cs" />
-    <Compile Include="Models\SearchMode.cs" />
-    <Compile Include="Models\SpawnerEntryData.cs" />
-    <Compile Include="Models\TagGroup.cs" />
-    <Compile Include="Models\UnlockedItemSaveData.cs" />
+    <Compile Include="Features\AssetLoading\Models\DirectLoadModData.cs" />
+    <Compile Include="Features\AssetLoading\Subscribers\BaseAssetLoadingSubscriber.cs" />
+    <Compile Include="Features\AssetLoading\Subscribers\IAssetLoadingSubscriber.cs" />
+    <Compile Include="Features\RewardSystem\Adapters\IRewardSystemAdapter.cs" />
+    <Compile Include="Features\Shared\Models\ResultCoroutine.cs" />
+    <Compile Include="Features\AssetLoading\Services\AssetLoadingService.cs" />
+    <Compile Include="Features\AssetLoading\Services\IAssetLoadingService.cs" />
+    <Compile Include="Features\ItemSpawner\Controllers\IItemSpawnerController.cs" />
+    <Compile Include="Features\RewardSystem\Controllers\IRewardController.cs" />
+    <Compile Include="Features\ItemSpawner\Controllers\ItemSpawnerController.cs" />
+    <Compile Include="Features\RewardSystem\Controllers\RewardController.cs" />
+    <Compile Include="Features\Config\Adapters\IConfigAdapter.cs" />
+    <Compile Include="Features\MetaData\Models\ItemDataContainer.cs" />
+    <Compile Include="Features\ItemSpawner\Models\ItemSpawnerState.cs" />
+    <Compile Include="Features\ItemSpawner\Models\ItemSpawnerTileState.cs" />
+    <Compile Include="Features\Config\Models\OtherLoaderConfig.cs" />
+    <Compile Include="Features\ItemSpawner\Models\PageMode.cs" />
+    <Compile Include="Features\ItemSpawner\Models\SearchMode.cs" />
+    <Compile Include="Features\MetaData\Models\SpawnerEntryData.cs" />
+    <Compile Include="Features\MetaData\Models\TagGroup.cs" />
+    <Compile Include="Features\RewardSystem\Models\UnlockedItemSaveData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Services\ApplicationPathService.cs" />
-    <Compile Include="Services\IApplicationPathService.cs" />
-    <Compile Include="Services\IPaginationService.cs" />
-    <Compile Include="Services\IPathService.cs" />
-    <Compile Include="Services\PaginationService.cs" />
-    <Compile Include="Services\PathService.cs" />
-    <Compile Include="SharedInterfaces\IPrototype.cs" />
-    <Compile Include="Adapters\IRewardSystemAdapter.cs" />
+    <Compile Include="Features\Shared\Services\ApplicationPathService.cs" />
+    <Compile Include="Features\Shared\Services\IApplicationPathService.cs" />
+    <Compile Include="Features\Shared\Services\IPaginationService.cs" />
+    <Compile Include="Features\Shared\Services\IPathService.cs" />
+    <Compile Include="Features\Shared\Services\PaginationService.cs" />
+    <Compile Include="Features\Shared\Services\PathService.cs" />
+    <Compile Include="Features\Shared\Models\IPrototype.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
