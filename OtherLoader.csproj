@@ -99,6 +99,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Scripts\Adapters\BundleLoadingAdapter.cs" />
     <Compile Include="Scripts\Adapters\RewardSystemAdapter.cs" />
     <Compile Include="Scripts\Loading\Loaders\AudioImpactSetLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\CategoryDefinitionLoader.cs" />
@@ -114,6 +115,7 @@
     <Compile Include="Scripts\Loading\Loaders\BaseAssetLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\ItemSpawnerEntryLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\TutorialBlockLoader.cs" />
+    <Compile Include="Scripts\Loading\Subscribers\TutorialBlockSubscriber.cs" />
     <Compile Include="Scripts\Models\CategoryDisplayData.cs" />
     <Compile Include="Scripts\Models\EntryNode.cs" />
     <Compile Include="Scripts\Models\ItemSpawnerData.cs" />

@@ -54,8 +54,10 @@
     <Compile Include="Controllers\ILoadOrderController.cs" />
     <Compile Include="Controllers\LoadOrderController.cs" />
     <Compile Include="Enums\LoadOrderType.cs" />
+    <Compile Include="Features\DependancyInjection\ServiceContainer.cs" />
     <Compile Include="Models\DirectLoadModData.cs" />
     <Compile Include="Models\BaseAssetLoadingSubscriber.cs" />
+    <Compile Include="Models\IAssetLoadingSubscriber.cs" />
     <Compile Include="Models\ResultCoroutine.cs" />
     <Compile Include="Services\AssetLoadingService.cs" />
     <Compile Include="Services\IAssetLoadingService.cs" />

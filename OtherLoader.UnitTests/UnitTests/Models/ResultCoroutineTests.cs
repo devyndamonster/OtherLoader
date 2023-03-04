@@ -27,15 +27,7 @@ namespace OtherLoader.UnitTests.Models
 
             coroutine.Result.ShouldBeEquivalentTo(expectedResult);
         }
-
         
-        [Test]
-        public void ItWillRunSubroutines()
-        {
-            Assert.True(false);
-        }
-        
-
         private IEnumerator TestCoroutine()
         {
             yield return null;

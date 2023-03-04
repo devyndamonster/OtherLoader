@@ -5,7 +5,26 @@ using System.Text;
 
 namespace OtherLoader.Core.Controllers
 {
-    public class LoadOrderController
+    public class LoadOrderController : ILoadOrderController
     {
+        public bool CanBundleBeginLoading(string bundleName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterBundleForLoading(string bundleName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterBundleLoadingComplete(string bundleName)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RegisterBundleLoadingStarted(string bundleName)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

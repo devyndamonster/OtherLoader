@@ -10,10 +10,15 @@ using RenderHeads.Media.AVProVideo;
 using OtherLoader.Patches;
 using OtherLoader.Core.Models;
 using OtherLoader.Core.Services;
+using OtherLoader.Core.Controllers;
+using OtherLoader.Scripts.Adapters;
+using OtherLoader.Scripts.Loading.Subscribers;
+using OtherLoader.Core.Features.DependancyInjection;
+using OtherLoader.Core.Adapters;
 
 namespace OtherLoader
 {
-    [BepInPlugin("h3vr.otherloader", "OtherLoader", "1.3.8")]
+    [BepInPlugin("h3vr.otherloader", "OtherLoader", "2.0.0")]
     [BepInDependency(StratumRoot.GUID, StratumRoot.Version)]
     [BepInDependency(Sodalite.SodaliteConstants.Guid, Sodalite.SodaliteConstants.Version)]
     public class OtherLoader : StratumPlugin
@@ -31,22 +36,21 @@ namespace OtherLoader
         public static UnlockedItemSaveData UnlockSaveData;
         public static Sprite LockIcon;
         
+        private static List<DirectLoadModData> directLoadMods = new List<DirectLoadModData>();
+        private ServiceContainer _serviceContainer;
+        private CoroutineStarter _coroutineStarter;
+
         public static int MaxActiveLoaders = 0;
 
-        private static List<DirectLoadModData> directLoadMods = new List<DirectLoadModData>();
-
-        public static CoroutineStarter coroutineStarter;
-
+        
+        
         private void Awake()
         {
             Configuration = OtherLoaderConfig.LoadFromFile(this);
             OtherLogger.Init(Configuration);
             CreateHarmonyPatches();
-            coroutineStarter = StartCoroutine;
-
-            //TODO: Setup services here
-
-            
+            _coroutineStarter = StartCoroutine;
+            _serviceContainer = ConstructServiceContainer();
         }
 
         private void Start()
@@ -77,40 +81,51 @@ namespace OtherLoader
 
         public override IEnumerator OnRuntime(IStageContext<IEnumerator> ctx)
         {
-            ItemLoader loader = new ItemLoader();
+            StartDirectModLoading();
+            RegisterStratumModLoading(ctx);
             
-            //On-Demand Loaders
-            ctx.Loaders.Add("item_data", loader.StartAssetDataLoad);
-            ctx.Loaders.Add("item_first_late", loader.RegisterAssetLoadFirstLate);
-            ctx.Loaders.Add("item_unordered_late", loader.RegisterAssetLoadUnorderedLate);
-            ctx.Loaders.Add("item_last_late", loader.RegisterAssetLoadLastLate);
-
-            //Immediate Loaders
-            ctx.Loaders.Add("item", loader.StartAssetLoadFirst);
-            ctx.Loaders.Add("item_unordered", loader.StartAssetLoadUnordered);
-            ctx.Loaders.Add("item_last", loader.StartAssetLoadLast);
-            
-            loader.LoadLegacyAssets(coroutineStarter);
-
-            foreach(DirectLoadModData mod in directLoadMods)
-            {
-                //loader.LoadDirectAssets(coroutineStarter, mod.path, mod.guid, mod.dependancies.Split(','), mod.loadFirst.Split(','), mod.loadAny.Split(','), mod.loadLast.Split(','));
-            }
-
             yield break;
         }
 
-        public static void TestLoadContainerSetup_DeleteLater()
+        private ServiceContainer ConstructServiceContainer()
         {
-            var assetLoadingService = new AssetLoadingService(null, null);
+            var container = new ServiceContainer();
 
-            BaseAssetLoadingSubscriber<TutorialBlock> tutorialSubscriber = null;
+            container.Bind<ILoadOrderController, LoadOrderController>();
+            container.Bind<IBundleLoadingAdapter, BundleLoadingAdapter>();
+            container.Bind<IAssetLoadingService, AssetLoadingService>();
+            
+            container.Bind<IAssetLoadingSubscriber, TutorialBlockSubscriber>();
 
-            assetLoadingService.OnAssetLoadComplete += tutorialSubscriber.LoadSubscribedAssets;
+            return container;
+        }
+
+        private void RegisterStratumModLoading(IStageContext<IEnumerator> ctx)
+        {
+            var assetLoadingService = _serviceContainer.Resolve<IAssetLoadingService>();
+
+            ctx.Loaders.Add("item_data", assetLoadingService.StartAssetLoadData);
+            ctx.Loaders.Add("item_first_late", assetLoadingService.RegisterAssetLoadFirstLate);
+            ctx.Loaders.Add("item_unordered_late", assetLoadingService.RegisterAssetLoadUnorderedLate);
+            ctx.Loaders.Add("item_last_late", assetLoadingService.RegisterAssetLoadLastLate);
+            ctx.Loaders.Add("item", assetLoadingService.StartAssetLoadFirst);
+            ctx.Loaders.Add("item_unordered", assetLoadingService.StartAssetLoadUnordered);
+            ctx.Loaders.Add("item_last", assetLoadingService.StartAssetLoadLast);
+
+        }
+
+        private void StartDirectModLoading()
+        {
+            var assetLoadingService = _serviceContainer.Resolve<IAssetLoadingService>();
 
             foreach (DirectLoadModData mod in directLoadMods)
             {
-                assetLoadingService.LoadDirectAssets(mod);
+                var assetLoadRoutines = assetLoadingService.LoadDirectAssets(mod);
+
+                foreach (var routine in assetLoadRoutines)
+                {
+                    _coroutineStarter(routine);
+                }
             }
         }
         

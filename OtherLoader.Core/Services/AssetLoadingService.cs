@@ -34,7 +34,7 @@ namespace OtherLoader.Core.Services
                 {
                     if (!string.IsNullOrEmpty(bundleName))
                     {
-                        loadCoroutines.Add(StartAssetLoadDirect(modData.FolderPath, bundleName, modData.Guid, modData.Dependancies, loadOrderBundles.Key, false));
+                        loadCoroutines.Add(LoadAssetBundle(modData.FolderPath, bundleName, loadOrderBundles.Key));
                     }
                 }
             }
@@ -92,23 +92,23 @@ namespace OtherLoader.Core.Services
          * 7. If the bundle has a late bundle, register that to load later
          */
 
-        private IEnumerator StartAssetLoadDirect(string folderPath, string bundleName, string guid, string[] dependancies, LoadOrderType loadOrder, bool allowUnload)
+        private IEnumerator LoadAssetBundle(string modId, string bundlePath, LoadOrderType loadOrder)
         {
-            _loadOrderController.RegisterBundleForLoading(bundleName);
+            _loadOrderController.RegisterBundleForLoading(bundlePath);
             yield return null;
 
-            while (!_loadOrderController.CanBundleBeginLoading(bundleName))
+            while (!_loadOrderController.CanBundleBeginLoading(bundlePath))
             {
                 yield return null;
             }
 
-            _loadOrderController.RegisterBundleLoadingStarted(bundleName);
+            _loadOrderController.RegisterBundleLoadingStarted(bundlePath);
             
             var resultCoroutine = new ResultCoroutine<object[]>(_bundleLoadingAdapter.LoadAssetsFromAssetBundle(""));
             yield return resultCoroutine;
             OnAssetLoadComplete?.Invoke(resultCoroutine.Result);
 
-            _loadOrderController.RegisterBundleLoadingComplete(bundleName);
+            _loadOrderController.RegisterBundleLoadingComplete(bundlePath);
 
             //TODO: Register bundle to load later
 

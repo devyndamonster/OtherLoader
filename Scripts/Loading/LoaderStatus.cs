@@ -138,7 +138,7 @@ namespace OtherLoader
             if (trackedLoaders.Count == 0)
             {
                 LoadStartTime = Time.time;
-                OtherLoader.coroutineStarter(LoadTimeCoroutine());
+                OtherLoader._coroutineStarter(LoadTimeCoroutine());
             }
 
             //Update the time when something is tracked
