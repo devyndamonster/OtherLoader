@@ -115,6 +115,18 @@ namespace OtherLoader.UnitTests.Services
                 mockLoadOrderService.DidNotReceive().RegisterBundleLoadingStarted(Arg.Any<string>());
             }
 
+            [Test]
+            public void ItWillRegisterBundleAsManaged()
+            {
+                false.Should().BeTrue();
+            }
+
+            [Test]
+            public void ItWillRegisterLateBundleAsManaged()
+            {
+                false.Should().BeTrue();
+            }
+
             private IEnumerator MockedLoadAssetsFromBundle(object[] assets)
             {
                 yield return null;

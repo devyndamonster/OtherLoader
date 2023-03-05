@@ -1,4 +1,5 @@
-﻿using System;
+﻿using OtherLoader.Core.Enums;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,8 +12,8 @@ namespace OtherLoader.Core.Controllers
         {
             throw new NotImplementedException();
         }
-
-        public void RegisterBundleForLoading(string bundleName)
+        
+        public void RegisterBundleForLoading(string bundleName, string modId, LoadOrderType loadOrder)
         {
             throw new NotImplementedException();
         }

@@ -92,27 +92,53 @@ namespace OtherLoader.Core.Services
          * 7. If the bundle has a late bundle, register that to load later
          */
 
+
+         
+        /* What Next?
+         * - Finish direct load asset loading
+         * - Create subscribers to load mod date into new Core format
+         * - Hook item spawner V2 up to the new service
+         * - Write some end to end tests?
+         */
+        
+
+
         private IEnumerator LoadAssetBundle(string modId, string bundlePath, LoadOrderType loadOrder)
         {
-            _loadOrderController.RegisterBundleForLoading(bundlePath);
+            _loadOrderController.RegisterBundleForLoading(bundlePath, modId, loadOrder);
+            yield return WaitUntilBundleCanLoad(bundlePath);
+            _loadOrderController.RegisterBundleLoadingStarted(bundlePath);
+            
+            var resultCoroutine = new ResultCoroutine<object[]>(_bundleLoadingAdapter.LoadAssetsFromAssetBundle(""));
+            yield return resultCoroutine;
+            
+            OnAssetLoadComplete?.Invoke(resultCoroutine.Result);
+
+            _loadOrderController.RegisterBundleLoadingComplete(bundlePath);
+            _bundleLoadingAdapter.AddManagedBundle(bundlePath);
+            RegisterLateLoadingBundle(bundlePath);
+
+            yield return null;
+        }
+
+        private IEnumerator WaitUntilBundleCanLoad(string bundlePath)
+        {
             yield return null;
 
             while (!_loadOrderController.CanBundleBeginLoading(bundlePath))
             {
                 yield return null;
             }
+        }
 
-            _loadOrderController.RegisterBundleLoadingStarted(bundlePath);
-            
-            var resultCoroutine = new ResultCoroutine<object[]>(_bundleLoadingAdapter.LoadAssetsFromAssetBundle(""));
-            yield return resultCoroutine;
-            OnAssetLoadComplete?.Invoke(resultCoroutine.Result);
+        private void RegisterLateLoadingBundle(string bundlePath)
+        {
+            var lateBundlePath = "late_" + bundlePath;
 
-            _loadOrderController.RegisterBundleLoadingComplete(bundlePath);
-
-            //TODO: Register bundle to load later
-
-            yield return null;
+            if (File.Exists(lateBundlePath))
+            {
+                _bundleLoadingAdapter.AddLateManagedBundle(lateBundlePath);
+            }
         }
     }
 }

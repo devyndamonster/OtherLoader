@@ -10,5 +10,9 @@ namespace OtherLoader.Core.Adapters
     {
         public IEnumerator LoadAssetsFromAssetBundle(string bundlePath);
 
+        public void AddManagedBundle(string bundlePath);
+
+        public void AddLateManagedBundle(string bundlePath);
+
     }
 }

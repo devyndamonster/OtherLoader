@@ -10,21 +10,43 @@ namespace OtherLoader.Helpers
     {
         public static void ExecuteCoroutine(this IEnumerator coroutine, int maxIterations = -1)
         {
+            var context = new CoroutineContext
+            {
+                MaxIterations = maxIterations,
+            };
+
+            ExecuteCoroutine(coroutine, context);
+        }
+
+        private static void ExecuteCoroutine(IEnumerator coroutine, CoroutineContext context)
+        {
             var moveNext = true;
-            var iterations = 0;
 
             do
             {
                 if (coroutine.Current is IEnumerator subCoroutine)
                 {
-                    subCoroutine.ExecuteCoroutine(maxIterations);
+                    ExecuteCoroutine(subCoroutine, context);
                 }
 
-                moveNext = coroutine.MoveNext();
-                iterations += 1;
+                if (context.CanCoroutineContinue)
+                {
+                    moveNext = coroutine.MoveNext();
+                    context.CurrentIterations += 1;
+                }
             }
-            while (moveNext && (maxIterations < 0 || maxIterations > iterations));
+            while (moveNext && context.CanCoroutineContinue);
         }
 
+    }
+
+
+    public class CoroutineContext
+    {
+        public int MaxIterations { get; set; }
+
+        public int CurrentIterations { get; set; }
+
+        public bool CanCoroutineContinue => MaxIterations < 0 || MaxIterations > CurrentIterations;
     }
 }
