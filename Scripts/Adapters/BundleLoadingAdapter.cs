@@ -9,6 +9,16 @@ namespace OtherLoader.Scripts.Adapters
 {
     public class BundleLoadingAdapter : IBundleLoadingAdapter
     {
+        public void AddLateManagedBundle(string bundlePath)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void AddManagedBundle(string bundlePath)
+        {
+            throw new NotImplementedException();
+        }
+
         public IEnumerator LoadAssetsFromAssetBundle(string bundlePath)
         {
             throw new NotImplementedException();

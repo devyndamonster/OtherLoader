@@ -67,6 +67,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helpers\CoroutineExtensions.cs" />
+    <Compile Include="IntegrationTests\Controllers\AssetLoadingServiceTests.cs" />
     <Compile Include="IntegrationTests\Controllers\ItemSpawnerControllerTests\NextPageClickedTests.cs" />
     <Compile Include="IntegrationTests\Controllers\ItemSpawnerControllerTests\PageSelectedTests.cs" />
     <Compile Include="IntegrationTests\Controllers\ItemSpawnerControllerTests\GetInitialStateTests.cs" />

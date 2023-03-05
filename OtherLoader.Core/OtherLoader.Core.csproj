@@ -53,7 +53,10 @@
     <Compile Include="Features\AssetLoading\Adapters\IBundleLoadingAdapter.cs" />
     <Compile Include="Features\AssetLoading\Controllers\ILoadOrderController.cs" />
     <Compile Include="Features\AssetLoading\Controllers\LoadOrderController.cs" />
+    <Compile Include="Features\AssetLoading\Models\BundleLoadData.cs" />
+    <Compile Include="Features\AssetLoading\Models\BundleLoadState.cs" />
     <Compile Include="Features\AssetLoading\Models\LoadOrderType.cs" />
+    <Compile Include="Features\AssetLoading\Models\ModLoadData.cs" />
     <Compile Include="Features\DependancyInjection\ServiceContainer.cs" />
     <Compile Include="Features\AssetLoading\Models\DirectLoadModData.cs" />
     <Compile Include="Features\AssetLoading\Subscribers\BaseAssetLoadingSubscriber.cs" />
