@@ -11,11 +11,10 @@ using OtherLoader.Patches;
 using OtherLoader.Core.Models;
 using OtherLoader.Core.Services;
 using OtherLoader.Core.Controllers;
-using OtherLoader.Scripts.Adapters;
-using OtherLoader.Scripts.Loading.Subscribers;
 using OtherLoader.Core.Features.DependancyInjection;
 using OtherLoader.Core.Adapters;
 using OtherLoader.Features.AssetLoading.Adapters;
+using OtherLoader.Features.AssetLoading.Subscribers;
 
 namespace OtherLoader
 {
@@ -96,7 +95,8 @@ namespace OtherLoader
             container.Bind<IBundleLoadingAdapter, BundleLoadingAdapter>();
             container.Bind<IAssetLoadingService, AssetLoadingService>();
             
-            container.Bind<IAssetLoadingSubscriber, TutorialBlockSubscriber>();
+            container.Bind<TutorialBlockSubscriber>();
+            container.Bind<ItemSpawnerIdSubscriber>();
 
             return container;
         }

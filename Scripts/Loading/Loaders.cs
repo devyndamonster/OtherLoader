@@ -35,7 +35,6 @@ namespace OtherLoader
             new HandlingSlotSetLoader(),
             new BulletImpactSetLoader(),
             new AudioImpactSetLoader(),
-            new TutorialBlockLoader(),
             new QuickbeltLoader()
         };
 
