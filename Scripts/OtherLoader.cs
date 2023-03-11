@@ -15,6 +15,7 @@ using OtherLoader.Scripts.Adapters;
 using OtherLoader.Scripts.Loading.Subscribers;
 using OtherLoader.Core.Features.DependancyInjection;
 using OtherLoader.Core.Adapters;
+using OtherLoader.Features.AssetLoading.Adapters;
 
 namespace OtherLoader
 {

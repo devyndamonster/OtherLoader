@@ -99,7 +99,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Scripts\Adapters\BundleLoadingAdapter.cs" />
+    <Compile Include="Features\AssetLoading\Adapters\BundleLoadingAdapter.cs" />
+    <Compile Include="Features\AssetLoading\Subscribers\ItemSpawnerIdSubscriber.cs" />
     <Compile Include="Scripts\Adapters\RewardSystemAdapter.cs" />
     <Compile Include="Scripts\Loading\Loaders\AudioImpactSetLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\CategoryDefinitionLoader.cs" />
@@ -114,8 +115,7 @@
     <Compile Include="Scripts\Loading\Loaders\MechanicalAccuracyLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\BaseAssetLoader.cs" />
     <Compile Include="Scripts\Loading\Loaders\ItemSpawnerEntryLoader.cs" />
-    <Compile Include="Scripts\Loading\Loaders\TutorialBlockLoader.cs" />
-    <Compile Include="Scripts\Loading\Subscribers\TutorialBlockSubscriber.cs" />
+    <Compile Include="Features\AssetLoading\Subscribers\TutorialBlockSubscriber.cs" />
     <Compile Include="Scripts\Models\CategoryDisplayData.cs" />
     <Compile Include="Scripts\Models\EntryNode.cs" />
     <Compile Include="Scripts\Models\ItemSpawnerData.cs" />
@@ -154,6 +154,9 @@
       <Project>{51e79649-e0b3-4bde-8776-b7c67d8982ff}</Project>
       <Name>OtherLoader.Core</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Scripts\Loading\Subscribers\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="packages\BepInEx.Core.5.4.21\build\BepInEx.Core.targets" Condition="Exists('packages\BepInEx.Core.5.4.21\build\BepInEx.Core.targets')" />

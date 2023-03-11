@@ -14,24 +14,32 @@ namespace OtherLoader.UnitTests.Controllers
         [TestFixture]
         public class CanBundleBeginLoading
         {
-            [Test]
-            public void LoadFirstWontLoad_WhileLoadFirstDependancyWaiting()
+            [TestCase(LoadOrderType.LoadFirst, LoadOrderType.LoadFirst)]
+            [TestCase(LoadOrderType.LoadUnordered, LoadOrderType.LoadFirst)]
+            [TestCase(LoadOrderType.LoadLast, LoadOrderType.LoadFirst)]
+            [TestCase(LoadOrderType.LoadLast, LoadOrderType.LoadUnordered)]
+            [TestCase(LoadOrderType.LoadLast, LoadOrderType.LoadLast)]
+            public void BundleWontLoad_WhileDependancyWaiting(LoadOrderType bundleLoadOrder, LoadOrderType dependancyLoadOrder)
             {
                 var loadOrderController = new LoadOrderController();
-                loadOrderController.RegisterBundleForLoading("BundleA", "ModA", LoadOrderType.LoadFirst);
-                loadOrderController.RegisterBundleForLoading("BundleB", "ModA", LoadOrderType.LoadFirst);
+                loadOrderController.RegisterBundleForLoading("BundleA", "ModA", dependancyLoadOrder);
+                loadOrderController.RegisterBundleForLoading("BundleB", "ModA", bundleLoadOrder);
 
                 var result = loadOrderController.CanBundleBeginLoading("BundleB");
 
                 result.Should().BeFalse();
             }
 
-            [Test]
-            public void LoadFirstWontLoad_WhileLoadFirstDependancyLoading()
+            [TestCase(LoadOrderType.LoadFirst, LoadOrderType.LoadFirst)]
+            [TestCase(LoadOrderType.LoadUnordered, LoadOrderType.LoadFirst)]
+            [TestCase(LoadOrderType.LoadLast, LoadOrderType.LoadFirst)]
+            [TestCase(LoadOrderType.LoadLast, LoadOrderType.LoadUnordered)]
+            [TestCase(LoadOrderType.LoadLast, LoadOrderType.LoadLast)]
+            public void BundleWontLoad_WhileDependancyLoading(LoadOrderType bundleLoadOrder, LoadOrderType dependancyLoadOrder)
             {
                 var loadOrderController = new LoadOrderController();
-                loadOrderController.RegisterBundleForLoading("BundleA", "ModA", LoadOrderType.LoadFirst);
-                loadOrderController.RegisterBundleForLoading("BundleB", "ModA", LoadOrderType.LoadFirst);
+                loadOrderController.RegisterBundleForLoading("BundleA", "ModA", dependancyLoadOrder);
+                loadOrderController.RegisterBundleForLoading("BundleB", "ModA", bundleLoadOrder);
                 loadOrderController.RegisterBundleLoadingStarted("BundleA");
 
                 var result = loadOrderController.CanBundleBeginLoading("BundleB");
@@ -39,12 +47,16 @@ namespace OtherLoader.UnitTests.Controllers
                 result.Should().BeFalse();
             }
 
-            [Test]
-            public void LoadFirstWillLoad_WhenLoadFirstDependancyLoaded()
+            [TestCase(LoadOrderType.LoadFirst, LoadOrderType.LoadFirst)]
+            [TestCase(LoadOrderType.LoadUnordered, LoadOrderType.LoadFirst)]
+            [TestCase(LoadOrderType.LoadLast, LoadOrderType.LoadFirst)]
+            [TestCase(LoadOrderType.LoadLast, LoadOrderType.LoadUnordered)]
+            [TestCase(LoadOrderType.LoadLast, LoadOrderType.LoadLast)]
+            public void BundleWillLoad_WhenDependancyLoaded(LoadOrderType bundleLoadOrder, LoadOrderType dependancyLoadOrder)
             {
                 var loadOrderController = new LoadOrderController();
-                loadOrderController.RegisterBundleForLoading("BundleA", "ModA", LoadOrderType.LoadFirst);
-                loadOrderController.RegisterBundleForLoading("BundleB", "ModA", LoadOrderType.LoadFirst);
+                loadOrderController.RegisterBundleForLoading("BundleA", "ModA", dependancyLoadOrder);
+                loadOrderController.RegisterBundleForLoading("BundleB", "ModA", bundleLoadOrder);
                 loadOrderController.RegisterBundleLoadingStarted("BundleA");
                 loadOrderController.RegisterBundleLoadingComplete("BundleA");
 
@@ -53,43 +65,46 @@ namespace OtherLoader.UnitTests.Controllers
                 result.Should().BeTrue();
             }
 
-            [Test]
-            public void LoadFirstWillLoad_WhenOtherLoadFirstDependsOnIt()
+            [TestCase(LoadOrderType.LoadFirst, LoadOrderType.LoadFirst)]
+            [TestCase(LoadOrderType.LoadFirst, LoadOrderType.LoadUnordered)]
+            [TestCase(LoadOrderType.LoadFirst, LoadOrderType.LoadLast)]
+            [TestCase(LoadOrderType.LoadUnordered, LoadOrderType.LoadLast)]
+            [TestCase(LoadOrderType.LoadLast, LoadOrderType.LoadLast)]
+            public void BundleWillLoad_WhenOtherBundleDependsOnIt(LoadOrderType bundleLoadOrder, LoadOrderType dependantLoadOrder)
             {
                 var loadOrderController = new LoadOrderController();
-                loadOrderController.RegisterBundleForLoading("BundleA", "ModA", LoadOrderType.LoadFirst);
-                loadOrderController.RegisterBundleForLoading("BundleB", "ModA", LoadOrderType.LoadFirst);
+                loadOrderController.RegisterBundleForLoading("BundleA", "ModA", bundleLoadOrder);
+                loadOrderController.RegisterBundleForLoading("BundleB", "ModA", dependantLoadOrder);
 
                 var result = loadOrderController.CanBundleBeginLoading("BundleA");
 
                 result.Should().BeTrue();
             }
 
-            [Test]
-            public void LoadFirstWillLoad_WhenOtherLoadUnorderedDependsOnIt()
+            [TestCase("BundleA")]
+            [TestCase("BundleB")]
+            public void LoadUnorderedBundles_WillLoadInAnyOrder(string bundle)
             {
                 var loadOrderController = new LoadOrderController();
-                loadOrderController.RegisterBundleForLoading("BundleA", "ModA", LoadOrderType.LoadFirst);
+                loadOrderController.RegisterBundleForLoading("BundleA", "ModA", LoadOrderType.LoadUnordered);
                 loadOrderController.RegisterBundleForLoading("BundleB", "ModA", LoadOrderType.LoadUnordered);
 
-                var result = loadOrderController.CanBundleBeginLoading("BundleA");
+                var result = loadOrderController.CanBundleBeginLoading(bundle);
 
                 result.Should().BeTrue();
             }
 
             [Test]
-            public void LoadFirstWillLoad_WhenOtherLoadLastDependsOnIt()
+            public void BundleLoadOrderOnlyAppliesToSameModId()
             {
                 var loadOrderController = new LoadOrderController();
                 loadOrderController.RegisterBundleForLoading("BundleA", "ModA", LoadOrderType.LoadFirst);
-                loadOrderController.RegisterBundleForLoading("BundleB", "ModA", LoadOrderType.LoadLast);
+                loadOrderController.RegisterBundleForLoading("BundleB", "ModB", LoadOrderType.LoadUnordered);
 
-                var result = loadOrderController.CanBundleBeginLoading("BundleA");
+                var result = loadOrderController.CanBundleBeginLoading("BundleB");
 
                 result.Should().BeTrue();
             }
-
-            //TODO more tests
         }
     }
 }

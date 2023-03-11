@@ -82,25 +82,25 @@ namespace OtherLoader.Core.Services
             throw new NotImplementedException();
         }
 
-         /* Steps of asset loading
-         * 1. Register the asset for loading
-         * 2. Have the asset wait to start loading untill it is allowed based on order
-         * 3. Register that the asset is now actively being loaded
-         * 4. Load the asset bundle
-         * 5. Get the assets from the asset bundle an apply them to the game
-         * 6. Register asset bundle as finished loading
-         * 7. If the bundle has a late bundle, register that to load later
-         */
+        /* Steps of asset loading
+        * 1. Register the asset for loading
+        * 2. Have the asset wait to start loading untill it is allowed based on order
+        * 3. Register that the asset is now actively being loaded
+        * 4. Load the asset bundle
+        * 5. Get the assets from the asset bundle an apply them to the game
+        * 6. Register asset bundle as finished loading
+        * 7. If the bundle has a late bundle, register that to load later
+        */
 
 
-         
+
         /* What Next?
-         * - Finish direct load asset loading
-         * - Create subscribers to load mod date into new Core format
-         * - Hook item spawner V2 up to the new service
-         * - Write some end to end tests?
+         * - [x] Finish direct load asset loading 
+         * - [ ] Create subscribers to load mod date into new Core format
+         * - [ ] Hook item spawner V2 up to the new service
+         * - [ ] Write some end to end tests?
          */
-        
+
 
 
         private IEnumerator LoadAssetBundle(string modId, string bundlePath, LoadOrderType loadOrder)

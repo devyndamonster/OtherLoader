@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace OtherLoader.Scripts.Adapters
+namespace OtherLoader.Features.AssetLoading.Adapters
 {
     public class BundleLoadingAdapter : IBundleLoadingAdapter
     {
