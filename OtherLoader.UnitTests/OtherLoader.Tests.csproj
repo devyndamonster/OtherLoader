@@ -80,6 +80,7 @@
     <Compile Include="UnitTests\Services\AssetLoadingServiceTests.cs" />
     <Compile Include="UnitTests\Services\PaginationServiceTests.cs" />
     <Compile Include="UnitTests\Services\PathServiceTests.cs" />
+    <Compile Include="UnitTests\Services\SpawnerEntryDataServiceTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

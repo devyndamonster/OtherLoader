@@ -67,6 +67,7 @@
     <Compile Include="Features\MetaData\Models\Vanilla\ItemSpawnerId.cs" />
     <Compile Include="Features\MetaData\Models\Vanilla\SubCategory.cs" />
     <Compile Include="Features\MetaData\Services\ISpawnerEntryDataService.cs" />
+    <Compile Include="Features\MetaData\Services\SpawnerEntryDataService.cs" />
     <Compile Include="Features\RewardSystem\Adapters\IRewardSystemAdapter.cs" />
     <Compile Include="Features\Shared\Models\ResultCoroutine.cs" />
     <Compile Include="Features\AssetLoading\Services\AssetLoadingService.cs" />
