@@ -61,6 +61,8 @@
     <Compile Include="Features\AssetLoading\Models\DirectLoadModData.cs" />
     <Compile Include="Features\AssetLoading\Subscribers\BaseAssetLoadingSubscriber.cs" />
     <Compile Include="Features\AssetLoading\Subscribers\IAssetLoadingSubscriber.cs" />
+    <Compile Include="Features\MetaData\Models\Vanilla\FVRObject.cs" />
+    <Compile Include="Features\MetaData\Models\Vanilla\ObjectCategory.cs" />
     <Compile Include="Features\MetaData\Repositories\IItemMetaDataRepository.cs" />
     <Compile Include="Features\MetaData\Repositories\ItemMetaDataRepository.cs" />
     <Compile Include="Features\MetaData\Models\Vanilla\ItemCategory.cs" />

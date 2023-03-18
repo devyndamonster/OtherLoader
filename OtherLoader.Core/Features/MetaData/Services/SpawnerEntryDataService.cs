@@ -18,17 +18,29 @@ namespace OtherLoader.Core.Features.MetaData.Services
             ItemCategory.Speedloader,
         };
 
-        public SpawnerEntryData ConvertToSpawnerEntryData(ItemSpawnerId spawnerId)
+        private readonly ItemCategory[] _firearmItemCategories = new ItemCategory[]
+        {
+            ItemCategory.Pistol,
+            ItemCategory.Shotgun,
+            ItemCategory.SMG_Rifle,
+            ItemCategory.Support
+        };
+
+        public SpawnerEntryData ConvertToSpawnerEntryData(ItemSpawnerId spawnerId, FVRObject mainObject)
         {
             return new SpawnerEntryData
             {
-                Path = GetSpawnerEntryPathFromSpawnerId(spawnerId)
+                Path = GetSpawnerEntryPathFromSpawnerId(spawnerId, mainObject),
+                DisplayText = spawnerId.DisplayName,
+                MainObjectId = spawnerId.MainObjectId,
+                IsDisplayedInMainEntry = spawnerId.IsDisplayedInMainEntry,
+                IsReward = spawnerId.IsReward,
             };
         }
 
-        private string GetSpawnerEntryPathFromSpawnerId(ItemSpawnerId spawnerId)
+        private string GetSpawnerEntryPathFromSpawnerId(ItemSpawnerId spawnerId, FVRObject mainObject)
         {
-            string path = GetPageForSpawnerId(spawnerId).ToString();
+            string path = GetPageForSpawnerId(spawnerId, mainObject).ToString();
 
             if (ShouldDisplayMainCategory(spawnerId))
             {
@@ -45,13 +57,13 @@ namespace OtherLoader.Core.Features.MetaData.Services
             return path;
         }
 
-        private PageMode GetPageForSpawnerId(ItemSpawnerId spawnerId)
+        private PageMode GetPageForSpawnerId(ItemSpawnerId spawnerId, FVRObject mainObject)
         {
-            if (ShouldItemBeTaggedAsToolsToy(spawnerId))
+            if (ShouldItemBeTaggedAsToolsToy(spawnerId, mainObject))
             {
                 return PageMode.ToolsToys;
             }
-            else if (ShouldItemBeTaggedAsMelee(spawnerId))
+            else if (ShouldItemBeTaggedAsMelee(spawnerId, mainObject))
             {
                 return PageMode.Melee;
             }
@@ -59,11 +71,11 @@ namespace OtherLoader.Core.Features.MetaData.Services
             {
                 return PageMode.Ammo;
             }
-            else if (ShouldItemBeTaggedAsAttachment(spawnerId))
+            else if (ShouldItemBeTaggedAsAttachment(spawnerId, mainObject))
             {
                 return PageMode.Attachments;
             }
-            else if (ShouldItemBeTaggedAsFirearm(spawnerId))
+            else if (ShouldItemBeTaggedAsFirearm(spawnerId, mainObject))
             {
                 return PageMode.Firearms;
             }
@@ -71,29 +83,28 @@ namespace OtherLoader.Core.Features.MetaData.Services
             return PageMode.MainMenu;
         }
 
-        //TODO: spawnerIds should have it's own Core FVRObject instance
-        private bool ShouldItemBeTaggedAsFirearm(ItemSpawnerId spawnerId)
+        private bool ShouldItemBeTaggedAsFirearm(ItemSpawnerId spawnerId, FVRObject mainObject)
         {
-            return 
-                spawnerId.MainObject.Category == FVRObject.ObjectCategory.Firearm ||
+            return
+                mainObject.ObjectCategory == ObjectCategory.Firearm ||
                 _firearmItemCategories.Contains(spawnerId.Category) ||
                 !Enum.IsDefined(typeof(ItemCategory), spawnerId.Category);
         }
 
-        private bool ShouldItemBeTaggedAsToolsToy(ItemSpawnerId spawnerId)
+        private bool ShouldItemBeTaggedAsToolsToy(ItemSpawnerId spawnerId, FVRObject mainObject)
         {
-            return 
-                spawnerId.MainObject.Category == FVRObject.ObjectCategory.Explosive ||
-                spawnerId.MainObject.Category == FVRObject.ObjectCategory.Thrown ||
+            return
+                mainObject.ObjectCategory == ObjectCategory.Explosive ||
+                mainObject.ObjectCategory == ObjectCategory.Thrown ||
                 spawnerId.SubCategory == SubCategory.Grenade ||
                 spawnerId.SubCategory == SubCategory.RemoteExplosives ||
                 spawnerId.Category == ItemCategory.Misc;
         }
 
-        private bool ShouldItemBeTaggedAsMelee(ItemSpawnerId spawnerId)
+        private bool ShouldItemBeTaggedAsMelee(ItemSpawnerId spawnerId, FVRObject mainObject)
         {
-            return 
-                spawnerId.MainObject.Category == FVRObject.ObjectCategory.MeleeWeapon ||
+            return
+                mainObject.ObjectCategory == ObjectCategory.MeleeWeapon ||
                 spawnerId.Category == ItemCategory.Melee;
         }
 
@@ -106,9 +117,9 @@ namespace OtherLoader.Core.Features.MetaData.Services
                 spawnerId.Category == ItemCategory.Cartridge;
         }
 
-        private bool ShouldItemBeTaggedAsAttachment(ItemSpawnerId spawnerId)
+        private bool ShouldItemBeTaggedAsAttachment(ItemSpawnerId spawnerId, FVRObject mainObject)
         {
-            return spawnerId.MainObject.Category == FVRObject.ObjectCategory.Attachment;
+            return mainObject.ObjectCategory == ObjectCategory.Attachment;
         }
 
 

@@ -25,19 +25,19 @@ namespace OtherLoader.Features.AssetLoading.Subscribers
         }
 
         /* What Do We Do With SpawnerIds?
-        * - Parse them into a unified item spawner entry
-        *   - Maybe should do quick parse into core spawner Id and then conversion happens in Core for testability?
-        * - Pass them into an item meta data store
-        * - Assets like images get connected by Id
-        * - Item spawner controller hooks into item meta data store?
+        * [x] Parse them into a unified item spawner entry
+        * [x] Pass them into an item meta data store
+        * [ ] Item spawner controller hooks into item meta data store
+        * [ ] Assets like images get connected by Id
         */
         protected override void LoadSubscribedAssets(IEnumerable<ItemSpawnerID> assets)
         {
             foreach(var spawnerId in assets)
             {
                 var convertedSpawnerId = ConvertSpawnerIdToCore(spawnerId);
+                var convertedMainObject = ConvertFVRObjectToCore(spawnerId.MainObject);
 
-                var spawnerEntry = _spawnerEntryDataService.ConvertToSpawnerEntryData(convertedSpawnerId);
+                var spawnerEntry = _spawnerEntryDataService.ConvertToSpawnerEntryData(convertedSpawnerId, convertedMainObject);
 
                 _itemMetaDataRepository.AddItemSpawnerEntry(spawnerEntry);
             }
@@ -68,73 +68,13 @@ namespace OtherLoader.Features.AssetLoading.Subscribers
             };
         }
 
-        private SpawnerEntryData GenerateSpawnerEntryFromSpawnerId(ItemSpawnerID spawnerId)
+        private Core.Features.MetaData.Models.Vanilla.FVRObject ConvertFVRObjectToCore(FistVR.FVRObject fvrObject)
         {
-            var spawnerEntry = new SpawnerEntryData
+            return new Core.Features.MetaData.Models.Vanilla.FVRObject
             {
-                Path = GetPathFromSpawnerId(spawnerId)
+                ObjectId = fvrObject.ItemID,
+                ObjectCategory = (ObjectCategory)fvrObject.Category
             };
-
-            /*
-            spawnerEntry.MainObjectID = GetMainObjectId(spawnerId);
-            spawnerEntry.SpawnWithIDs = spawnerId.SecondObject is null ? new List<string>() : new List<string> { spawnerId.SecondObject.ItemID };
-
-            spawnerEntry.SecondaryObjectIDs = spawnerId.Secondaries is null ? new List<string>() : spawnerId.Secondaries
-                .Where(secondary => secondary != null && secondary.MainObject != null)
-                .Select(secondary => secondary.MainObject.ItemID)
-                .ToList();
-
-            spawnerEntry.SecondaryObjectIDs.AddRange(spawnerId.Secondaries_ByStringID?.Where(id => !spawnerEntry.SecondaryObjectIDs.Contains(id)) ?? new List<string>());
-            spawnerEntry.EntryIcon = spawnerId.Sprite;
-            spawnerEntry.DisplayName = spawnerId.DisplayName;
-            spawnerEntry.IsDisplayedInMainEntry = spawnerId.IsDisplayedInMainEntry;
-            spawnerEntry.UsesLargeSpawnPad = spawnerId.UsesLargeSpawnPad;
-            spawnerEntry.UsesHugeSpawnPad = spawnerId.UsesHugeSpawnPad;
-            spawnerEntry.IsModded = IM.OD[spawnerEntry.MainObjectID].IsModContent;
-            spawnerEntry.TutorialBlockIDs = spawnerId.TutorialBlocks is null ? new List<string>() : new List<string>(spawnerId.TutorialBlocks);
-            spawnerEntry.ModTags = spawnerId.ModTags is null ? new List<string>() : new List<string>(spawnerId.ModTags);
-            */
-
-            return spawnerEntry;
-        }
-
-        private string GetPathFromSpawnerId(ItemSpawnerID spawnerId)
-        {
-            //string path = _metaDataService.GetSpawnerPageForSpawnerId(spawnerId).ToString();
-
-            if (ShouldDisplayMainCategory(spawnerId))
-            {
-                //path += "/" + _metaDataService.GetTagFromCategory(spawnerId.Category);
-            }
-
-            if (ShouldDisplaySubcategory(spawnerId))
-            {
-                //path += "/" + _metaDataService.GetTagFromSubcategory(spawnerId.SubCategory);
-            }
-
-            //path += "/" + GetMainObjectId(spawnerId);
-
-            //return path;
-
-            return "";
-        }
-
-        private bool ShouldDisplayMainCategory(ItemSpawnerID spawnerId)
-        {
-            var isDisplayableVanillaCategory = spawnerId.Category == ItemSpawnerID.EItemCategory.MeatFortress ||
-                spawnerId.Category == ItemSpawnerID.EItemCategory.Magazine ||
-                spawnerId.Category == ItemSpawnerID.EItemCategory.Cartridge ||
-                spawnerId.Category == ItemSpawnerID.EItemCategory.Clip ||
-                spawnerId.Category == ItemSpawnerID.EItemCategory.Speedloader;
-
-            var isModdedMainCategory = !Enum.IsDefined(typeof(ItemSpawnerID.EItemCategory), spawnerId.Category);
-
-            return isDisplayableVanillaCategory || isModdedMainCategory;
-        }
-
-        private bool ShouldDisplaySubcategory(ItemSpawnerID spawnerId)
-        {
-            return spawnerId.SubCategory != ItemSpawnerID.ESubCategory.None;
         }
     }
 }

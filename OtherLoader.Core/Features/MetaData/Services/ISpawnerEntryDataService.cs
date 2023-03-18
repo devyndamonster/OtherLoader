@@ -10,7 +10,7 @@ namespace OtherLoader.Core.Features.MetaData.Services
     public interface ISpawnerEntryDataService
     {
 
-        public SpawnerEntryData ConvertToSpawnerEntryData(ItemSpawnerId spawnerId);
+        public SpawnerEntryData ConvertToSpawnerEntryData(ItemSpawnerId spawnerId, FVRObject mainObject);
 
     }
 }
